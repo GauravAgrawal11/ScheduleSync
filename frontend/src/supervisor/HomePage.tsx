@@ -1,0 +1,912 @@
+import React, { useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { api, ComplaintCategory, ComplaintCreatePayload, ActivityProgressItem } from '../api/client';
+import { useAuthStore } from '../auth/authStore';
+import { Card, CardContent } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
+import { StatusPill } from '../components/ui/StatusPill';
+import { ConfidenceBar } from '../components/ui/ConfidenceBar';
+import {
+  CheckCircle2,
+  Clock,
+  XCircle,
+  Plus,
+  ChevronRight,
+  Sparkles,
+  Layers,
+  Calendar,
+  AlertTriangle,
+  UserCheck,
+  Search,
+  AlertOctagon,
+  MessageSquare,
+  Send,
+  X,
+  ShieldAlert,
+  Wrench,
+  HardHat,
+  Zap,
+  Check,
+  HelpCircle,
+  Users,
+  FolderOpen,
+} from 'lucide-react';
+
+export const HomePage: React.FC = () => {
+  const { user } = useAuthStore();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const queryClient = useQueryClient();
+
+  // Filter & Search states for assigned activities
+  const [activitySearch, setActivitySearch] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'IN_PROGRESS' | 'COMPLETED' | 'DELAYED' | 'PLANNED'>('ALL');
+
+  // Blocker / Complaint modal state
+  const [isBlockerModalOpen, setIsBlockerModalOpen] = useState<boolean>(false);
+  const [blockerActivityId, setBlockerActivityId] = useState<string>('');
+  const [blockerCategory, setBlockerCategory] = useState<ComplaintCategory>('MATERIAL');
+  const [blockerDescription, setBlockerDescription] = useState<string>('');
+  const [blockerSuccessMsg, setBlockerSuccessMsg] = useState<string | null>(null);
+
+  // STRICT DISCIPLINE & CREDENTIAL ISOLATION:
+  // When a site supervisor logs in, they are locked to user.id.
+  // If a planner clicks "Supervisor Access" from the workload page (?sup_id=X), it views that supervisor's terminal.
+  const querySupId = searchParams.get('sup_id') ? Number(searchParams.get('sup_id')) : null;
+  const isSupervisorRole = user?.role === 'supervisor';
+  const effectiveSupervisorId = isSupervisorRole ? (user?.id || 2) : (querySupId || user?.id || 2);
+  const userDiscipline = user?.discipline
+    ? (user.discipline.charAt(0).toUpperCase() + user.discipline.slice(1).toLowerCase())
+    : 'Field';
+
+  // Submissions query
+  const { data: submissions = [], isLoading: loadingSubmissions } = useQuery({
+    queryKey: ['my-submissions'],
+    queryFn: () => api.getMySubmissions(),
+  });
+
+  // Supervisor Weekly Workload Tasks
+  const { data: supervisorTasks = [], isLoading: loadingTasks } = useQuery({
+    queryKey: ['supervisor-tasks', effectiveSupervisorId],
+    queryFn: () => (effectiveSupervisorId ? api.getSupervisorTasks(effectiveSupervisorId) : Promise.resolve([])),
+    enabled: Boolean(effectiveSupervisorId),
+  });
+
+  // Live Supervisor Progress & Overdue Summary
+  const { data: progressSummary, isLoading: loadingProgress } = useQuery({
+    queryKey: ['supervisor-progress', effectiveSupervisorId],
+    queryFn: () => (effectiveSupervisorId ? api.getSupervisorProgress(effectiveSupervisorId, 1) : Promise.resolve(null)),
+    enabled: Boolean(effectiveSupervisorId),
+  });
+
+  const currentSupervisorMeta = {
+    id: effectiveSupervisorId,
+    name: (querySupId && progressSummary?.supervisor_name) ? progressSummary.supervisor_name : (user?.name || 'Site Supervisor'),
+    discipline: (querySupId && progressSummary?.discipline) ? progressSummary.discipline : userDiscipline,
+    email: user?.email || '',
+  };
+
+  // Supervisor's own raised complaints
+  const { data: myComplaints = [], isLoading: loadingComplaints } = useQuery({
+    queryKey: ['my-complaints', effectiveSupervisorId],
+    queryFn: () => (effectiveSupervisorId ? api.getMyComplaints(1) : Promise.resolve([])),
+    enabled: Boolean(effectiveSupervisorId),
+  });
+
+  // Raise Complaint Mutation
+  const raiseComplaintMutation = useMutation({
+    mutationFn: (payload: ComplaintCreatePayload) => api.raiseComplaint(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-complaints', user?.id] });
+      setBlockerSuccessMsg('Blocker logged successfully! Planner has been notified.');
+      setBlockerDescription('');
+      setBlockerActivityId('');
+      setTimeout(() => {
+        setIsBlockerModalOpen(false);
+        setBlockerSuccessMsg(null);
+      }, 1800);
+    },
+  });
+
+  const handleOpenBlockerModal = (preselectedActivityId?: string) => {
+    if (preselectedActivityId) {
+      setBlockerActivityId(preselectedActivityId);
+    }
+    setBlockerSuccessMsg(null);
+    setIsBlockerModalOpen(true);
+  };
+
+  const handleBlockerSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!blockerDescription.trim()) return;
+
+    raiseComplaintMutation.mutate({
+      project_id: 1,
+      activity_id: blockerActivityId.trim() || undefined,
+      category: blockerCategory,
+      description: blockerDescription.trim(),
+    });
+  };
+
+  const matchedCount = submissions.filter((s) => s.status === 'matched').length;
+  const pendingCount = submissions.filter((s) => s.status === 'pending review').length;
+  const rejectedCount = submissions.filter((s) => s.status === 'rejected').length;
+
+  // Combine task information with progress details
+  const allActivities: ActivityProgressItem[] =
+    (progressSummary?.activities && progressSummary.activities.length > 0 ? progressSummary.activities : null) ||
+    (progressSummary?.all_activities && progressSummary.all_activities.length > 0 ? progressSummary.all_activities : null) ||
+    supervisorTasks.map((t) => ({
+      activity_id: t.activity_id,
+      activity_name: t.activity_name,
+      discipline: t.discipline,
+      status: t.status,
+      planned_start: t.planned_start,
+      planned_finish: t.planned_finish,
+      days_overdue: 0,
+      is_delayed: t.status === 'DELAYED',
+      completion_pct: t.status === 'COMPLETED' ? 100 : t.status === 'IN_PROGRESS' ? 50 : 0,
+      starts_in_days: t.starts_in_days,
+      schedule_state: t.schedule_state,
+      assignment_timeline_status: t.assignment_timeline_status,
+      is_completed: t.status === 'COMPLETED',
+    }));
+
+  // Filter activities safely without risk of runtime exception
+  const filteredActivities = (allActivities || []).filter((act) => {
+    if (!act) return false;
+    const actId = (act.activity_id || '').toLowerCase();
+    const actName = (act.activity_name || '').toLowerCase();
+    const query = activitySearch.trim().toLowerCase();
+
+    const matchesSearch = query === '' || actId.includes(query) || actName.includes(query);
+
+    const actStatus = (act.status || 'PLANNED').toUpperCase();
+    const matchesStatus = statusFilter === 'ALL' || actStatus === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
+
+  // Activity status count badges (safely guarded)
+  const completedCount = (allActivities || []).filter((a) => (a?.status || '').toUpperCase() === 'COMPLETED').length;
+  const inProgressCount = (allActivities || []).filter((a) => (a?.status || '').toUpperCase() === 'IN_PROGRESS').length;
+  const delayedCount = (allActivities || []).filter((a) => (a?.status || '').toUpperCase() === 'DELAYED' || a?.is_delayed).length;
+  const plannedCount = (allActivities || []).filter((a) => (a?.status || '').toUpperCase() === 'PLANNED').length;
+
+  const overallStatus = (progressSummary?.overall_status || (delayedCount > 0 ? 'delayed' : completedCount === allActivities.length && allActivities.length > 0 ? 'completed' : 'on_track')).toLowerCase();
+  const statusDetail = progressSummary?.status_detail || (delayedCount > 0 ? `Delayed by ${delayedCount} task(s)` : 'All assigned schedule activities on track');
+  const remainingTasks = progressSummary?.remaining_count ?? (allActivities.length - completedCount);
+  const totalAssigned = progressSummary?.total_assigned ?? allActivities.length;
+  const countCompleted = progressSummary?.completed_count ?? completedCount;
+  const countInProgress = progressSummary?.in_progress_count ?? inProgressCount;
+  const countDelayed = progressSummary?.critical_delayed_activities?.length ?? delayedCount;
+
+  return (
+    <div className="space-y-5">
+      {/* Site Status Banner */}
+      <div className="bg-gradient-to-r from-oil-900 via-oil-800 to-slate-900 rounded-2xl p-4 text-white shadow-md relative overflow-hidden">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/10 text-white text-[10px] font-medium backdrop-blur-sm">
+                <Sparkles className="w-3 h-3 text-amber-300" /> Numaligarh Unit 3 Expansion
+              </span>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-bold uppercase">
+                {currentSupervisorMeta.discipline} Discipline
+              </span>
+
+              <div className="inline-flex items-center gap-1 bg-white/10 px-2 py-0.5 rounded-full text-[10px] text-slate-300 border border-white/15">
+                <HardHat className="w-3 h-3 text-amber-400" />
+                <span>Site Terminal: <strong>{user?.name || currentSupervisorMeta.name}</strong></span>
+              </div>
+            </div>
+            <h2 className="text-lg font-bold">Field Supervisor Workspace</h2>
+            <p className="text-xs text-slate-300 mt-0.5">
+              Viewing tasks for: <strong className="text-white">{currentSupervisorMeta.name}</strong> ({currentSupervisorMeta.discipline}). Review your assigned schedule, log site activities, and flag operational blockers.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => handleOpenBlockerModal()}
+              className="px-3 py-2 text-xs font-bold bg-rose-600/90 hover:bg-rose-600 text-white rounded-xl shadow-sm flex items-center gap-1.5 border border-rose-400/40 transition-all hover:shadow-rose-900/30 active:scale-95"
+            >
+              <AlertOctagon className="w-4 h-4" />
+              Raise Blocker / Issue
+            </button>
+          </div>
+        </div>
+        <div className="absolute -right-6 -bottom-6 w-28 h-28 bg-white/5 rounded-full pointer-events-none" />
+      </div>
+
+      {/* FEATURE 1: Live Progress & Schedule Health Card (Guarded against null crashes) */}
+      <Card className="border-slate-200 bg-white shadow-sm overflow-hidden">
+        <div
+          className={`p-4 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+            overallStatus === 'delayed'
+              ? 'bg-rose-50/80 border-rose-200'
+              : overallStatus === 'completed'
+              ? 'bg-emerald-50/80 border-emerald-200'
+              : 'bg-blue-50/80 border-blue-200'
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <div
+              className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+                overallStatus === 'delayed'
+                  ? 'bg-rose-600 text-white'
+                  : overallStatus === 'completed'
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-blue-600 text-white'
+              }`}
+            >
+              {overallStatus === 'delayed' ? (
+                <AlertTriangle className="w-5 h-5" />
+              ) : overallStatus === 'completed' ? (
+                <CheckCircle2 className="w-5 h-5" />
+              ) : (
+                <Clock className="w-5 h-5" />
+              )}
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-600">
+                  Live Progress Status
+                </span>
+                <span
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                    overallStatus === 'delayed'
+                      ? 'bg-rose-100 text-rose-800 border border-rose-300'
+                      : overallStatus === 'completed'
+                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                      : 'bg-blue-100 text-blue-800 border border-blue-300'
+                  }`}
+                >
+                  {overallStatus.replace('_', ' ')}
+                </span>
+              </div>
+              <div className="text-base font-black text-slate-900 mt-0.5">
+                {statusDetail}
+              </div>
+            </div>
+          </div>
+
+          <div className="text-left sm:text-right">
+            <div className="text-[11px] font-semibold text-slate-500">Remaining Tasks</div>
+            <div className="text-2xl font-black text-slate-900 font-mono">
+              {remainingTasks}{' '}
+              <span className="text-xs font-normal text-slate-500">/ {totalAssigned}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Metrics Bar */}
+        <div className="grid grid-cols-4 divide-x divide-slate-100 p-3 bg-slate-50 text-center">
+          <div>
+            <div className="text-xs font-bold text-slate-400 uppercase">Assigned</div>
+            <div className="text-base font-extrabold text-slate-800 font-mono">{totalAssigned}</div>
+          </div>
+          <div>
+            <div className="text-xs font-bold text-emerald-600 uppercase">Completed</div>
+            <div className="text-base font-extrabold text-emerald-700 font-mono">{countCompleted}</div>
+          </div>
+          <div>
+            <div className="text-xs font-bold text-blue-600 uppercase">In Progress</div>
+            <div className="text-base font-extrabold text-blue-700 font-mono">{countInProgress}</div>
+          </div>
+          <div>
+            <div className="text-xs font-bold text-rose-600 uppercase">Delayed</div>
+            <div className="text-base font-extrabold text-rose-700 font-mono">{countDelayed}</div>
+          </div>
+        </div>
+
+          {/* Critical Delayed Warning Note if any */}
+          {(progressSummary?.critical_delayed_activities?.length ?? 0) > 0 && (
+            <div className="p-3 bg-rose-50/50 border-t border-rose-100 text-xs text-rose-900 space-y-1">
+              <div className="font-bold flex items-center gap-1 text-rose-700">
+                <AlertTriangle className="w-3.5 h-3.5" /> Overdue Critical Activities:
+              </div>
+              <ul className="list-disc list-inside space-y-0.5 text-[11px] text-rose-800">
+                {progressSummary?.critical_delayed_activities?.map((act) => (
+                  <li key={act.activity_id}>
+                    <strong className="font-mono">{act.activity_id}</strong>: {act.activity_name} —{' '}
+                    <span className="font-semibold text-rose-950">{act.days_overdue} days overdue</span> (Planned:{' '}
+                    {act.planned_finish})
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </Card>
+
+      {/* 3 Stat Cards for Submissions */}
+      <div className="grid grid-cols-3 gap-2.5">
+        <Card className="bg-emerald-50/50 border-emerald-200/60 p-3 text-center">
+          <div className="flex justify-center text-emerald-600 mb-1">
+            <CheckCircle2 className="w-4 h-4" />
+          </div>
+          <div className="text-xl font-black text-emerald-950">
+            {loadingSubmissions ? '...' : matchedCount}
+          </div>
+          <div className="text-[10px] font-semibold text-emerald-700 uppercase tracking-wider">
+            Matched Logs
+          </div>
+        </Card>
+
+        <Card className="bg-amber-50/50 border-amber-200/60 p-3 text-center">
+          <div className="flex justify-center text-amber-600 mb-1">
+            <Clock className="w-4 h-4" />
+          </div>
+          <div className="text-xl font-black text-amber-950">
+            {loadingSubmissions ? '...' : pendingCount}
+          </div>
+          <div className="text-[10px] font-semibold text-amber-700 uppercase tracking-wider">
+            In Review
+          </div>
+        </Card>
+
+        <Card className="bg-rose-50/50 border-rose-200/60 p-3 text-center">
+          <div className="flex justify-center text-rose-600 mb-1">
+            <XCircle className="w-4 h-4" />
+          </div>
+          <div className="text-xl font-black text-rose-950">
+            {loadingSubmissions ? '...' : rejectedCount}
+          </div>
+          <div className="text-[10px] font-semibold text-rose-700 uppercase tracking-wider">
+            Held / Discrepancy
+          </div>
+        </Card>
+      </div>
+
+      {/* Quick Access: Site Files & Field Documents */}
+      <div className="p-3.5 bg-gradient-to-r from-oil-900 via-slate-800 to-oil-950 rounded-xl text-white flex items-center justify-between shadow-sm border border-slate-700/50">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-400/30 flex items-center justify-center text-amber-400 flex-shrink-0">
+            <FolderOpen className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="text-xs font-bold flex items-center gap-1.5">
+              <span>Site Files &amp; Field Documents</span>
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-400/30">
+                P&amp;ID · Photos · DPR
+              </span>
+            </div>
+            <div className="text-[11px] text-slate-300">
+              Access engineering drawings, BBS sheets, and upload site photos/reports
+            </div>
+          </div>
+        </div>
+        <button
+          onClick={() => navigate('/supervisor/files')}
+          className="px-3 py-1.5 text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-lg shadow-sm flex items-center gap-1 transition-all active:scale-95 flex-shrink-0"
+        >
+          <span>Files</span>
+          <ChevronRight className="w-3.5 h-3.5" />
+        </button>
+      </div>
+
+      {/* Searchable Assigned Activities Section */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+            <UserCheck className="w-4 h-4 text-oil-800" />
+            Your Assigned Schedule Activities ({allActivities.length})
+          </h3>
+        </div>
+
+
+        {/* Search Bar & Status Filter Tabs */}
+        <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-xs space-y-2.5">
+          <div className="relative">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+            <input
+              type="text"
+              placeholder="Search assigned activities by ID or name (e.g. L6-PIP-101, Hydrotest)..."
+              value={activitySearch}
+              onChange={(e) => setActivitySearch(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-oil-600 focus:border-transparent"
+            />
+            {activitySearch && (
+              <button
+                onClick={() => setActivitySearch('')}
+                className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* Status Tabs */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+            <button
+              onClick={() => setStatusFilter('ALL')}
+              className={`px-3 py-1 rounded-lg font-bold whitespace-nowrap transition-all ${
+                statusFilter === 'ALL'
+                  ? 'bg-oil-800 text-white shadow-xs'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              All ({allActivities.length})
+            </button>
+            <button
+              onClick={() => setStatusFilter('IN_PROGRESS')}
+              className={`px-3 py-1 rounded-lg font-bold whitespace-nowrap transition-all flex items-center gap-1 ${
+                statusFilter === 'IN_PROGRESS'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200'
+              }`}
+            >
+              In Progress ({inProgressCount})
+            </button>
+            <button
+              onClick={() => setStatusFilter('COMPLETED')}
+              className={`px-3 py-1 rounded-lg font-bold whitespace-nowrap transition-all flex items-center gap-1 ${
+                statusFilter === 'COMPLETED'
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'
+              }`}
+            >
+              Completed ({completedCount})
+            </button>
+            <button
+              onClick={() => setStatusFilter('DELAYED')}
+              className={`px-3 py-1 rounded-lg font-bold whitespace-nowrap transition-all flex items-center gap-1 ${
+                statusFilter === 'DELAYED'
+                  ? 'bg-rose-600 text-white shadow-xs'
+                  : 'bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200'
+              }`}
+            >
+              Delayed ({delayedCount})
+            </button>
+            <button
+              onClick={() => setStatusFilter('PLANNED')}
+              className={`px-3 py-1 rounded-lg font-bold whitespace-nowrap transition-all ${
+                statusFilter === 'PLANNED'
+                  ? 'bg-slate-700 text-white shadow-xs'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              Planned ({plannedCount})
+            </button>
+          </div>
+        </div>
+
+        {/* Assigned Activities List */}
+        {loadingProgress || loadingTasks ? (
+          <div className="p-6 bg-slate-50 rounded-xl text-center text-xs text-slate-400">
+            Checking your assigned schedule activities...
+          </div>
+        ) : filteredActivities.length === 0 ? (
+          <div className="p-6 bg-white border border-slate-200 rounded-xl text-center text-xs text-slate-500">
+            {allActivities.length === 0
+              ? 'No schedule activities currently assigned to you for this project.'
+              : 'No activities matching the active search or status filter.'}
+          </div>
+        ) : (
+          <div className="space-y-2.5">
+            {filteredActivities.map((act) => {
+              const matchingTask = supervisorTasks.find((t) => t.activity_id === act.activity_id);
+              const isManual = matchingTask?.assignment_source === 'manual';
+
+              const safeStatus = (act.status || 'PLANNED').toUpperCase();
+              const isTaskCompleted =
+                safeStatus === 'COMPLETED' ||
+                act.schedule_state === 'completed' ||
+                matchingTask?.schedule_state === 'completed' ||
+                (act.completion_pct !== undefined && act.completion_pct >= 100);
+              return (
+                <Card
+                  key={act.activity_id}
+                  className={`border transition-all bg-white shadow-xs hover:border-oil-500 ${
+                    safeStatus === 'COMPLETED'
+                      ? 'border-emerald-200/80 bg-emerald-50/10'
+                      : safeStatus === 'DELAYED'
+                      ? 'border-rose-200 bg-rose-50/10'
+                      : 'border-slate-200'
+                  }`}
+                >
+                  <CardContent className="p-3.5 space-y-2.5">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-mono font-bold text-xs text-oil-900 bg-oil-50 px-2 py-0.5 rounded border border-oil-200">
+                            {act.activity_id}
+                          </span>
+                          <span className="text-xs font-bold text-slate-900">
+                            {act.activity_name}
+                          </span>
+                          {/* Status Badge */}
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                              safeStatus === 'COMPLETED'
+                                ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                                : safeStatus === 'IN_PROGRESS'
+                                ? 'bg-blue-100 text-blue-800 border border-blue-300'
+                                : safeStatus === 'DELAYED'
+                                ? 'bg-rose-100 text-rose-800 border border-rose-300'
+                                : 'bg-slate-100 text-slate-700 border border-slate-200'
+                            }`}
+                          >
+                            {safeStatus.replace('_', ' ')}
+                          </span>
+
+                          {/* Dynamic Timeline Assignment Badge */}
+                          {(() => {
+                            const timelineText =
+                              act.assignment_timeline_status ||
+                              matchingTask?.assignment_timeline_status ||
+                              (safeStatus === 'COMPLETED'
+                                ? 'Completed'
+                                : (act.starts_in_days && act.starts_in_days > 0) ||
+                                  (matchingTask?.starts_in_days && matchingTask.starts_in_days > 0)
+                                ? `Assigned after ${act.starts_in_days || matchingTask?.starts_in_days} day${
+                                    (act.starts_in_days || matchingTask?.starts_in_days) === 1 ? '' : 's'
+                                  }`
+                                : 'Assigned (Active Now)');
+
+                            const isQueued =
+                              act.schedule_state === 'queued' ||
+                              matchingTask?.schedule_state === 'queued' ||
+                              String(timelineText || '').startsWith('Assigned after');
+
+                            const isComp = isTaskCompleted;
+
+                            if (isComp) {
+                              return (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-300">
+                                  <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                  Completed
+                                </span>
+                              );
+                            }
+
+                            if (isQueued) {
+                              return (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-900 border border-amber-300 shadow-xs">
+                                  <Clock className="w-3 h-3 text-amber-700" />
+                                  {timelineText}
+                                </span>
+                              );
+                            }
+
+                            return (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-900 border border-blue-300 shadow-xs">
+                                <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse"></span>
+                                {timelineText}
+                              </span>
+                            );
+                          })()}
+                        </div>
+
+                        <div className="flex items-center gap-3 text-[11px] text-slate-500 flex-wrap">
+                          <span className="font-medium text-slate-700 capitalize">{act.discipline}</span>
+                          <span>·</span>
+                          <span>Planned: {act.planned_finish || '—'}</span>
+                          {act.actual_finish && (
+                            <>
+                              <span>·</span>
+                              <span className="text-emerald-700 font-medium">Finished: {act.actual_finish}</span>
+                            </>
+                          )}
+                          {act.days_overdue > 0 && (
+                            <>
+                              <span>·</span>
+                              <span className="text-rose-600 font-bold">
+                                {act.days_overdue}d overdue
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Action buttons */}
+                      <div className="flex items-center gap-2 self-end sm:self-center">
+                        {isManual && (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
+                            Manual Reassigned
+                          </span>
+                        )}
+
+                        {!isTaskCompleted && (
+                          <button
+                            onClick={() => handleOpenBlockerModal(act.activity_id)}
+                            className="px-2.5 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-50 border border-rose-200 rounded-lg flex items-center gap-1 transition-colors"
+                            title="Raise a blocker specifically for this activity"
+                          >
+                            <AlertTriangle className="w-3 h-3 text-rose-600" />
+                            Flag Blocker
+                          </button>
+                        )}
+
+                        {isTaskCompleted ? (
+                          <span
+                            className="px-3 py-1 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-300 rounded-lg flex items-center gap-1 cursor-default select-none shadow-xs"
+                            title="Activity is completed (100%). Progress cannot be logged again."
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 stroke-[2.5]" />
+                            Completed · Locked
+                          </span>
+                        ) : (
+                          <Button
+                            size="sm"
+                            onClick={() =>
+                              navigate(
+                                `/supervisor/log?activity_id=${act.activity_id}&discipline=${encodeURIComponent(
+                                  act.discipline || ''
+                                )}&location=${encodeURIComponent(act.location || '')}`
+                              )
+                            }
+                            className="text-xs py-1 px-3 bg-oil-800 hover:bg-oil-900 text-white font-semibold flex items-center gap-1 transition-transform active:scale-95"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                            Log Progress
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Progress Bar: Blue for In-Progress, Emerald Green for Completed */}
+                    {safeStatus === 'IN_PROGRESS' && (
+                      <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                        <div
+                          className="bg-blue-600 h-1.5 rounded-full transition-all"
+                          style={{ width: `${Math.max(act.completion_pct || 40, 20)}%` }}
+                        />
+                      </div>
+                    )}
+                    {safeStatus === 'COMPLETED' && (
+                      <div className="w-full bg-emerald-100 rounded-full h-1.5 overflow-hidden">
+                        <div
+                          className="bg-emerald-600 h-1.5 rounded-full"
+                          style={{ width: '100%' }}
+                        />
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* FEATURE 2: My Blockers & Complaints Section */}
+      <div className="space-y-2.5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+              <AlertOctagon className="w-4 h-4 text-rose-600" />
+              My Raised Blockers &amp; Site Issues ({myComplaints.length})
+            </h3>
+          </div>
+
+          <button
+            onClick={() => handleOpenBlockerModal()}
+            className="text-xs text-rose-600 font-bold hover:underline flex items-center gap-1"
+          >
+            + Raise New Issue
+          </button>
+        </div>
+
+        {loadingComplaints ? (
+          <div className="p-4 bg-slate-50 rounded-xl text-center text-xs text-slate-400">
+            Loading your blockers...
+          </div>
+        ) : myComplaints.length === 0 ? (
+          <div className="p-4 bg-white border border-slate-200 rounded-xl text-center text-xs text-slate-500">
+            No blockers currently raised by you. If labor shortage, material delay, or access issues occur, click "Raise Blocker".
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {myComplaints.map((comp) => (
+              <Card key={comp.id} className="border-slate-200 bg-white shadow-xs">
+                <CardContent className="p-3.5 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-800 border border-slate-200">
+                        {comp.category}
+                      </span>
+                      {comp.activity_id && (
+                        <span className="font-mono text-xs font-bold text-oil-900 bg-oil-50 px-1.5 py-0.2 rounded border border-oil-200">
+                          {comp.activity_id}
+                        </span>
+                      )}
+                      <span className="text-[11px] text-slate-400">
+                        {new Date(comp.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+
+                    {/* Status Badge */}
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                        comp.status === 'RESOLVED'
+                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                          : comp.status === 'ACKNOWLEDGED'
+                          ? 'bg-blue-100 text-blue-800 border border-blue-300'
+                          : 'bg-amber-100 text-amber-800 border border-amber-300'
+                      }`}
+                    >
+                      {comp.status}
+                    </span>
+                  </div>
+
+                  <p className="text-xs text-slate-800 font-medium leading-relaxed">
+                    "{comp.description}"
+                  </p>
+
+                  {/* Planner Response if acknowledged/resolved */}
+                  {comp.planner_response && (
+                    <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-700 flex items-start gap-2 mt-1">
+                      <MessageSquare className="w-3.5 h-3.5 text-oil-800 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <span className="font-bold text-oil-900 text-[11px] block">Planner Response:</span>
+                        <span className="text-slate-600 text-xs">{comp.planner_response}</span>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Recent Submissions */}
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+            Recent Site Logs
+          </h3>
+          <button
+            onClick={() => navigate('/supervisor/submissions')}
+            className="text-xs text-oil-800 font-semibold hover:underline flex items-center"
+          >
+            View all <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        <div className="space-y-2.5">
+          {loadingSubmissions ? (
+            <div className="p-6 text-center text-xs text-slate-400">Loading site logs...</div>
+          ) : submissions.slice(0, 3).map((sub) => (
+            <Card
+              key={sub.id}
+              onClick={() => navigate(`/supervisor/submissions/${sub.id}`)}
+              className="cursor-pointer hover:border-oil-600 transition-all hover:shadow-sm"
+            >
+              <CardContent className="p-3.5 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-semibold text-slate-500">
+                    #{sub.id} · {sub.date} · {sub.discipline}
+                  </span>
+                  <StatusPill status={sub.status} />
+                </div>
+                <p className="text-xs text-slate-800 font-medium line-clamp-2">
+                  "{sub.raw_text}"
+                </p>
+                <div className="pt-1 border-t border-slate-100">
+                  <div className="text-[10px] text-slate-500 mb-1 truncate">
+                    Matched: <span className="font-semibold text-slate-700">{sub.suggested_activity_name || 'Awaiting match'}</span>
+                  </div>
+                  <ConfidenceBar score={sub.confidence} size="sm" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+
+      {/* Raise Blocker / Complaint Modal */}
+      {isBlockerModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2 text-rose-700">
+                <AlertOctagon className="w-5 h-5" />
+                <h3 className="font-bold text-slate-900 text-sm">Raise Site Blocker / Operational Issue</h3>
+              </div>
+              <button
+                onClick={() => setIsBlockerModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 rounded-lg p-1"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {blockerSuccessMsg ? (
+              <div className="py-8 text-center space-y-2">
+                <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
+                  <Check className="w-6 h-6 stroke-[3]" />
+                </div>
+                <div className="font-bold text-slate-900 text-sm">{blockerSuccessMsg}</div>
+                <p className="text-xs text-slate-500">Closing window...</p>
+              </div>
+            ) : (
+              <form onSubmit={handleBlockerSubmit} className="mt-4 space-y-4">
+                <p className="text-xs text-slate-500">
+                  Log operational issues (material delays, labor shortage, access permits) directly to the Planner Cockpit.
+                </p>
+
+                {/* Blocker Category */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Issue Category *
+                  </label>
+                  <select
+                    value={blockerCategory}
+                    onChange={(e) => setBlockerCategory(e.target.value as ComplaintCategory)}
+                    className="w-full text-xs font-semibold border border-slate-300 rounded-lg p-2.5 bg-white focus:ring-2 focus:ring-oil-600 focus:outline-none"
+                  >
+                    <option value="MATERIAL">Material Delay / Shortage (e.g. pipes, fittings, cable)</option>
+                    <option value="LABOR">Labor Shortage / Absenteeism (fitters, welders, riggers)</option>
+                    <option value="ACCESS">Site Access / Civil Clearance / Permit to Work (PTW)</option>
+                    <option value="EQUIPMENT">Equipment Breakdown / Mobilization (cranes, compressors)</option>
+                    <option value="SAFETY">Safety Hold / Weather Stoppage (HSE stop, heavy rain)</option>
+                    <option value="OTHER">Other Operational Disruption</option>
+                  </select>
+                </div>
+
+                {/* Linked Activity */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Link to Specific Assigned Activity (Optional)
+                  </label>
+                  <select
+                    value={blockerActivityId}
+                    onChange={(e) => setBlockerActivityId(e.target.value)}
+                    className="w-full text-xs border border-slate-300 rounded-lg p-2.5 bg-white focus:ring-2 focus:ring-oil-600 focus:outline-none"
+                  >
+                    <option value="">-- General Site Issue (No specific activity) --</option>
+                    {allActivities.map((act) => (
+                      <option key={act.activity_id} value={act.activity_id}>
+                        {act.activity_id} — {act.activity_name} ({act.status})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Detailed Description */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Issue Description &amp; Required Action *
+                  </label>
+                  <textarea
+                    rows={4}
+                    value={blockerDescription}
+                    onChange={(e) => setBlockerDescription(e.target.value)}
+                    placeholder="Describe the exact site bottleneck (e.g., 24-inch header delivery delayed by vendor; need planner to expedite warehouse release)..."
+                    className="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-oil-600 focus:outline-none leading-relaxed"
+                    required
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsBlockerModalOpen(false)}
+                    className="text-xs"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    size="sm"
+                    disabled={raiseComplaintMutation.isPending || !blockerDescription.trim()}
+                    isLoading={raiseComplaintMutation.isPending}
+                    className="text-xs bg-rose-600 hover:bg-rose-700 text-white font-bold flex items-center gap-1.5"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    Submit Blocker
+                  </Button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};

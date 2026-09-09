@@ -1,0 +1,36 @@
+report_id,true_activity_id,true_discipline,true_location
+REP-001,ACT-PIP-001,piping,Unit 3
+REP-002,ACT-PIP-002,piping,Unit 3
+REP-003,ACT-PIP-003,piping,Unit 3
+REP-004,ACT-PIP-004,piping,Unit 3
+REP-005,ACT-PIP-005,piping,Unit 3
+REP-006,ACT-PIP-006,piping,Pipe Rack A
+REP-007,ACT-PIP-007,piping,Pipe Rack A
+REP-008,ACT-PIP-008,piping,Pipe Rack A
+REP-009,ACT-PIP-009,piping,Tank Farm
+REP-010,ACT-PIP-010,piping,Tank Farm
+REP-011,ACT-PIP-011,piping,Tank Farm
+REP-012,ACT-PIP-012,piping,Unit 1
+REP-013,ACT-PIP-013,piping,Unit 1
+REP-014,ACT-PIP-014,piping,Unit 1
+REP-015,ACT-CIV-101,civil,Unit 3
+REP-016,ACT-CIV-102,civil,Unit 3
+REP-017,ACT-CIV-103,civil,Unit 3
+REP-018,ACT-CIV-104,civil,Unit 3
+REP-019,ACT-CIV-105,civil,Unit 3
+REP-020,ACT-CIV-106,civil,Pipe Rack A
+REP-021,ACT-CIV-107,civil,Pipe Rack A
+REP-022,ACT-CIV-108,civil,Pipe Rack A
+REP-023,ACT-CIV-109,civil,Unit 1
+REP-024,ACT-CIV-110,civil,Unit 1
+REP-025,ACT-CIV-111,civil,Tank Farm
+REP-026,ACT-CIV-112,civil,Tank Farm
+REP-027,ACT-ELE-201,electrical,Unit 3
+REP-028,ACT-ELE-202,electrical,Unit 3
+REP-029,ACT-ELE-203,electrical,Unit 3
+REP-030,ACT-ELE-204,electrical,Unit 1
+REP-031,ACT-PIP-002,piping,Unit 3
+REP-032,ACT-CIV-104,civil,Unit 3
+REP-033,ACT-ELE-202,electrical,Unit 3
+REP-034,NONE,other,Substation
+REP-035,NONE,electrical,Admin

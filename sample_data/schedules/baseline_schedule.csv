@@ -1,0 +1,37 @@
+activity_id,wbs_code,parent_wbs,activity_name,discipline,location,level,planned_start,planned_finish
+L6-PIP-101,3.2.1.1,3.2.1,Erect Line 24 (12in CS pipe),Piping,Unit 3,L6,2026-02-05,2026-02-12
+L6-PIP-102,3.2.1.2,3.2.1,Erect Line 31 (8in CS pipe),Piping,Unit 3,L6,2026-02-08,2026-02-14
+L6-PIP-103,3.2.1.3,3.2.1,Hydrotest Line 24,Piping,Unit 3,L6,2026-02-13,2026-02-15
+L6-PIP-104,3.2.1.4,3.2.1,Fit-up spool SP-045,Piping,Unit 3,L6,2026-02-04,2026-02-06
+L6-PIP-105,3.2.2.1,3.2.2,Weld joint W-12 on Line 18,Piping,Tank Farm,L6,2026-02-06,2026-02-09
+L6-PIP-106,3.2.3.1,3.2.3,Erect Line 40,Piping,Pipeline Corridor,L6,2026-02-10,2026-02-18
+L6-PIP-107,3.2.1.5,3.2.1,Fabricate pipe rack support PR-3,Piping,Unit 3,L6,2026-02-01,2026-02-05
+L6-PIP-108,3.2.1.6,3.2.1,Flange bolt-up Line 24,Piping,Unit 3,L6,2026-02-11,2026-02-12
+L6-PIP-109,3.2.1.7,3.2.1,NDT/Radiography Line 31 joints,Piping,Unit 3,L6,2026-02-15,2026-02-16
+L6-PIP-110,3.2.2.2,3.2.2,Erect Line 52,Piping,Tank Farm,L6,2026-02-09,2026-02-16
+L6-PIP-111,3.2.1.8,3.2.1,Install valve V-201 on Line 24,Piping,Unit 3,L6,2026-02-12,2026-02-13
+L6-PIP-112,3.2.3.2,3.2.3,Insulation wrap Line 40,Piping,Pipeline Corridor,L6,2026-02-19,2026-02-22
+L6-CIV-201,3.1.1.1,3.1.1,Excavate foundation F-12,Civil,Unit 3,L6,2026-02-02,2026-02-04
+L6-CIV-202,3.1.1.2,3.1.1,PCC pour F-12,Civil,Unit 3,L6,2026-02-05,2026-02-06
+L6-CIV-203,3.1.1.3,3.1.1,RCC pour footing F-12,Civil,Unit 3,L6,2026-02-07,2026-02-09
+L6-CIV-204,3.1.2.1,3.1.2,Excavate cable duct trench,Civil,Substation,L6,2026-02-03,2026-02-06
+L6-CIV-205,3.1.1.4,3.1.1,Shuttering column C-7,Civil,Unit 3,L6,2026-02-08,2026-02-10
+L6-CIV-206,3.1.2.2,3.1.2,Backfill cable duct trench,Civil,Substation,L6,2026-02-09,2026-02-10
+L6-CIV-207,3.1.3.1,3.1.3,Construct boundary wall,Civil,Tank Farm,L6,2026-02-04,2026-02-14
+L6-CIV-208,3.1.2.3,3.1.2,Lay earthmat,Civil,Substation,L6,2026-02-07,2026-02-09
+L6-CIV-209,3.1.4.1,3.1.4,Access road paving,Civil,Pipeline Corridor,L6,2026-02-11,2026-02-17
+L6-CIV-210,3.1.1.5,3.1.1,Curing RCC footing F-12,Civil,Unit 3,L6,2026-02-10,2026-02-13
+L6-CIV-211,3.1.3.2,3.1.3,Excavate pit for underground tank,Civil,Tank Farm,L6,2026-02-05,2026-02-08
+L6-CIV-212,3.1.3.3,3.1.3,Erect precast boundary panel,Civil,Tank Farm,L6,2026-02-13,2026-02-18
+L6-ELE-301,3.3.1.1,3.3.1,Lay 11kV feeder cable,Electrical,Substation,L6,2026-02-08,2026-02-11
+L6-ELE-302,3.3.2.1,3.3.2,Install cable tray,Electrical,Unit 3,L6,2026-02-09,2026-02-12
+L6-ELE-303,3.3.1.2,3.3.1,Terminate 11kV feeder cable,Electrical,Substation,L6,2026-02-12,2026-02-13
+L6-ELE-304,3.3.1.3,3.3.1,Install transformer TR-2,Electrical,Substation,L6,2026-02-14,2026-02-18
+L6-ELE-305,3.3.1.4,3.3.1,Install earthing pit,Electrical,Substation,L6,2026-02-06,2026-02-08
+L6-ELE-306,3.3.2.2,3.3.2,Panel wiring MCC-3,Electrical,Unit 3,L6,2026-02-10,2026-02-14
+L6-ELE-307,3.3.2.3,3.3.2,Cable glanding,Electrical,Unit 3,L6,2026-02-13,2026-02-14
+L6-ELE-308,3.3.3.1,3.3.3,Install lighting fixtures,Electrical,Tank Farm,L6,2026-02-15,2026-02-19
+L6-ELE-309,3.3.2.4,3.3.2,Terminate motor cable,Electrical,Unit 3,L6,2026-02-14,2026-02-15
+L6-ELE-310,3.3.4.1,3.3.4,Install junction box JB-14,Electrical,Pipeline Corridor,L6,2026-02-16,2026-02-17
+L6-ELE-311,3.3.1.5,3.3.1,Megger testing of feeders,Electrical,Substation,L6,2026-02-19,2026-02-19
+L6-ELE-312,3.3.1.6,3.3.1,Install cable tray support,Electrical,Substation,L6,2026-02-05,2026-02-07

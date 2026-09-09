@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-900;
+  }
+}
+
+/* Custom modern scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Frappe Gantt Custom Styling */
+.gantt .bar-wrapper .bar {
+  fill: #134074 !important;
+  rx: 4px;
+  ry: 4px;
+}
+.gantt .bar-wrapper.active .bar,
+.gantt .bar-wrapper .bar-progress {
+  fill: #10B981 !important;
+}
+.gantt .bar-label {
+  fill: #0f172a !important;
+  font-weight: 600 !important;
+  font-size: 11px !important;
+}
+.gantt .grid-header {
+  fill: #f8fafc !important;
+  stroke: #e2e8f0 !important;
+}
+.gantt .grid-row {
+  fill: #ffffff !important;
+}
+.gantt .grid-row:nth-child(even) {
+  fill: #f8fafc !important;
+}
+.gantt .lower-text, .gantt .upper-text {
+  font-size: 10px !important;
+  fill: #64748b !important;
+}
+
+/* Audio recording pulse */
+@keyframes pulse-ring {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.2); opacity: 0.3; }
+  100% { transform: scale(0.95); opacity: 0.8; }
+}
+.recording-pulse {
+  animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}

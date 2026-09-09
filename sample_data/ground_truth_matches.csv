@@ -1,0 +1,23 @@
+report_file,line_ref,raw_text_snippet,correct_activity_id,discipline,match_type,expected_confidence_tier,notes
+civil_dpr_2026-02-10.csv,row1,Excavation for footing F-12 completed,L6-CIV-201,Civil,paraphrase,high,straightforward
+civil_dpr_2026-02-10.csv,row2,PCC laid for F-12 footing,L6-CIV-202,Civil,paraphrase,high,straightforward
+civil_dpr_2026-02-10.csv,row3,RCC pouring ongoing near column C-7 area,L6-CIV-203,Civil,ambiguous_location,medium,location entity (C-7) points to a different activity (L6-CIV-205 shuttering) than the action described - tests entity vs semantic conflict resolution
+civil_dpr_2026-02-10.csv,row4,Trench digging near substation for cable duct work,L6-CIV-204,Civil,paraphrase,high,straightforward
+civil_dpr_2026-02-10.csv,row5,Boundary wall brickwork - tank farm side,L6-CIV-207,Civil,granularity_mismatch,medium,brickwork is a sub-step not explicitly named in the plan activity
+civil_dpr_2026-02-10.csv,row6,Earthmat laying substation yard,L6-CIV-208,Civil,near_exact,high,straightforward
+civil_dpr_2026-02-10.csv,row7,Additional soak pit excavation near store shed,UNMATCHED_NEW,Civil,unrelated,no_match,genuinely new scope not in WBS - must route to review queue not auto-link
+civil_dpr_2026-02-10.csv,row8,Curing of F-12 footing continues,L6-CIV-210,Civil,near_exact,high,straightforward
+piping_daily_report_2026-02-10.txt,line1,completed spool erection for Line 24 in Unit 3,L6-PIP-101,Piping,paraphrase,high,classic terminology-mismatch case from the spec example
+piping_daily_report_2026-02-10.txt,line2,Fit-up of spool SP-045 near pipe rack 80% complete,L6-PIP-104,Piping,near_exact,high,partial completion - status should be in_progress not finish
+piping_daily_report_2026-02-10.txt,line3,Flange bolt-up on Line 24 near valve station finished,L6-PIP-108,Piping,near_exact,high,straightforward
+piping_daily_report_2026-02-10.txt,line4,Weld joint W-12 on Line 18 tank farm side inspected NDT pending,L6-PIP-105,Piping,near_exact,high,visual inspection done; NDT sub-step still open
+piping_daily_report_2026-02-10.txt,line5,Hydro test package for Line 24 scheduled tomorrow,L6-PIP-103,Piping,forward_looking,medium,mentions a FUTURE action - extractor must tag status=planned not actual; should not create a progress_event
+piping_daily_report_2026-02-10.txt,line6,insulation wrap on a bypass tie-in line near tank farm not in WBS,UNMATCHED_NEW,Piping,unrelated,no_match,client-added scope not in plan
+piping_daily_report_2026-02-10.txt,line7,No progress on Line 40 or Line 52 today due to material shortage,NO_EVENT,Piping,negative_mention,no_event,explicitly NOT progress - tests that the system does not hallucinate a start/finish event from a mention of the activity name
+electrical_whatsapp_notes_2026-02-10.txt,msg1,11kv cable pulling done substation side feeder run complete,L6-ELE-301,Electrical,abbreviation,high,lowercase/informal phrasing of the same activity
+electrical_whatsapp_notes_2026-02-10.txt,msg2,tray install ongoing MCC building ground floor unit 3,L6-ELE-302,Electrical,abbreviation,high,straightforward
+electrical_whatsapp_notes_2026-02-10.txt,msg3,termination kal start karenge feeder side material abhi nahi aaya,L6-ELE-303,Electrical,code_mixed_forward_looking,no_event,Hindi-English code-mixed AND future intent ("will start tomorrow") - double difficulty case; must not mark as done
+electrical_whatsapp_notes_2026-02-10.txt,msg4,earthing pit dug near substation gate 2 nos complete,L6-ELE-305,Electrical,paraphrase,high,straightforward
+electrical_whatsapp_notes_2026-02-10.txt,msg5,panel wiring MCC-3 about 60% done will finish tomorrow,L6-ELE-306,Electrical,near_exact,high,status should be in_progress not finish despite "MCC-3" being an exact entity match
+electrical_whatsapp_notes_2026-02-10.txt,msg6,client asked extra junction box near old pump house not in the plan,UNMATCHED_NEW,Electrical,near_duplicate_trap,no_match,deliberately similar to L6-ELE-310 (Install junction box JB-14) but different location/scope - tests that entity/location matching correctly rejects a false positive
+electrical_whatsapp_notes_2026-02-10.txt,msg7,transformer TR-2 material reached site install starts day after,L6-ELE-304,Electrical,forward_looking,no_event,material delivery is not an activity start - tests status discrimination

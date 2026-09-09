@@ -1,0 +1,37 @@
+{
+  "system": {
+    "project_name": "ScheduleSync",
+    "problem_statement": "SIH26122",
+    "organization": "Oil India Limited",
+    "version": "1.0.0"
+  },
+  "matching_confidence_tiers": {
+    "auto_approve_threshold": 0.90,
+    "review_threshold": 0.70,
+    "weights": {
+      "semantic_score": 0.45,
+      "entity_score": 0.35,
+      "metadata_score": 0.20
+    },
+    "descriptions": {
+      "auto": "Confidence > 90%: high confidence, suggested for one-click approval",
+      "review": "Confidence 70-90%: medium confidence, requires planner review on Hero Screen",
+      "rejected": "Confidence < 70%: low confidence, held in review queue, never auto-updates schedule"
+    }
+  },
+  "disciplines": [
+    "civil",
+    "piping",
+    "electrical",
+    "instrumentation",
+    "hse",
+    "other"
+  ],
+  "supported_report_formats": [
+    "pdf",
+    "xlsx",
+    "text",
+    "scan",
+    "voice"
+  ]
+}

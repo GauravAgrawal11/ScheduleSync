@@ -1,0 +1,36 @@
+report_id,report_text,source_format
+REP-001,Piping crew completed spool erection on Line 24 in Unit 3 today. 4 joints fitted up and bolt-up in progress.,text
+REP-002,Line 24 | Piping | Unit 3 | Fit-up spool SP-045 | In-Progress | 04-Mar-2026,spreadsheet_row
+REP-003,Completed final torqueing and bolt-up for Line 24 flanges at Unit 3 piperack interface. Ready for testing.,text
+REP-004,Conducted hydro testing on line 24-PP-1203 holding pressure at 24 bar for 4 hours. No pressure drop observed. Test passed.,text
+REP-005,Rigged and mounted 4-inch control valve CV-201 on the unit 3 piping run. Gasket seating verified.,text
+REP-006,Line 31 | Piping | Pipe Rack A | Erection of carbon steel pipe | Complete | 11-Mar-2026,spreadsheet_row
+REP-007,Piping team completed butt weld joints W-01 through W-04 on the Line 31 pipe rack A extension.,text
+REP-008,X-ray testing team carried out NDT radiography for 6 joints on Line 31. Films sent for dark room processing.,text
+REP-009,Erection of 16-inch crude header line 52 inside tank farm commenced with 50T mobile crane.,text
+REP-010,Tank Farm | Piping | Line 52 | Tie-in Weld W-12 completed | Done | 23-Mar-2026,spreadsheet_row
+REP-011,Filled Line 52 with test water for hydrostatic pressure test. Maintained required test pressure.,text
+REP-012,Fabricated and installed suction manifold piping connecting into crude pump P-101 in Unit 1.,text
+REP-013,Carried out laser dial alignment of discharge spools and flanges for feed pump P-101 in Unit 1.,text
+REP-014,Applied thermal insulation mineral wool and aluminum cladding across main steam headers in Unit 1.,text
+REP-015,Excavator completed pit excavation for foundation F-12 in Unit 3 down to -2.5m depth.,text
+REP-016,F-12 | Civil | Unit 3 | Plain Cement Concrete (PCC) pour | Done | 07-Mar-2026,spreadsheet_row
+REP-017,Bar benders tied 2.8 MT of rebar cage for the footing F-12 at Unit 3. Inspection cleared by consultant.,text
+REP-018,Poured 34 cubic meters of M30 grade concrete into F-12 footing pit. Test cubes cast for curing.,text
+REP-019,Erected shuttering and cast vertical column C-7 with ready mix concrete at Unit 3 structure.,text
+REP-020,Cable Trench CT-01 | Civil | Pipe Rack A | Trenching and soil disposal | Completed | 05-Mar-2026,spreadsheet_row
+REP-021,Masonry gang completed brick wall lining and plastering along both sides of cable trench CT-01 at Pipe Rack A.,text
+REP-022,Placed heavy precast RCC trench covers over cable duct CT-01 near Pipe Rack A.,text
+REP-023,Concreted heavy equipment plinth foundation for Pump P-101 in Unit 1 compressor house area.,text
+REP-024,Pump P-101 | Civil | Unit 1 | Non-shrink cementitious grouting baseplate | Complete | 16-Mar-2026,spreadsheet_row
+REP-025,Reinforcement tying and concreting of containment dyke wall around Tank TK-102 finished today.,text
+REP-026,Paved 180 meters of heavy asphalt road between tank farm perimeter and pump house.,text
+REP-027,Rigged and bolted 250m of heavy gauge perforated cable trays along Unit 3 piperack tiers.,text
+REP-028,Pulled 450 meters of 11kV copper feeder cable through underground duct into Unit 3.,text
+REP-029,Cable jointers terminated high voltage 11kV stress cones inside unit 3 HT switchgear panel.,text
+REP-030,Erected structural steel gantry for main step-down power transformer TR-01 in Unit 1 yard.,text
+REP-031,Crew delayed by 1 day due to late crane arrival. Fit-up work on Spool SP-045 resumed in evening after crane setup.,text
+REP-032,Rain water accumulation in foundation F-12 pit delayed RCC pour by 24 hours. Dewatering pumps deployed.,text
+REP-033,Electrical gang delayed by 6 hours due to lack of work permit clearance for 11kV cable pull in Unit 3.,text
+REP-034,Overhauled diesel generator DG-04 starter motor in the utility substation shed.,text
+REP-035,Repaired boundary security lighting mast behind admin building parking lot.,text

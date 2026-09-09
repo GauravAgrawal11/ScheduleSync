@@ -1,0 +1,1 @@
+"""ScheduleSync Backend Application package."""

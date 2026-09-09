@@ -1,0 +1,41 @@
+activity_id,wbs_code,activity_name,discipline,location,planned_start,planned_finish,predecessor_activity_id
+ACT-PIP-001,3.2.1.1,Erect Line 24-PP-1203,piping,Unit 3,2026-03-01,2026-03-10,
+ACT-PIP-002,3.2.1.2,Fit-up spool SP-045 on Line 24,piping,Unit 3,2026-03-03,2026-03-06,ACT-PIP-001
+ACT-PIP-003,3.2.1.3,Flange bolt-up Line 24-PP-1203,piping,Unit 3,2026-03-09,2026-03-12,ACT-PIP-002
+ACT-PIP-004,3.2.1.4,Hydrotest Line 24-PP-1203,piping,Unit 3,2026-03-13,2026-03-16,ACT-PIP-001
+ACT-PIP-005,3.2.1.5,Install Control Valve CV-201,piping,Unit 3,2026-03-15,2026-03-18,ACT-PIP-003
+ACT-PIP-006,3.2.2.1,Erect Line 31-CS-1102,piping,Pipe Rack A,2026-03-05,2026-03-15,
+ACT-PIP-007,3.2.2.2,Weld joints on Line 31,piping,Pipe Rack A,2026-03-10,2026-03-18,ACT-PIP-006
+ACT-PIP-008,3.2.2.3,NDT and Radiography Line 31,piping,Pipe Rack A,2026-03-19,2026-03-22,ACT-PIP-007
+ACT-PIP-009,3.2.3.1,Erect Line 52 Crude Transfer,piping,Tank Farm,2026-03-12,2026-03-24,
+ACT-PIP-010,3.2.3.2,Weld tie-in joint W-12 on Line 52,piping,Tank Farm,2026-03-20,2026-03-26,ACT-PIP-009
+ACT-PIP-011,3.2.3.3,Hydrotest Line 52,piping,Tank Farm,2026-03-27,2026-03-30,ACT-PIP-009
+ACT-PIP-012,3.2.4.1,Install Pump P-101 Suction Piping,piping,Unit 1,2026-03-08,2026-03-16,
+ACT-PIP-013,3.2.4.2,Align Pump P-101 Discharge Spools,piping,Unit 1,2026-03-16,2026-03-22,ACT-PIP-012
+ACT-PIP-014,3.2.4.3,Insulation Cladding Unit 1 Headers,piping,Unit 1,2026-03-24,2026-03-31,ACT-PIP-013
+ACT-CIV-101,3.1.1.1,Excavate Foundation F-12,civil,Unit 3,2026-03-01,2026-03-05,
+ACT-CIV-102,3.1.1.2,PCC Pour Footing F-12,civil,Unit 3,2026-03-06,2026-03-08,ACT-CIV-101
+ACT-CIV-103,3.1.1.3,Rebar Binding Footing F-12,civil,Unit 3,2026-03-08,2026-03-12,ACT-CIV-102
+ACT-CIV-104,3.1.1.4,RCC Pour Footing F-12,civil,Unit 3,2026-03-13,2026-03-15,ACT-CIV-103
+ACT-CIV-105,3.1.1.5,Cast Column C-7,civil,Unit 3,2026-03-16,2026-03-20,ACT-CIV-104
+ACT-CIV-106,3.1.2.1,Excavate Cable Trench CT-01,civil,Pipe Rack A,2026-03-02,2026-03-07,
+ACT-CIV-107,3.1.2.2,Brick Masonry Cable Trench CT-01,civil,Pipe Rack A,2026-03-08,2026-03-14,ACT-CIV-106
+ACT-CIV-108,3.1.2.3,Precast Slab Covers CT-01,civil,Pipe Rack A,2026-03-15,2026-03-18,ACT-CIV-107
+ACT-CIV-109,3.1.3.1,Equipment Foundation Pump P-101,civil,Unit 1,2026-03-01,2026-03-07,
+ACT-CIV-110,3.1.3.2,Grouting Base Plate Pump P-101,civil,Unit 1,2026-03-14,2026-03-17,ACT-CIV-109
+ACT-CIV-111,3.1.4.1,Tank TK-102 Dyke Wall RCC,civil,Tank Farm,2026-03-05,2026-03-18,
+ACT-CIV-112,3.1.4.2,Bituminous Road Paving Corridor,civil,Tank Farm,2026-03-20,2026-03-29,ACT-CIV-111
+ACT-ELE-201,3.3.1.1,Cable Tray Installation Unit 3,electrical,Unit 3,2026-03-10,2026-03-17,
+ACT-ELE-202,3.3.1.2,Pull 11kV Power Cable Feeder-2,electrical,Unit 3,2026-03-18,2026-03-24,ACT-ELE-201
+ACT-ELE-203,3.3.1.3,Terminate 11kV Cable at Switchgear,electrical,Unit 3,2026-03-25,2026-03-28,ACT-ELE-202
+ACT-ELE-204,3.3.2.1,Main Transformer TR-01 Gantry Erection,electrical,Unit 1,2026-03-04,2026-03-11,
+ACT-ELE-205,3.3.2.2,Motor Control Center MCC-A Energization,electrical,Unit 1,2026-03-22,2026-03-26,ACT-ELE-204
+ACT-ELE-206,3.3.3.1,Earthing Grid Pit Installation,electrical,Tank Farm,2026-03-08,2026-03-14,
+ACT-ELE-207,3.3.3.2,High Mast Lighting Tower Erection,electrical,Tank Farm,2026-03-15,2026-03-21,ACT-ELE-206
+ACT-INS-301,3.4.1.1,Instrument Air Tubing Unit 3,instrumentation,Unit 3,2026-03-16,2026-03-22,
+ACT-INS-302,3.4.1.2,Mount Pressure Transmitter PT-104,instrumentation,Unit 3,2026-03-20,2026-03-24,ACT-INS-301
+ACT-INS-303,3.4.2.1,DCS Marshalling Cabinet Termination,instrumentation,Unit 1,2026-03-22,2026-03-28,
+ACT-INS-304,3.4.3.1,Radar Level Gauge Installation Tank TK-102,instrumentation,Tank Farm,2026-03-24,2026-03-29,
+ACT-HSE-401,3.5.1.1,Fire Water Hydrant Network Piping,hse,Pipe Rack A,2026-03-06,2026-03-16,
+ACT-HSE-402,3.5.2.1,Install Deluge Valve Skid DV-01,hse,Tank Farm,2026-03-18,2026-03-25,ACT-HSE-401
+ACT-HSE-403,3.5.3.1,Pre-commissioning Safety Barricading,hse,Unit 1,2026-03-28,2026-03-31,ACT-HSE-402

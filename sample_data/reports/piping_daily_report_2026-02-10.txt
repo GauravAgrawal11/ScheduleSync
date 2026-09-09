@@ -1,0 +1,16 @@
+Site: Unit 3 / Tank Farm
+Supervisor: R. Sharma
+Date: 10-Feb-2026
+
+Piping crew completed spool erection for Line 24 in Unit 3 today. Fit-up of
+spool SP-045 near the pipe rack continued through the morning shift and is
+about 80% complete. Flange bolt-up on Line 24 near the valve station was
+finished in the evening. Weld joint W-12 on Line 18, tank farm side, was
+inspected visually but radiography/NDT is still pending. Hydro test package
+for Line 24 is scheduled tomorrow, subject to bolt-up sign-off.
+
+Separately, the team started insulation wrap on a bypass tie-in line near
+the tank farm boundary that is not currently listed in the WBS - flagging
+this for planner review as it may be a client-added scope item.
+
+No progress on Line 40 or Line 52 today due to material shortage (flanges).
