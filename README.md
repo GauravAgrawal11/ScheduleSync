@@ -1,4 +1,4 @@
-# ⚡ ScheduleSync (SIH26122)
+# ⚡ ScheduleSync
 ### **Intelligent Multi-Modal Data Capture & Schedule-Linking Layer for Heavy Capital Projects**
 **Smart India Hackathon** · **Problem Statement**: SIH26122 · **Organization**: Oil India Limited (OIL)  
 **Theme**: Smart Automation · **Target Site**: Numaligarh Refinery Expansion (NRL Unit 3 & Pipeline Corridors)
