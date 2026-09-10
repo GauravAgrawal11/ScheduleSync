@@ -1,5 +1,5 @@
 /**
- * SIH26122 Sync Manager
+ * ScheduleSync Sync Manager
  * Automatically flushes locally queued offline reports to POST /ingestion/report
  * using window 'online', Background Sync API (where available), and initial app load.
  */

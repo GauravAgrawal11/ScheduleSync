@@ -732,7 +732,7 @@ def ask_historical_memory(
 
 
 # -----------------------------------------------------------------------------
-# SIH26122 Task 1: Out-of-Sequence Detection Endpoints
+# Out-of-Sequence Detection Endpoints
 # -----------------------------------------------------------------------------
 from datetime import datetime, timezone
 from app.analytics.sequence import SequenceViolation, SequenceViolationResponse
@@ -779,7 +779,7 @@ def acknowledge_sequence_violation(
 
 
 # -----------------------------------------------------------------------------
-# SIH26122 Task 2: Forecasting from Historical Projects Endpoints
+# Forecasting from Historical Projects Endpoints
 # -----------------------------------------------------------------------------
 from app.analytics.forecasting import ForecastResult, forecast_activity_completion
 

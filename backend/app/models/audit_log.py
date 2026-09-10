@@ -6,7 +6,7 @@ from app.core.database import Base
 class AuditLog(Base):
     """
     Immutable audit log for schedule changes and progress event decisions.
-    Ensures full traceability for planners, supervisors, and SIH judges.
+    Ensures full traceability for planners, supervisors, and enterprise audits.
     NOTE FOR TEAM: Scaffolded by Member A. Populated by Member C.
     """
     __tablename__ = "audit_log"

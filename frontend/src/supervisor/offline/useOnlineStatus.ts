@@ -1,5 +1,5 @@
 /**
- * SIH26122 Online Status Hook
+ * ScheduleSync Online Status Hook
  * Wraps navigator.onLine and the window 'online' / 'offline' events.
  */
 

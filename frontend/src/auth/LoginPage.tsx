@@ -96,7 +96,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ defaultPortal }) => {
 
           <div className="hidden sm:flex items-center gap-2 text-[11px] font-mono text-slate-400">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span>Intranet Secure Channel · SIH26122</span>
+            <span>Intranet Secure Channel</span>
           </div>
         </div>
       </header>
@@ -267,7 +267,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ defaultPortal }) => {
             <span>·</span>
             <span>Role-Enforced RBAC</span>
             <span>·</span>
-            <span>SIH26122</span>
+            <span>Enterprise Edition</span>
           </div>
         </div>
       </footer>

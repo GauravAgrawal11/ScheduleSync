@@ -43,7 +43,7 @@ def record_progress(
     db.commit()
     db.refresh(event)
 
-    # SIH26122 Task 1: Out-of-sequence detection hook
+    # Out-of-sequence detection hook
     try:
         from app.analytics.sequence import check_sequence_violation
         check_sequence_violation(event.activity_id, db)

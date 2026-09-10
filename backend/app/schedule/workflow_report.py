@@ -1,5 +1,5 @@
 """
-ScheduleSync (SIH26122) - Project Workflow Report PDF Generator
+ScheduleSync - Project Workflow Report PDF Generator
 Generates a multi-page executive workflow report using ReportLab Platypus API.
 Summarizes schedule activities grouped by discipline and merged chronologically
 to present an operational workflow rather than a raw data dump.
@@ -195,7 +195,7 @@ def generate_workflow_pdf(project_id: int, db: Session) -> bytes:
                 Paragraph("ScheduleSync — Project Workflow Report", title_style),
                 Paragraph(
                     f"Generated on: {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}<br/>"
-                    f"<b>System:</b> SIH26122 AI Schedule Linker",
+                    f"<b>System:</b> ScheduleSync AI Schedule Linker",
                     ParagraphStyle("MetaRight", parent=subtitle_style, alignment=2),
                 ),
             ],

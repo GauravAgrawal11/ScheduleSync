@@ -457,7 +457,7 @@ export const ActivityDetail: React.FC = () => {
                     )}
                   </div>
 
-                  {/* SIH26122 Task 2: Historical Forecasting Badge */}
+                  {/* Historical Forecasting Badge */}
                   {forecast && (
                     <div
                       className={`p-3 rounded-xl border flex items-start gap-2.5 text-xs transition-all ${

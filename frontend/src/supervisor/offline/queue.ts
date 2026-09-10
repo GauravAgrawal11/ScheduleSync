@@ -1,5 +1,5 @@
 /**
- * SIH26122 Supervisor Offline Queue
+ * ScheduleSync Supervisor Offline Queue
  * Uses IndexedDB (via idb) to store pending site report submissions when offline.
  */
 

@@ -1,5 +1,5 @@
 """
-SIH26122 Task 2: Historical Project Forecasting Module
+ScheduleSync Historical Project Forecasting Module
 Benchmarks ongoing activities against closed project actuals in `historical_activities`
 to calculate historical average durations and flag 'at_risk' schedule items.
 """

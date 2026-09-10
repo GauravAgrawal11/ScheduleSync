@@ -226,7 +226,7 @@ async def ingest_report(
     else:
         raw_text = input_text or ""
 
-    # SIH26122 Requirement: All reports stored for central admin/planner review and Primavera P6 matching must be in English.
+    # Central Requirement: All reports stored for central admin/planner review and Primavera P6 matching must be in English.
     # If supervisor wrote or spoke in Hindi or regional languages (Indic Unicode range \u0900-\u0D7F), auto-translate to English.
     import re
     if raw_text and re.search(r'[\u0900-\u0D7F]', raw_text):
@@ -279,7 +279,7 @@ async def ingest_report(
         # Graceful fallback if matching encounters uncommitted project activities
         pass
 
-    # SIH26122 Task 3: HSE auto-tagging check (side effect without altering return shape)
+    # HSE auto-tagging check (side effect without altering return shape)
     try:
         from app.extraction.hse import check_and_tag_hse
         matched_act_pk = candidate.activity_id if ('candidate' in locals() and candidate) else None

@@ -1,5 +1,5 @@
 """
-SIH26122 Task 1: Out-of-Sequence Detection Module
+ScheduleSync Out-of-Sequence Detection Module
 Monitors progress updates and flags sequence violations when an activity starts or completes
 before its required predecessor has reached COMPLETED status.
 """

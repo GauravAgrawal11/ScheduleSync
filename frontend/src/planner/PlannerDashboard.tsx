@@ -56,7 +56,7 @@ export const PlannerDashboard: React.FC = () => {
 
       {/* Main Content */}
       <main className="max-w-6xl mx-auto p-8 space-y-6">
-        {/* SIH26122 Task 1: Sequence Violations Alert List */}
+        {/* Sequence Violations Alert List */}
         {sequenceViolations.length > 0 && (
           <div className="bg-rose-50 border border-rose-300 rounded-xl p-5 shadow-xs space-y-3">
             <div className="flex items-center justify-between">

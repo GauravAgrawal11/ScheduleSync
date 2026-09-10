@@ -90,7 +90,7 @@ export const WorkflowReportModal: React.FC<WorkflowReportModalProps> = ({
                   Project Workflow Report
                 </h3>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-oil-800 text-white font-mono shrink-0">
-                  SIH26122 Executive PDF
+                  Executive PDF Report
                 </span>
               </div>
               <p className="text-xs text-slate-500 truncate mt-0.5">

@@ -132,7 +132,7 @@ export const LogProgress: React.FC = () => {
         );
       }
 
-      // SIH26122 Requirement: All responses/reports sent to central admin panel & Primavera P6 must be in English!
+      // Central Requirement: All responses/reports sent to central admin panel & Primavera P6 must be in English!
       let reportTextForAdmin = text.trim();
       if (reportTextForAdmin && (language === 'hi' || /[\u0900-\u0D7F]/.test(reportTextForAdmin))) {
         try {

@@ -1,5 +1,5 @@
 # =============================================================================
-# ScheduleSync (SIH26122) - Production Dependencies
+# ScheduleSync - Production Dependencies
 # Oil India Limited | Intelligent Schedule-Linking Layer
 # =============================================================================
 

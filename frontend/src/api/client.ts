@@ -818,7 +818,7 @@ export const api = {
       if (res.ok) return await res.json();
     } catch {}
 
-    // Resilient simulated extraction matching SIH26122 AI behavior
+    // Resilient simulated extraction matching ScheduleSync AI behavior
     const newId = 100 + MOCK_REPORTS.length + 1;
     const isPiping = text.toLowerCase().includes("pipe") || text.toLowerCase().includes("line");
     const isCivil = text.toLowerCase().includes("excav") || text.toLowerCase().includes("footing") || text.toLowerCase().includes("concrete");
@@ -1516,7 +1516,7 @@ export const api = {
     return await res.json();
   },
 
-  // ==================== SIH26122 ANALYTICS EXTENSIONS ====================
+  // ==================== ADVANCED ANALYTICS EXTENSIONS ====================
   getSequenceViolations: async (projectId?: number): Promise<SequenceViolationItem[]> => {
     try {
       const url = projectId

@@ -212,7 +212,7 @@ export const MatchReview: React.FC = () => {
           <div>
             <div className="flex items-center justify-between mb-2">
               <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                3-Signal Explainable Scoring Weights (SIH26122 Architecture)
+                3-Signal Explainable Scoring Weights (ScheduleSync Architecture)
               </span>
               <span className="text-[11px] text-slate-400 font-mono">
                 Formula: (0.45 × Sem) + (0.35 × Ent) + (0.20 × Meta)

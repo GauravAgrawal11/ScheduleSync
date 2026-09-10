@@ -44,7 +44,7 @@ export const ReviewQueue: React.FC = () => {
     refetchInterval: 15000,
   });
 
-  // SIH26122 Task 1: Sequence violations alert list
+  // Sequence violations alert list
   const { data: sequenceViolations = [] } = useQuery({
     queryKey: ['sequence-violations', selectedProjectId],
     queryFn: () => api.getSequenceViolations(selectedProjectId),
@@ -132,7 +132,7 @@ export const ReviewQueue: React.FC = () => {
         </div>
       </div>
 
-      {/* SIH26122 Task 1: Sequence Violations Alert List */}
+      {/* Sequence Violations Alert List */}
       {sequenceViolations.length > 0 && (
         <Card className="border-rose-300 bg-rose-50/80 p-4 shadow-sm space-y-3">
           <div className="flex items-center justify-between">

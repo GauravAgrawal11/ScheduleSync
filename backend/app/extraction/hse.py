@@ -1,5 +1,5 @@
 """
-SIH26122 Task 3: HSE Auto-Tagging Service
+ScheduleSync HSE Auto-Tagging Service
 Scans raw report text for health, safety, and environmental (HSE) keywords.
 Automatically logs a safety_concern in the complaints table without altering
 the extraction pipeline's return shape or behavior for non-HSE reports.

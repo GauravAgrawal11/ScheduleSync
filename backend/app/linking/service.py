@@ -69,7 +69,7 @@ def apply_match_link(
     db.add(progress_event)
     db.flush()
 
-    # SIH26122 Task 1: Out-of-sequence detection hook
+    # Out-of-sequence detection hook
     try:
         from app.analytics.sequence import check_sequence_violation
         check_sequence_violation(activity.id, db)

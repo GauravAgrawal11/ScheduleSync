@@ -4,11 +4,11 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "ScheduleSync API - SIH26122"
+    PROJECT_NAME: str = "ScheduleSync API"
     PROJECT_VERSION: str = "1.0.0"
     PROJECT_DESCRIPTION: str = (
         "Core domain, schedule baseline & auth layer for Intelligent Data Capture & "
-        "Schedule-Linking Layer (Oil India Limited - SIH26122)."
+        "Schedule-Linking Layer (Oil India Limited)."
     )
 
     # Database (Supabase PostgreSQL + pgvector)
@@ -19,7 +19,7 @@ class Settings(BaseSettings):
 
     # JWT Authentication
     SECRET_KEY: str = os.getenv(
-        "SECRET_KEY", "sih26122-oil-india-super-secret-production-key-2026-secure"
+        "SECRET_KEY", "schedulesync-oil-india-super-secret-production-key-2026-secure"
     )
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24 hours
