@@ -33,6 +33,7 @@ pypdf>=4.0.0
 python-docx>=1.1.0
 pillow>=10.2.0
 pytesseract>=0.3.10
+reportlab>=4.0.0
 
 # AI, Vector Search, LLM & Speech-to-Text
 google-genai>=0.1.0
