@@ -4,11 +4,13 @@ import { api, Activity } from '../api/client';
 import { useProjectStore } from './projectStore';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { CalendarRange, Filter, CheckCircle2, Clock, AlertCircle, Layers } from 'lucide-react';
+import { CalendarRange, Filter, CheckCircle2, Clock, AlertCircle, Layers, FileDown } from 'lucide-react';
+import { WorkflowReportModal } from './WorkflowReportModal';
 
 export const Schedule: React.FC = () => {
   const [discipline, setDiscipline] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'Day' | 'Week' | 'Month'>('Day');
+  const [isReportModalOpen, setIsReportModalOpen] = useState<boolean>(false);
   const ganttContainerRef = useRef<HTMLDivElement>(null);
 
   const { selectedProjectId, selectedProjectName } = useProjectStore();
@@ -102,6 +104,16 @@ export const Schedule: React.FC = () => {
               </button>
             ))}
           </div>
+
+          <Button
+            onClick={() => setIsReportModalOpen(true)}
+            size="sm"
+            className="bg-oil-800 hover:bg-oil-900 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs shrink-0 cursor-pointer"
+            title="View executive project workflow report as multi-page PDF"
+          >
+            <FileDown className="w-3.5 h-3.5 text-emerald-400" />
+            View Workflow Report (PDF)
+          </Button>
         </div>
       </div>
 
@@ -208,6 +220,14 @@ export const Schedule: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Interactive On-Screen Workflow Report PDF Viewer Modal */}
+      <WorkflowReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        projectId={selectedProjectId || 1}
+        projectName={selectedProjectName || 'Numaligarh Refinery Expansion'}
+      />
     </div>
   );
 };

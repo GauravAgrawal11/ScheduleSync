@@ -1016,14 +1016,22 @@ export const api = {
       headers: getAuthHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify(project),
     });
-    if (res.ok) return await res.json();
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'Failed to create project' }));
+      throw new Error(err.detail || 'Failed to create project');
+    }
+    return await res.json();
+  },
 
-    return {
-      id: Date.now(),
-      ...project,
-      activity_count: 0,
-      created_at: new Date().toISOString(),
-    };
+  deleteProject: async (projectId: number): Promise<void> => {
+    const res = await fetch(`${API_BASE_URL}/schedule/projects/${projectId}`, {
+      method: "DELETE",
+      headers: getAuthHeaders(),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'Failed to delete project' }));
+      throw new Error(err.detail || 'Failed to delete project');
+    }
   },
 
   importScheduleFile: async (projectId: number, file: File): Promise<{ imported_count: number; source_type: string }> => {
@@ -1047,6 +1055,30 @@ export const api = {
       imported_count: 36,
       source_type: isXer ? "xer" : "excel",
     };
+  },
+
+  getWorkflowReportBlob: async (projectId: number = 1): Promise<Blob> => {
+    const res = await fetch(`${API_BASE_URL}/schedule/${projectId}/workflow-report`, {
+      headers: getAuthHeaders(),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'Failed to generate workflow report' }));
+      throw new Error(err.detail || 'Failed to generate workflow report');
+    }
+    return await res.blob();
+  },
+
+  downloadWorkflowReport: async (projectId: number = 1, projectName: string = 'project'): Promise<void> => {
+    const blob = await api.getWorkflowReportBlob(projectId);
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const safeName = projectName.replace(/[^a-zA-Z0-9-_]/g, '_');
+    a.download = `${safeName}_workflow_report.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
   },
 
   getActivities: async (

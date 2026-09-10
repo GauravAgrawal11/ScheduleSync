@@ -16,7 +16,10 @@ import {
   Zap,
   Users,
   ArrowRight,
+  FileDown,
+  Trash2,
 } from 'lucide-react';
+import { WorkflowReportModal } from './WorkflowReportModal';
 
 export const ProjectSetup: React.FC = () => {
   const [name, setName] = useState('Numaligarh Refinery Expansion (Unit 3 & Offsites)');
@@ -26,6 +29,7 @@ export const ProjectSetup: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [importSuccess, setImportSuccess] = useState<any | null>(null);
   const [assignmentSummary, setAssignmentSummary] = useState<any | null>(null);
+  const [isDownloadingReport, setIsDownloadingReport] = useState<boolean>(false);
 
   const { selectedProjectId } = useProjectStore();
   const navigate = useNavigate();
@@ -45,10 +49,30 @@ export const ProjectSetup: React.FC = () => {
     },
   });
 
+  const [createProjectSuccess, setCreateProjectSuccess] = useState<string | null>(null);
+  const [createProjectError, setCreateProjectError] = useState<string | null>(null);
+
   const createProjectMutation = useMutation({
-    mutationFn: () => api.createProject({ name, client, start_date: startDate, end_date: endDate }),
+    mutationFn: () => api.createProject({ name: name.trim(), client: client.trim(), start_date: startDate, end_date: endDate }),
+    onSuccess: (newProj) => {
+      setCreateProjectSuccess(`Project "${newProj.name}" created! Now select a schedule file in Step 2.`);
+      setCreateProjectError(null);
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+    },
+    onError: (err: any) => {
+      setCreateProjectError(err?.message || 'Failed to create project');
+      setCreateProjectSuccess(null);
+    },
+  });
+
+  const deleteProjectMutation = useMutation({
+    mutationFn: (projectId: number) => api.deleteProject(projectId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ['activities'] });
+    },
+    onError: (err: any) => {
+      alert(err?.message || 'Failed to delete project');
     },
   });
 
@@ -70,13 +94,25 @@ export const ProjectSetup: React.FC = () => {
     }
   };
 
+  const [previewModalProject, setPreviewModalProject] = useState<{ id: number; name: string } | null>(null);
+
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
-      <div>
-        <h2 className="text-xl font-bold text-slate-900 tracking-tight">Project Setup & Schedule Import</h2>
-        <p className="text-xs text-slate-500 mt-0.5">
-          Configure capital project boundaries and upload baseline WBS schedules (.xlsx or Primavera .xer)
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Project Setup & Schedule Import</h2>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Configure capital project boundaries and upload baseline WBS schedules (.xlsx or Primavera .xer)
+          </p>
+        </div>
+        <Button
+          onClick={() => setPreviewModalProject({ id: selectedProjectId || 1, name })}
+          size="sm"
+          className="bg-oil-800 hover:bg-oil-900 text-white font-bold text-xs flex items-center gap-2 shadow-xs shrink-0 cursor-pointer"
+        >
+          <FileDown className="w-4 h-4 text-emerald-400" />
+          View / Download Workflow Report
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -131,12 +167,26 @@ export const ProjectSetup: React.FC = () => {
               </div>
             </div>
 
+            {createProjectSuccess && (
+              <div className="p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>{createProjectSuccess}</span>
+              </div>
+            )}
+
+            {createProjectError && (
+              <div className="p-2.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                <span>{createProjectError}</span>
+              </div>
+            )}
+
             <Button
               onClick={() => createProjectMutation.mutate()}
               isLoading={createProjectMutation.isPending}
               variant="outline"
               size="sm"
-              className="w-full text-xs mt-2"
+              className="w-full text-xs mt-2 cursor-pointer"
             >
               Save Project Parameters
             </Button>
@@ -195,8 +245,17 @@ export const ProjectSetup: React.FC = () => {
                   </p>
                 </div>
 
-                {/* Deliberate Admin Checkpoint: Auto-Assign Supervisors Button */}
-                <div className="pt-2 border-t border-emerald-200">
+                {/* Download Workflow PDF & Auto-Assign Checkpoint */}
+                <div className="pt-2 border-t border-emerald-200 space-y-2">
+                  <button
+                    type="button"
+                    onClick={() => setPreviewModalProject({ id: selectedProjectId || 1, name })}
+                    className="w-full text-xs font-bold py-2 px-3 rounded-lg border border-emerald-400 bg-white hover:bg-emerald-100/70 text-emerald-950 flex items-center justify-center gap-2 transition-colors shadow-2xs cursor-pointer"
+                  >
+                    <FileDown className="w-4 h-4 text-emerald-600" />
+                    View Workflow Report (PDF)
+                  </button>
+
                   <Button
                     onClick={() => runAssignmentMutation.mutate()}
                     isLoading={runAssignmentMutation.isPending}
@@ -301,21 +360,22 @@ export const ProjectSetup: React.FC = () => {
             Configured Projects on Server
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-0">
-          <table className="w-full text-left text-xs border-collapse">
+        <CardContent className="p-0 overflow-x-auto">
+          <table className="w-full text-left text-xs border-collapse min-w-[650px]">
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold">
               <tr>
                 <th className="p-3 pl-5">Project Name</th>
                 <th className="p-3">Client</th>
                 <th className="p-3">Schedule Window</th>
                 <th className="p-3">Activities</th>
-                <th className="p-3 text-right pr-5">Status</th>
+                <th className="p-3">Status</th>
+                <th className="p-3 text-right pr-5">Workflow Report</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loadingProjects ? (
                 <tr>
-                  <td colSpan={5} className="p-6 text-center text-slate-400">Loading projects...</td>
+                  <td colSpan={6} className="p-6 text-center text-slate-400">Loading projects...</td>
                 </tr>
               ) : (
                 projectsData?.projects.map((proj) => (
@@ -326,12 +386,49 @@ export const ProjectSetup: React.FC = () => {
                       {proj.start_date} to {proj.end_date}
                     </td>
                     <td className="p-3 font-mono font-medium text-oil-800">
-                      {proj.activity_count || 36} activities
+                      {proj.activity_count !== undefined && proj.activity_count !== null
+                        ? proj.activity_count
+                        : 0}{' '}
+                      activities
+                    </td>
+                    <td className="p-3">
+                      {Number(proj.activity_count || 0) > 0 ? (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                          Active Baseline
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-800 border border-amber-300">
+                          No Schedule Uploaded
+                        </span>
+                      )}
                     </td>
                     <td className="p-3 text-right pr-5">
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                        Active Baseline
-                      </span>
+                      <div className="flex items-center justify-end gap-2">
+                        {Number(proj.activity_count || 0) > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => setPreviewModalProject({ id: proj.id, name: proj.name })}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-md border border-slate-300 bg-white hover:bg-slate-100 text-slate-800 transition-colors shadow-2xs cursor-pointer"
+                            title={`View workflow PDF for ${proj.name}`}
+                          >
+                            <FileDown className="w-3.5 h-3.5 text-emerald-600" />
+                            View PDF Report
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (confirm(`Delete project "${proj.name}" (ID: ${proj.id})?`)) {
+                              deleteProjectMutation.mutate(proj.id);
+                            }
+                          }}
+                          disabled={deleteProjectMutation.isPending}
+                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors cursor-pointer"
+                          title={`Delete project ${proj.name}`}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -340,6 +437,14 @@ export const ProjectSetup: React.FC = () => {
           </table>
         </CardContent>
       </Card>
+
+      {/* Interactive On-Screen Workflow Report PDF Viewer Modal */}
+      <WorkflowReportModal
+        isOpen={!!previewModalProject}
+        onClose={() => setPreviewModalProject(null)}
+        projectId={previewModalProject?.id || 1}
+        projectName={previewModalProject?.name || ''}
+      />
     </div>
   );
 };

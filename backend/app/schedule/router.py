@@ -1,6 +1,6 @@
 import math
 from typing import Optional, List
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status, Response
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
@@ -14,6 +14,7 @@ from app.schemas.activity import ActivityResponse, ActivityListResponse
 from app.schemas.schedule import ScheduleImportResponse
 from app.auth.dependencies import get_current_user, require_role
 from app.schedule.service import import_excel_schedule, import_xer_schedule
+from app.schedule.workflow_report import generate_workflow_pdf
 
 router = APIRouter(prefix="/schedule", tags=["Schedule & Baseline"])
 
@@ -35,9 +36,17 @@ def create_project(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("planner", "admin")),
 ):
+    clean_name = project_in.name.strip()
+    existing = db.query(Project).filter(func.lower(Project.name) == clean_name.lower()).first()
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"A project named '{clean_name}' already exists. Please choose a new name or upload schedule files to the existing project.",
+        )
+
     project = Project(
-        name=project_in.name,
-        client=project_in.client,
+        name=clean_name,
+        client=project_in.client.strip(),
         start_date=project_in.start_date,
         end_date=project_in.end_date,
     )
@@ -48,6 +57,28 @@ def create_project(
     resp = ProjectResponse.model_validate(project)
     resp.activity_count = 0
     return resp
+
+
+@router.delete(
+    "/projects/{id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete a project",
+    description="Delete a project and its baseline activities. Restricted to planners and admins.",
+)
+def delete_project(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("planner", "admin")),
+):
+    project = db.query(Project).filter(Project.id == id).first()
+    if not project:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Project with ID {id} not found.",
+        )
+    db.delete(project)
+    db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.get(
@@ -227,3 +258,61 @@ def get_activity(
             detail=f"Activity with ID {id} not found.",
         )
     return ActivityResponse.model_validate(activity)
+
+
+# -----------------------------------------------------------------------------
+# WORKFLOW REPORT PDF
+# -----------------------------------------------------------------------------
+
+
+@router.get(
+    "/{project_id}/workflow-report",
+    summary="Download project workflow report PDF",
+    description=(
+        "Generates an executive multi-page PDF summarizing project activities "
+        "grouped by discipline and merged chronologically as an operational workflow. "
+        "Restricted to planners and admins."
+    ),
+)
+def download_workflow_report(
+    project_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("planner", "admin")),
+):
+    """
+    Generate and stream a downloadable workflow report PDF for the specified project.
+    """
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Project with ID {project_id} not found.",
+        )
+
+    act_count = db.query(Activity).filter(Activity.project_id == project_id).count()
+    if act_count == 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Project '{project.name}' has zero schedule activities. Please import a baseline schedule before generating a workflow report.",
+        )
+
+    try:
+        pdf_bytes = generate_workflow_pdf(project_id, db)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+
+    safe_name = "".join(c if c.isalnum() or c in ("-", "_") else "_" for c in project.name).strip("_")
+    filename = f"{safe_name}_workflow_report.pdf"
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Access-Control-Expose-Headers": "Content-Disposition",
+        },
+    )
+

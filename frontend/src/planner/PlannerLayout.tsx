@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '../auth/authStore';
@@ -15,8 +15,10 @@ import {
   Users,
   AlertOctagon,
   ClipboardList,
+  FileDown,
 } from 'lucide-react';
 import { BrandLogo } from '../components/BrandLogo';
+import { WorkflowReportModal } from './WorkflowReportModal';
 
 export const PlannerLayout: React.FC = () => {
   const { user, logout } = useAuthStore();
@@ -24,9 +26,12 @@ export const PlannerLayout: React.FC = () => {
 
   const {
     selectedProjectId,
+    selectedProjectName,
     selectedProjectActivityCount,
     setProject,
   } = useProjectStore();
+
+  const [isReportModalOpen, setIsReportModalOpen] = useState<boolean>(false);
 
   const { data: projectsData } = useQuery({
     queryKey: ['projects'],
@@ -96,19 +101,27 @@ export const PlannerLayout: React.FC = () => {
             <BrandLogo size="sm" inCard={false} />
           </div>
 
-          {/* Project Selector */}
-          <div className="flex items-center gap-2 px-4 flex-shrink-0 border-r border-slate-200">
+          {/* Project Selector & Workflow PDF Report Button */}
+          <div className="flex items-center gap-2 px-3 flex-shrink-0 border-r border-slate-200">
             <Building2 className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
             <select
               aria-label="Active Project"
               value={selectedProjectId}
               onChange={handleProjectChange}
-              className="bg-transparent text-slate-800 font-medium text-xs rounded border-none py-0.5 focus:outline-none cursor-pointer max-w-[200px] truncate"
+              className="bg-slate-50 text-slate-800 font-semibold text-xs rounded border border-slate-200 px-2 py-1 focus:outline-none cursor-pointer max-w-[190px] truncate"
             >
               {projects.map((p) => (
                 <option key={p.id} value={p.id}>{p.name}</option>
               ))}
             </select>
+            <button
+              onClick={() => setIsReportModalOpen(true)}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-oil-800 hover:bg-oil-900 text-white font-bold text-[11px] shadow-2xs transition-colors cursor-pointer flex-shrink-0"
+              title="View and download Workflow PDF Report for selected project"
+            >
+              <FileDown className="w-3.5 h-3.5 text-emerald-400" />
+              <span>View Report PDF</span>
+            </button>
           </div>
 
           {/* Nav Items — left-aligned */}
@@ -173,6 +186,14 @@ export const PlannerLayout: React.FC = () => {
       <footer className="border-t border-slate-200 bg-white px-6 py-3 text-center text-xs text-slate-400">
         © 2026 Oil India Limited · ScheduleSync Project Control Platform
       </footer>
+
+      {/* Interactive On-Screen Workflow Report PDF Viewer Modal */}
+      <WorkflowReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        projectId={selectedProjectId || 1}
+        projectName={selectedProjectName || 'Numaligarh Refinery Expansion'}
+      />
     </div>
   );
 };
