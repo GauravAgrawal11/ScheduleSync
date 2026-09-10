@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Check, X, Eye, Calendar, MapPin, Tag, AlertTriangle } from "lucide-react";
 import { ConfidenceBadge } from "../components/ConfidenceBadge";
+import { BrandLogo } from "../components/BrandLogo";
 import { api } from "../api/client";
 
 /**
@@ -32,10 +33,7 @@ export const PlannerDashboard: React.FC = () => {
     <div className="min-h-screen bg-slate-100 text-slate-900">
       {/* Header */}
       <header className="bg-white border-b border-slate-200 px-8 py-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-slate-800">ScheduleSync · Planner Cockpit</h1>
-          <p className="text-xs text-slate-500">Numaligarh Refinery Expansion Project · Oil India Limited</p>
-        </div>
+        <BrandLogo roleTag="PLANNER COCKPIT" tagColor="emerald" size="md" />
         <div className="flex gap-2">
           <button
             onClick={() => setActiveTab("hero")}

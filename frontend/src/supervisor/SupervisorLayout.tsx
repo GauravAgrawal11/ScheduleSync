@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../auth/authStore';
-import { Home, PlusCircle, ListOrdered, LogOut, HardHat, ShieldCheck, Bell, CheckCheck, ExternalLink, FolderOpen, WifiOff } from 'lucide-react';
+import { Home, PlusCircle, ListOrdered, LogOut, ShieldCheck, Bell, CheckCheck, ExternalLink, FolderOpen, WifiOff } from 'lucide-react';
 import { notificationsApi, AppNotification } from '../api/client';
 import { initSyncManager } from './offline/syncManager';
 import { useOnlineStatus } from './offline/useOnlineStatus';
 
 import { InstallAppBanner } from './offline/InstallAppBanner';
+import { BrandLogo } from '../components/BrandLogo';
 
 export const SupervisorLayout: React.FC = () => {
   const { user, logout } = useAuthStore();
@@ -25,14 +26,19 @@ export const SupervisorLayout: React.FC = () => {
       ]);
       setUnreadCount(count);
       setNotifications(list);
-    } catch {}
+    } catch {
+      // Offline fallback
+    }
   };
 
   useEffect(() => {
-    initSyncManager();
     fetchNotifs();
     const interval = setInterval(fetchNotifs, 10000); // Polling every 10s for real-time alerts
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    initSyncManager();
   }, []);
 
   const handleMarkAllRead = async () => {
@@ -50,17 +56,7 @@ export const SupervisorLayout: React.FC = () => {
     <div className="max-w-md mx-auto min-h-screen bg-slate-50 flex flex-col border-x border-slate-200 shadow-xl relative pb-20">
       {/* Top Site Bar: High Contrast White for Outdoor Sunlight */}
       <header className="bg-white text-slate-900 border-b border-slate-200 px-4 py-3 sticky top-0 z-30 shadow-2xs flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 font-bold">
-            <HardHat className="w-4 h-4" />
-          </div>
-          <div>
-            <h1 className="text-sm font-bold tracking-tight text-slate-900">ScheduleSync Mobile</h1>
-            <p className="text-[10px] text-slate-500">
-              {user?.name || 'Site Supervisor'} · {user?.discipline ? `${user.discipline.toUpperCase()} Discipline` : 'Field Site'}
-            </p>
-          </div>
-        </div>
+        <BrandLogo roleTag="SUPERVISOR" tagColor="amber" size="sm" />
 
         <div className="flex items-center gap-2">
           {!isOnline && (

@@ -17,6 +17,7 @@ import {
   Smartphone,
 } from 'lucide-react';
 import { InstallAppBanner } from '../supervisor/offline/InstallAppBanner';
+import { BrandLogo } from '../components/BrandLogo';
 
 export const SupervisorLoginPage: React.FC = () => {
   const [username, setUsername] = useState<string>('piping.sup1@oilindia.in');
@@ -55,22 +56,7 @@ export const SupervisorLoginPage: React.FC = () => {
       {/* Top Header: High-contrast white bar */}
       <header className="bg-white border-b border-slate-200 px-5 py-3.5 sticky top-0 z-20 shadow-xs">
         <div className="max-w-md mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 font-bold">
-              <HardHat className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="text-xs font-bold text-slate-900 tracking-tight flex items-center gap-1.5">
-                <span>OIL INDIA LIMITED</span>
-                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-semibold border border-amber-200">
-                  NRL Unit 3
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-500 leading-none mt-0.5">
-                Field Operations · Site Mobile Terminal
-              </p>
-            </div>
-          </div>
+          <BrandLogo roleTag="FIELD" tagColor="amber" size="sm" />
 
           <div className="flex items-center gap-1 text-[11px] font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 font-medium">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -97,7 +83,7 @@ export const SupervisorLoginPage: React.FC = () => {
               </span>
             </div>
             <p className="text-xs text-slate-500 mt-1">
-              Log daily progress, inspect site drawings, and report blockers for Numaligarh Refinery expansion.
+              Log daily progress, inspect site drawings, and report blockers for the refinery project.
             </p>
           </div>
 
@@ -340,7 +326,7 @@ export const SupervisorLoginPage: React.FC = () => {
       <footer className="bg-white border-t border-slate-200 px-4 py-3 text-center text-xs text-slate-500">
         <div className="max-w-md mx-auto flex items-center justify-between text-[11px]">
           <span>&copy; 2026 Oil India Limited</span>
-          <span className="font-mono text-slate-400">Numaligarh Field Link</span>
+          <span className="font-mono text-slate-400">Field Portal</span>
         </div>
       </footer>
     </div>

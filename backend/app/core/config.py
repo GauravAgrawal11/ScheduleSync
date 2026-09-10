@@ -11,8 +11,11 @@ class Settings(BaseSettings):
         "Schedule-Linking Layer (Oil India Limited - SIH26122)."
     )
 
-    # Database
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./sih26122.db")
+    # Database (Supabase PostgreSQL + pgvector)
+    DATABASE_URL: str = os.getenv(
+        "DATABASE_URL",
+        "postgresql+psycopg2://postgres.clrbuzbwyjkzvxdwtumn:ScheduleSync%40123@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres"
+    )
 
     # JWT Authentication
     SECRET_KEY: str = os.getenv(

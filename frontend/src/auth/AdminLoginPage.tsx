@@ -14,6 +14,8 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 
+import { BrandLogo } from '../components/BrandLogo';
+
 export const AdminLoginPage: React.FC = () => {
   const [username, setUsername] = useState<string>('planner@oilindia.in');
   const [password, setPassword] = useState<string>('SecurePlannerPassword123!');
@@ -50,22 +52,7 @@ export const AdminLoginPage: React.FC = () => {
       {/* Top Enterprise Corporate Header */}
       <header className="bg-white border-b border-slate-200 px-6 py-4 sticky top-0 z-20 shadow-2xs">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-black tracking-tight text-slate-900">OIL INDIA LIMITED</span>
-                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                  NRL Unit 3 &amp; Offsites
-                </span>
-              </div>
-              <p className="text-xs text-slate-500">
-                Central Engineering &amp; Project ScheduleSync Cockpit
-              </p>
-            </div>
-          </div>
+          <BrandLogo roleTag="ADMIN COCKPIT" tagColor="emerald" size="md" />
 
           <div className="hidden sm:flex items-center gap-2 text-xs font-mono text-slate-500 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -207,18 +194,15 @@ export const AdminLoginPage: React.FC = () => {
         </div>
       </main>
 
-      {/* Footer */}
       <footer className="bg-white border-t border-slate-200 px-6 py-4 text-center text-xs text-slate-500">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px]">
           <div>
-            &copy; 2026 Oil India Limited · Numaligarh Refinery Expansion (Unit 3 &amp; Offsites)
+            &copy; 2026 Oil India Limited
           </div>
           <div className="flex items-center gap-3 font-mono text-slate-400">
             <span>Zero-LocalStorage Security</span>
             <span>·</span>
             <span>Role-Enforced RBAC</span>
-            <span>·</span>
-            <span>SIH26122</span>
           </div>
         </div>
       </footer>

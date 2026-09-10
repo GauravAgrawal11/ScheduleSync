@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: schedulesync-api
+    runtime: docker
+    dockerfilePath: backend/Dockerfile
+    dockerContext: backend
+    plan: starter
+    region: oregon
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        value: postgresql+psycopg2://postgres.clrbuzbwyjkzvxdwtumn:ScheduleSync%40123@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "1440"
+      - key: GEMINI_API_KEY
+        sync: false

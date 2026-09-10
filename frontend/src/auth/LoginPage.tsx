@@ -22,6 +22,7 @@ import {
   Clock,
   Flame,
 } from 'lucide-react';
+import { BrandLogo } from '../components/BrandLogo';
 
 interface LoginPageProps {
   defaultPortal?: 'planner' | 'supervisor';
@@ -118,22 +119,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ defaultPortal }) => {
       {/* Top Enterprise Header */}
       <header className="border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-md px-6 py-3.5 z-20">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-black tracking-tight text-white">OIL INDIA LIMITED</span>
-                <span className="px-1.5 py-0.2 rounded text-[10px] font-mono bg-slate-800 text-slate-300 border border-slate-700">
-                  NRL Unit 3
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-400">
-                Numaligarh Refinery Expansion Project · ScheduleSync Enterprise Gateway
-              </p>
-            </div>
-          </div>
+          <BrandLogo roleTag="GATEWAY" inCard={true} size="sm" />
 
           <div className="hidden sm:flex items-center gap-2 text-[11px] font-mono text-slate-400">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>

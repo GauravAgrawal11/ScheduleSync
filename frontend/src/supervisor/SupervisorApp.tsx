@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Upload, Mic, CheckCircle, FileText } from "lucide-react";
+import { BrandLogo } from "../components/BrandLogo";
 
 /**
  * Frontend 1: Supervisor Mobile-First App
@@ -42,8 +43,7 @@ export const SupervisorApp: React.FC = () => {
   return (
     <div className="max-w-md mx-auto min-h-screen bg-slate-50 p-4 pb-20">
       <header className="mb-6 pt-2">
-        <h1 className="text-xl font-bold text-slate-800">ScheduleSync · Site Supervisor</h1>
-        <p className="text-xs text-slate-500">Unit 3 Expansion · Oil India Limited</p>
+        <BrandLogo roleTag="SUPERVISOR" tagColor="amber" size="md" />
       </header>
 
       {submitted && (

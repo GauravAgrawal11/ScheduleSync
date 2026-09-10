@@ -21,6 +21,7 @@ import { MatchReview } from './planner/MatchReview';
 import { Schedule } from './planner/Schedule';
 import { Analytics } from './planner/Analytics';
 import { ActivityDetail } from './planner/ActivityDetail';
+
 import { HistoricalMemoryPanel } from './planner/HistoricalMemoryPanel';
 import { SupervisorWorkload } from './planner/SupervisorWorkload';
 import { ComplaintsPanel } from './planner/ComplaintsPanel';

@@ -8,18 +8,15 @@ import {
   Layers,
   Inbox,
   CalendarRange,
-  BarChart3,
-  History,
   FolderKanban,
   LogOut,
   Building2,
-  ChevronRight,
-  ShieldCheck,
   Brain,
   Users,
   AlertOctagon,
-  HardHat,
+  ClipboardList,
 } from 'lucide-react';
+import { BrandLogo } from '../components/BrandLogo';
 
 export const PlannerLayout: React.FC = () => {
   const { user, logout } = useAuthStore();
@@ -77,121 +74,104 @@ export const PlannerLayout: React.FC = () => {
   };
 
   const navItems = [
-    {
-      to: '/planner/review',
-      label: 'Review Queue (Hero Screen)',
-      icon: Inbox,
-      badge: queueCount > 0 ? `${queueCount} Pending` : undefined,
-    },
-    { to: '/planner/schedule', label: 'Schedule & Gantt', icon: CalendarRange },
-    { to: '/planner/workload', label: 'Supervisor Workload', icon: Users },
-    {
-      to: '/planner/complaints',
-      label: 'Field Blockers',
-      icon: AlertOctagon,
-      badge: openComplaintsCount > 0 ? `${openComplaintsCount} Open` : undefined,
-    },
-    { to: '/planner/analytics', label: 'Analytics Cockpit', icon: BarChart3 },
-    { to: '/planner/historical', label: 'Institutional Memory (RAG)', icon: Brain, badge: 'New' },
-    { to: '/planner/setup', label: 'Project Setup & Ingest', icon: FolderKanban },
-    { to: '/planner/activities', label: 'Activity Audit Log', icon: History },
+    { to: '/planner/schedule',    label: 'Gantt',          icon: CalendarRange },
+    { to: '/planner/review',      label: 'Review Queue',   icon: Inbox,        badge: true },
+    { to: '/planner/activities',  label: 'Activity Audit', icon: ClipboardList },
+    { to: '/planner/analytics',   label: 'Analytics',      icon: Layers },
+    { to: '/planner/complaints',  label: 'HSE & Blockers', icon: AlertOctagon, hseCount: true },
+    { to: '/planner/workload',    label: 'Assignments',    icon: Users },
+    { to: '/planner/historical',  label: 'Historical',     icon: Brain },
+    { to: '/planner/setup',       label: 'Baseline Setup', icon: FolderKanban },
   ];
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col text-slate-900">
-      {/* Top Cockpit Header */}
-      <header className="bg-oil-950 text-white border-b border-oil-800 px-6 py-3 sticky top-0 z-50 shadow-md">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-oil-800 border border-oil-600 flex items-center justify-center text-emerald-400">
-                <ShieldCheck className="w-5 h-5" />
-              </div>
-              <div>
-                <span className="text-base font-bold tracking-tight">ScheduleSync</span>
-                <span className="text-[10px] text-emerald-400 font-mono ml-2 px-1.5 py-0.5 rounded bg-emerald-950/80 border border-emerald-800">
-                  SIH26122
-                </span>
-              </div>
-            </div>
+    <div className="min-h-screen bg-slate-50 flex flex-col text-slate-900">
 
-            {/* Interactive Project Context Selector */}
-            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-oil-900 border border-oil-700 text-xs shadow-inner">
-              <Building2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-              <span className="text-slate-400 font-medium hidden lg:inline">Active Project:</span>
-              <select
-                aria-label="Active Project"
-                value={selectedProjectId}
-                onChange={handleProjectChange}
-                className="bg-oil-950 text-white font-semibold text-xs rounded border border-oil-700 py-1 px-2 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer max-w-xs truncate"
-              >
-                {projects.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} ({p.activity_count || (p.id === 1 ? 36 : 40)} Acts)
-                  </option>
-                ))}
-              </select>
-              <span className="hidden xl:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-950 text-emerald-300 border border-emerald-800 font-mono whitespace-nowrap">
-                {selectedProjectActivityCount || (selectedProjectId === 1 ? 36 : 40)} Activities
-              </span>
-            </div>
+      {/* ── Single Compact Header Bar ── */}
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+        <div className="flex items-center h-12 px-4 gap-0 w-full">
+
+          {/* Brand */}
+          <div className="flex items-center gap-2.5 flex-shrink-0 pr-4 border-r border-slate-200">
+            <BrandLogo size="sm" inCard={false} />
           </div>
 
-          {/* User profile & logout */}
-          <div className="flex items-center gap-3">
-            <div className="hidden sm:block text-right">
-              <div className="text-xs font-semibold text-slate-200">
+          {/* Project Selector */}
+          <div className="flex items-center gap-2 px-4 flex-shrink-0 border-r border-slate-200">
+            <Building2 className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+            <select
+              aria-label="Active Project"
+              value={selectedProjectId}
+              onChange={handleProjectChange}
+              className="bg-transparent text-slate-800 font-medium text-xs rounded border-none py-0.5 focus:outline-none cursor-pointer max-w-[200px] truncate"
+            >
+              {projects.map((p) => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Nav Items — left-aligned */}
+          <nav className="flex items-center gap-0.5 px-2 overflow-x-auto min-w-0">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  className={({ isActive }) =>
+                    `relative flex items-center gap-1.5 px-3 h-12 text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
+                      isActive
+                        ? 'text-slate-900 font-semibold after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-amber-500 after:rounded-t'
+                        : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
+                    }`
+                  }
+                >
+                  <Icon className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span>{item.label}</span>
+                  {item.badge && queueCount > 0 && (
+                    <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-amber-500 text-white font-bold ml-0.5 leading-none">
+                      {queueCount}
+                    </span>
+                  )}
+                  {item.hseCount && openComplaintsCount > 0 && (
+                    <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-rose-500 text-white font-bold ml-0.5 leading-none">
+                      {openComplaintsCount}
+                    </span>
+                  )}
+                </NavLink>
+              );
+            })}
+          </nav>
+
+          {/* User + Logout — pushed to far right */}
+          <div className="flex items-center gap-2 pl-3 border-l border-slate-200 flex-shrink-0 ml-auto">
+            <div className="hidden sm:flex flex-col text-right">
+              <span className="text-xs font-semibold text-slate-800 leading-none">
                 {user?.name && !user.name.toLowerCase().includes('arun') ? user.name : 'Admin'}
-              </div>
-              <div className="text-[10px] text-slate-400">Admin · Oil India Ltd</div>
+              </span>
+              <span className="text-[10px] text-slate-400 mt-0.5">Lead Planner</span>
             </div>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-oil-900 hover:bg-rose-900/40 text-slate-300 hover:text-rose-300 border border-oil-800 transition-colors text-xs font-medium"
+              title="Sign Out"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg hover:bg-rose-50 text-slate-500 hover:text-rose-600 border border-transparent hover:border-rose-200 transition-all text-xs font-medium"
             >
               <LogOut className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Sign Out</span>
+              <span className="hidden md:inline">Sign Out</span>
             </button>
           </div>
         </div>
-
-        {/* Subnav Navigation Tabs */}
-        <div className="max-w-7xl mx-auto mt-3 flex gap-1 overflow-x-auto border-t border-oil-900 pt-2">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                className={({ isActive }) =>
-                  `flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
-                    isActive
-                      ? 'bg-oil-800 text-white shadow-sm font-semibold'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-oil-900'
-                  }`
-                }
-              >
-                <Icon className="w-4 h-4" />
-                <span>{item.label}</span>
-                {item.badge && (
-                  <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-amber-500 text-slate-950 font-bold ml-1">
-                    {item.badge}
-                  </span>
-                )}
-              </NavLink>
-            );
-          })}
-        </div>
       </header>
 
-      {/* Main Content Viewport */}
-      <main className="max-w-7xl mx-auto w-full flex-1 p-6 md:p-8">
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto w-full flex-1 p-5 md:p-7">
         <Outlet />
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200 bg-white px-6 py-3 text-center text-xs text-slate-500">
-        SIH26122 · Oil India Limited Progress-Linking Layer · Zero LocalStorage in-memory security
+      <footer className="border-t border-slate-200 bg-white px-6 py-3 text-center text-xs text-slate-400">
+        © 2026 Oil India Limited · ScheduleSync Project Control Platform
       </footer>
     </div>
   );
