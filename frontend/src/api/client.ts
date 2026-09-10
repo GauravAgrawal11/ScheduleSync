@@ -6,7 +6,7 @@
 
 import { useAuthStore } from '../auth/authStore';
 
-const API_BASE_URL = import.meta.env?.VITE_API_BASE_URL || "http://localhost:8000";
+const API_BASE_URL = (import.meta.env?.VITE_API_BASE_URL || "http://localhost:8000").replace(/\/+$/, '');
 
 // Helper to add auth header
 function getAuthHeaders(extraHeaders: Record<string, string> = {}): Record<string, string> {
