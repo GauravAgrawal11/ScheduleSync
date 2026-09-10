@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
-import { X, Download, ExternalLink, FileText, Loader2, AlertCircle } from 'lucide-react';
+import { X, Download, ExternalLink, FileText, Loader2, AlertCircle, FileSpreadsheet, ArrowRight } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 
 interface WorkflowReportModalProps {
@@ -16,6 +17,7 @@ export const WorkflowReportModal: React.FC<WorkflowReportModalProps> = ({
   projectId,
   projectName,
 }) => {
+  const navigate = useNavigate();
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -146,17 +148,55 @@ export const WorkflowReportModal: React.FC<WorkflowReportModalProps> = ({
           )}
 
           {error && !isLoading && (
-            <div className="flex flex-col items-center justify-center gap-3 p-8 text-center max-w-md">
-              <div className="p-3 rounded-full bg-rose-100 text-rose-600">
-                <AlertCircle className="w-6 h-6" />
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm font-bold text-slate-900">Could not generate report</p>
-                <p className="text-xs text-slate-600">{error}</p>
-              </div>
-              <Button size="sm" onClick={onClose} variant="outline" className="text-xs mt-2 cursor-pointer">
-                Close
-              </Button>
+            <div className="flex flex-col items-center justify-center gap-4 p-8 text-center max-w-lg">
+              {error.toLowerCase().includes('zero schedule activities') ||
+              error.toLowerCase().includes('no schedule activities') ? (
+                <>
+                  <div className="p-3.5 rounded-2xl bg-amber-100 text-amber-800 ring-8 ring-amber-50">
+                    <FileSpreadsheet className="w-8 h-8 text-amber-700" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
+                      No Baseline Ingested
+                    </span>
+                    <h4 className="text-base font-bold text-slate-900 mt-1">
+                      No Activities Found for {projectName}
+                    </h4>
+                    <p className="text-xs text-slate-600 leading-relaxed max-w-md mx-auto">
+                      Workflow reports are dynamically generated from project activities. Upload an Excel (.xlsx / .csv) or Primavera P6 (.xer) file in <strong>Baseline Setup</strong> to generate this project's operational workflow PDF.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 pt-2">
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        onClose();
+                        navigate('/planner/setup');
+                      }}
+                      className="bg-oil-800 hover:bg-oil-900 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs"
+                    >
+                      <span>Go to Baseline Setup</span>
+                      <ArrowRight className="w-3.5 h-3.5 text-amber-400" />
+                    </Button>
+                    <Button size="sm" onClick={onClose} variant="outline" className="text-xs cursor-pointer">
+                      Close
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="p-3 rounded-full bg-rose-100 text-rose-600">
+                    <AlertCircle className="w-6 h-6" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-bold text-slate-900">Could not generate report</p>
+                    <p className="text-xs text-slate-600">{error}</p>
+                  </div>
+                  <Button size="sm" onClick={onClose} variant="outline" className="text-xs mt-2 cursor-pointer">
+                    Close
+                  </Button>
+                </>
+              )}
             </div>
           )}
 

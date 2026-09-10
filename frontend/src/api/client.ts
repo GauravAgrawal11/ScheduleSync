@@ -798,11 +798,13 @@ export const api = {
     text: string,
     file?: File | null,
     discipline?: string,
-    location?: string
+    location?: string,
+    projectId?: number
   ): Promise<ReportSubmissionResponse> => {
     try {
       const formData = new FormData();
       formData.append("text", text);
+      formData.append("project_id", String(projectId || 1));
       if (file) formData.append("file", file);
       if (discipline) formData.append("discipline", discipline);
       if (location) formData.append("location", location);
@@ -1042,19 +1044,14 @@ export const api = {
     formData.append("project_id", String(projectId));
     formData.append("file", file);
 
-    try {
-      const res = await fetch(`${API_BASE_URL}${endpoint}`, {
-        method: "POST",
-        headers: getAuthHeaders(),
-        body: formData,
-      });
-      if (res.ok) return await res.json();
-    } catch {}
-
-    return {
-      imported_count: 36,
-      source_type: isXer ? "xer" : "excel",
-    };
+    const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: formData,
+    });
+    if (res.ok) return await res.json();
+    const err = await res.json().catch(() => ({ detail: 'Failed to import schedule file' }));
+    throw new Error(err.detail || 'Failed to import schedule file');
   },
 
   getWorkflowReportBlob: async (projectId: number = 1): Promise<Blob> => {

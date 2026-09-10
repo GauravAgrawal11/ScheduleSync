@@ -68,7 +68,7 @@ export const PlannerLayout: React.FC = () => {
         id: target.id,
         name: target.name,
         client: target.client,
-        activity_count: target.activity_count || (target.id === 1 ? 36 : 40),
+        activity_count: target.activity_count ?? 0,
       });
     }
   };
@@ -108,10 +108,10 @@ export const PlannerLayout: React.FC = () => {
               aria-label="Active Project"
               value={selectedProjectId}
               onChange={handleProjectChange}
-              className="bg-slate-50 text-slate-800 font-semibold text-xs rounded border border-slate-200 px-2 py-1 focus:outline-none cursor-pointer max-w-[190px] truncate"
+              className="bg-slate-50 text-slate-800 font-semibold text-xs rounded border border-slate-200 px-2 py-1 focus:outline-none cursor-pointer max-w-[210px] truncate"
             >
               {projects.map((p) => (
-                <option key={p.id} value={p.id}>{p.name}</option>
+                <option key={p.id} value={p.id}>{p.name} ({p.activity_count ?? 0} acts)</option>
               ))}
             </select>
             <button

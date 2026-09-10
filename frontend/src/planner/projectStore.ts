@@ -30,6 +30,6 @@ export const useProjectStore = create<ProjectStoreState>((set) => ({
     set({
       selectedProjectId: p.id,
       selectedProjectName: p.name,
-      selectedProjectActivityCount: p.activity_count || (p.id === 1 ? 36 : 40),
+      selectedProjectActivityCount: p.activity_count ?? 0,
     }),
 }));

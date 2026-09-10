@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
@@ -22,7 +22,7 @@ import {
 import { WorkflowReportModal } from './WorkflowReportModal';
 
 export const ProjectSetup: React.FC = () => {
-  const [name, setName] = useState('Numaligarh Refinery Expansion (Unit 3 & Offsites)');
+  const [name, setName] = useState('');
   const [client, setClient] = useState('Oil India Limited');
   const [startDate, setStartDate] = useState('2026-01-01');
   const [endDate, setEndDate] = useState('2026-12-31');
@@ -31,7 +31,8 @@ export const ProjectSetup: React.FC = () => {
   const [assignmentSummary, setAssignmentSummary] = useState<any | null>(null);
   const [isDownloadingReport, setIsDownloadingReport] = useState<boolean>(false);
 
-  const { selectedProjectId } = useProjectStore();
+  const { selectedProjectId, selectedProjectName, setProject } = useProjectStore();
+  const [targetProjectId, setTargetProjectId] = useState<number>(selectedProjectId || 1);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -40,8 +41,15 @@ export const ProjectSetup: React.FC = () => {
     queryFn: () => api.getProjects(),
   });
 
+  // Keep targetProjectId in sync if active project changes
+  useEffect(() => {
+    if (selectedProjectId) {
+      setTargetProjectId(selectedProjectId);
+    }
+  }, [selectedProjectId]);
+
   const runAssignmentMutation = useMutation({
-    mutationFn: () => api.runAssignment(selectedProjectId || 1),
+    mutationFn: () => api.runAssignment(targetProjectId || selectedProjectId || 1),
     onSuccess: (data) => {
       setAssignmentSummary(data);
       queryClient.invalidateQueries({ queryKey: ['supervisor-workload'] });
@@ -53,11 +61,27 @@ export const ProjectSetup: React.FC = () => {
   const [createProjectError, setCreateProjectError] = useState<string | null>(null);
 
   const createProjectMutation = useMutation({
-    mutationFn: () => api.createProject({ name: name.trim(), client: client.trim(), start_date: startDate, end_date: endDate }),
+    mutationFn: () => {
+      if (!name.trim()) throw new Error('Project name cannot be empty');
+      return api.createProject({
+        name: name.trim(),
+        client: client.trim() || 'Oil India Limited',
+        start_date: startDate,
+        end_date: endDate,
+      });
+    },
     onSuccess: (newProj) => {
-      setCreateProjectSuccess(`Project "${newProj.name}" created! Now select a schedule file in Step 2.`);
+      setCreateProjectSuccess(`Project "${newProj.name}" created! Selected for schedule upload in Step 2.`);
       setCreateProjectError(null);
+      setTargetProjectId(newProj.id);
+      setProject({
+        id: newProj.id,
+        name: newProj.name,
+        client: newProj.client,
+        activity_count: 0,
+      });
       queryClient.invalidateQueries({ queryKey: ['projects'] });
+      setName('');
     },
     onError: (err: any) => {
       setCreateProjectError(err?.message || 'Failed to create project');
@@ -79,10 +103,11 @@ export const ProjectSetup: React.FC = () => {
   const importScheduleMutation = useMutation({
     mutationFn: async () => {
       if (!selectedFile) throw new Error('No file selected');
-      return await api.importScheduleFile(1, selectedFile);
+      return await api.importScheduleFile(targetProjectId, selectedFile);
     },
     onSuccess: (data) => {
       setImportSuccess(data);
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
       queryClient.invalidateQueries({ queryKey: ['activities'] });
       queryClient.invalidateQueries({ queryKey: ['analytics-summary'] });
     },
@@ -106,7 +131,13 @@ export const ProjectSetup: React.FC = () => {
           </p>
         </div>
         <Button
-          onClick={() => setPreviewModalProject({ id: selectedProjectId || 1, name })}
+          onClick={() => {
+            const currentProj = projectsData?.projects.find((p) => p.id === (selectedProjectId || 1));
+            setPreviewModalProject({
+              id: selectedProjectId || 1,
+              name: currentProj?.name || selectedProjectName || 'Project Workflow Report',
+            });
+          }}
           size="sm"
           className="bg-oil-800 hover:bg-oil-900 text-white font-bold text-xs flex items-center gap-2 shadow-xs shrink-0 cursor-pointer"
         >
@@ -130,6 +161,7 @@ export const ProjectSetup: React.FC = () => {
               <label className="block text-xs font-semibold text-slate-700 mb-1">Project Name</label>
               <input
                 type="text"
+                placeholder="e.g. Numaligarh Petrochemicals Expansion Phase 2"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="w-full text-xs border border-slate-300 rounded-lg p-2.5 bg-white focus:ring-2 focus:ring-oil-600 focus:outline-none"
@@ -184,9 +216,10 @@ export const ProjectSetup: React.FC = () => {
             <Button
               onClick={() => createProjectMutation.mutate()}
               isLoading={createProjectMutation.isPending}
+              disabled={!name.trim()}
               variant="outline"
               size="sm"
-              className="w-full text-xs mt-2 cursor-pointer"
+              className="w-full text-xs mt-2 cursor-pointer font-bold bg-slate-50 hover:bg-slate-100 disabled:opacity-50"
             >
               Save Project Parameters
             </Button>
@@ -205,6 +238,27 @@ export const ProjectSetup: React.FC = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 pt-4">
+            {/* Target Project Dropdown */}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center justify-between">
+                <span>Target Project:</span>
+                <span className="text-[11px] font-mono text-oil-800 font-semibold">
+                  {projectsData?.projects.find((p) => p.id === targetProjectId)?.activity_count ?? 0} activities
+                </span>
+              </label>
+              <select
+                value={targetProjectId}
+                onChange={(e) => setTargetProjectId(Number(e.target.value))}
+                className="w-full text-xs font-semibold border border-slate-300 rounded-lg p-2.5 bg-white text-slate-900 focus:ring-2 focus:ring-oil-800 focus:outline-none cursor-pointer"
+              >
+                {projectsData?.projects.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name} ({p.activity_count ?? 0} activities)
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <label className="border-2 border-dashed border-slate-300 rounded-xl p-6 flex flex-col items-center justify-center bg-slate-50 hover:border-oil-700 hover:bg-white cursor-pointer transition-all">
               <FileUp className="w-8 h-8 text-oil-700 mb-2" />
               <span className="text-xs font-bold text-slate-800">
@@ -219,7 +273,9 @@ export const ProjectSetup: React.FC = () => {
             {importScheduleMutation.isError && (
               <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                <span>Failed to import schedule. Please check file formatting.</span>
+                <span>
+                  {(importScheduleMutation.error as any)?.message || 'Failed to import schedule. Please check file formatting.'}
+                </span>
               </div>
             )}
 
@@ -241,7 +297,7 @@ export const ProjectSetup: React.FC = () => {
                     Successfully ingested {importSuccess.imported_count} activities!
                   </div>
                   <p className="text-[11px] text-emerald-700">
-                    File format: <span className="uppercase font-semibold">{importSuccess.source_type}</span> · Baseline WBS synchronized.
+                    File format: <span className="uppercase font-semibold">{importSuccess.source_type}</span> · Baseline WBS synchronized for project #{targetProjectId}.
                   </p>
                 </div>
 
@@ -249,11 +305,17 @@ export const ProjectSetup: React.FC = () => {
                 <div className="pt-2 border-t border-emerald-200 space-y-2">
                   <button
                     type="button"
-                    onClick={() => setPreviewModalProject({ id: selectedProjectId || 1, name })}
+                    onClick={() => {
+                      const activeProj = projectsData?.projects.find((p) => p.id === targetProjectId);
+                      setPreviewModalProject({
+                        id: targetProjectId,
+                        name: activeProj?.name || `Project #${targetProjectId}`,
+                      });
+                    }}
                     className="w-full text-xs font-bold py-2 px-3 rounded-lg border border-emerald-400 bg-white hover:bg-emerald-100/70 text-emerald-950 flex items-center justify-center gap-2 transition-colors shadow-2xs cursor-pointer"
                   >
                     <FileDown className="w-4 h-4 text-emerald-600" />
-                    View Workflow Report (PDF)
+                    View Ingested Workflow Report (PDF)
                   </button>
 
                   <Button
@@ -404,7 +466,7 @@ export const ProjectSetup: React.FC = () => {
                     </td>
                     <td className="p-3 text-right pr-5">
                       <div className="flex items-center justify-end gap-2">
-                        {Number(proj.activity_count || 0) > 0 && (
+                        {Number(proj.activity_count || 0) > 0 ? (
                           <button
                             type="button"
                             onClick={() => setPreviewModalProject({ id: proj.id, name: proj.name })}
@@ -413,6 +475,19 @@ export const ProjectSetup: React.FC = () => {
                           >
                             <FileDown className="w-3.5 h-3.5 text-emerald-600" />
                             View PDF Report
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setTargetProjectId(proj.id);
+                              window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }}
+                            className="inline-flex items-center gap-1.5 px-2 py-1 text-[11px] font-semibold rounded-md border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 transition-colors cursor-pointer"
+                            title={`Select ${proj.name} to upload schedule in Step 2`}
+                          >
+                            <FileUp className="w-3 h-3 text-amber-700" />
+                            Upload Schedule
                           </button>
                         )}
                         <button
