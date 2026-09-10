@@ -1,18 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../auth/authStore';
-import { Home, PlusCircle, ListOrdered, LogOut, ShieldCheck, Bell, CheckCheck, ExternalLink, FolderOpen, WifiOff } from 'lucide-react';
+import { Home, PlusCircle, ListOrdered, LogOut, ShieldCheck, Bell, CheckCheck, ExternalLink, FolderOpen, WifiOff, Languages } from 'lucide-react';
 import { notificationsApi, AppNotification } from '../api/client';
 import { initSyncManager } from './offline/syncManager';
 import { useOnlineStatus } from './offline/useOnlineStatus';
+import { useLanguageStore } from './languageStore';
 
 import { InstallAppBanner } from './offline/InstallAppBanner';
 import { BrandLogo } from '../components/BrandLogo';
 
 export const SupervisorLayout: React.FC = () => {
   const { user, logout } = useAuthStore();
-  const navigate = useNavigate();
+  const { language, toggleLanguage, t } = useLanguageStore();
   const isOnline = useOnlineStatus();
+  const navigate = useNavigate();
 
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
@@ -58,10 +60,20 @@ export const SupervisorLayout: React.FC = () => {
       <header className="bg-white text-slate-900 border-b border-slate-200 px-4 py-3 sticky top-0 z-30 shadow-2xs flex items-center justify-between">
         <BrandLogo roleTag="SUPERVISOR" tagColor="amber" size="sm" />
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
+          {/* Language Switcher Pill EN | हिन्दी */}
+          <button
+            onClick={toggleLanguage}
+            title={language === 'en' ? 'हिन्दी में बदलें (Switch to Hindi)' : 'Switch to English'}
+            className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-bold bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 transition-all shadow-2xs"
+          >
+            <Languages className="w-3.5 h-3.5 text-amber-700" />
+            <span>{language === 'en' ? 'हिन्दी' : 'English'}</span>
+          </button>
+
           {!isOnline && (
             <span className="text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-2xs">
-              <WifiOff className="w-3 h-3 text-amber-700" /> Offline
+              <WifiOff className="w-3 h-3 text-amber-700" /> {t('status_offline')}
             </span>
           )}
 
@@ -72,7 +84,7 @@ export const SupervisorLayout: React.FC = () => {
                 setShowNotifs(!showNotifs);
                 if (!showNotifs) fetchNotifs();
               }}
-              title="Notifications"
+              title={t('alerts_approvals')}
               className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors relative"
             >
               <Bell className="w-4 h-4" />
@@ -87,19 +99,19 @@ export const SupervisorLayout: React.FC = () => {
             {showNotifs && (
               <div className="absolute right-0 mt-2 w-72 bg-white text-slate-900 rounded-xl shadow-xl border border-slate-200 z-50 p-3">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-2">
-                  <span className="text-xs font-bold text-slate-800">Alerts & Approvals</span>
+                  <span className="text-xs font-bold text-slate-800">{t('alerts_approvals')}</span>
                   {unreadCount > 0 && (
                     <button
                       onClick={handleMarkAllRead}
                       className="text-[10px] text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-0.5"
                     >
-                      <CheckCheck className="w-3 h-3" /> Mark all read
+                      <CheckCheck className="w-3 h-3" /> {t('mark_all_read')}
                     </button>
                   )}
                 </div>
 
                 {notifications.length === 0 ? (
-                  <p className="text-xs text-slate-400 text-center py-4">No recent notifications</p>
+                  <p className="text-xs text-slate-400 text-center py-4">{t('no_notifications')}</p>
                 ) : (
                   <div className="space-y-2 max-h-64 overflow-y-auto">
                     {notifications.map((n) => (
@@ -140,12 +152,12 @@ export const SupervisorLayout: React.FC = () => {
           </div>
 
           <span className="px-2 py-0.5 rounded-full bg-amber-50 text-[10px] font-mono font-semibold text-amber-800 border border-amber-200">
-            Field Terminal
+            {t('home_site_terminal')}
           </span>
 
           <button
             onClick={handleLogout}
-            title="Sign Out"
+            title={t('sign_out')}
             className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-slate-100 transition-colors"
           >
             <LogOut className="w-4 h-4" />
@@ -173,7 +185,7 @@ export const SupervisorLayout: React.FC = () => {
           }
         >
           <Home className="w-5 h-5" />
-          <span>Home</span>
+          <span>{t('nav_home')}</span>
         </NavLink>
 
         <NavLink
@@ -187,7 +199,7 @@ export const SupervisorLayout: React.FC = () => {
           <div className="w-9 h-9 -mt-4 rounded-full bg-oil-800 text-white flex items-center justify-center shadow-md shadow-oil-900/30">
             <PlusCircle className="w-5 h-5" />
           </div>
-          <span>Log Work</span>
+          <span>{t('nav_log')}</span>
         </NavLink>
 
         <NavLink
@@ -199,7 +211,7 @@ export const SupervisorLayout: React.FC = () => {
           }
         >
           <FolderOpen className="w-5 h-5" />
-          <span>Files</span>
+          <span>{t('nav_files')}</span>
         </NavLink>
 
         <NavLink
@@ -211,7 +223,7 @@ export const SupervisorLayout: React.FC = () => {
           }
         >
           <ListOrdered className="w-5 h-5" />
-          <span>My Logs</span>
+          <span>{t('nav_history')}</span>
         </NavLink>
       </nav>
     </div>

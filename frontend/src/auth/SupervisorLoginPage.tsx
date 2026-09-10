@@ -22,6 +22,13 @@ export const SupervisorLoginPage: React.FC = () => {
   const setAuth = useAuthStore((state) => state.setAuth);
   const navigate = useNavigate();
 
+  // Guarantee fields are completely blank and not auto-filled on mount
+  React.useEffect(() => {
+    setUsername('');
+    setPassword('');
+    setError(null);
+  }, []);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -85,7 +92,7 @@ export const SupervisorLoginPage: React.FC = () => {
           )}
 
           {/* Credentials Form */}
-          <form onSubmit={handleLogin} className="space-y-3.5">
+          <form onSubmit={handleLogin} autoComplete="off" className="space-y-3.5">
             <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-700">
                 Supervisor Email ID
@@ -96,6 +103,9 @@ export const SupervisorLoginPage: React.FC = () => {
                 </div>
                 <input
                   type="email"
+                  name="supervisor_work_email"
+                  id="supervisor_work_email"
+                  autoComplete="off"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required
@@ -115,6 +125,9 @@ export const SupervisorLoginPage: React.FC = () => {
                 </div>
                 <input
                   type="password"
+                  name="supervisor_work_key"
+                  id="supervisor_work_key"
+                  autoComplete="new-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required

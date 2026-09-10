@@ -32,12 +32,14 @@ import {
   Users,
   FolderOpen,
 } from 'lucide-react';
+import { useLanguageStore, translateActivityName, translateStatus, translateDiscipline, translateLocation, translateTimeline } from './languageStore';
 
 export const HomePage: React.FC = () => {
   const { user } = useAuthStore();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
+  const { language, t } = useLanguageStore();
 
   // Filter & Search states for assigned activities
   const [activitySearch, setActivitySearch] = useState<string>('');
@@ -190,20 +192,20 @@ export const HomePage: React.FC = () => {
           <div>
             <div className="flex items-center gap-2 mb-2 flex-wrap">
               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/10 text-white text-[10px] font-medium backdrop-blur-sm">
-                <Sparkles className="w-3 h-3 text-amber-300" /> Numaligarh Unit 3 Expansion
+                <Sparkles className="w-3 h-3 text-amber-300" /> {t('home_expansion_subtitle')}
               </span>
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-bold uppercase">
-                {currentSupervisorMeta.discipline} Discipline
+                {currentSupervisorMeta.discipline} {language === 'hi' ? 'विभाग' : 'Discipline'}
               </span>
 
               <div className="inline-flex items-center gap-1 bg-white/10 px-2 py-0.5 rounded-full text-[10px] text-slate-300 border border-white/15">
                 <HardHat className="w-3 h-3 text-amber-400" />
-                <span>Site Terminal: <strong>{user?.name || currentSupervisorMeta.name}</strong></span>
+                <span>{t('home_site_terminal')}: <strong>{user?.name || currentSupervisorMeta.name}</strong></span>
               </div>
             </div>
-            <h2 className="text-lg font-bold">Field Supervisor Workspace</h2>
+            <h2 className="text-lg font-bold">{t('home_workspace_title')}</h2>
             <p className="text-xs text-slate-300 mt-0.5">
-              Viewing tasks for: <strong className="text-white">{currentSupervisorMeta.name}</strong> ({currentSupervisorMeta.discipline}). Review your assigned schedule, log site activities, and flag operational blockers.
+              {t('home_viewing_tasks_for')} <strong className="text-white">{currentSupervisorMeta.name}</strong> ({currentSupervisorMeta.discipline}). {t('home_viewing_tasks_desc')}
             </p>
           </div>
 
@@ -213,7 +215,7 @@ export const HomePage: React.FC = () => {
               className="px-3 py-2 text-xs font-bold bg-rose-600/90 hover:bg-rose-600 text-white rounded-xl shadow-sm flex items-center gap-1.5 border border-rose-400/40 transition-all hover:shadow-rose-900/30 active:scale-95"
             >
               <AlertOctagon className="w-4 h-4" />
-              Raise Blocker / Issue
+              {t('home_raise_blocker_btn')}
             </button>
           </div>
         </div>
@@ -252,7 +254,7 @@ export const HomePage: React.FC = () => {
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-600">
-                  Live Progress Status
+                  {t('home_live_progress_status')}
                 </span>
                 <span
                   className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
@@ -263,7 +265,7 @@ export const HomePage: React.FC = () => {
                       : 'bg-blue-100 text-blue-800 border border-blue-300'
                   }`}
                 >
-                  {overallStatus.replace('_', ' ')}
+                  {overallStatus === 'delayed' ? t('status_delayed') : overallStatus === 'completed' ? t('status_completed') : t('status_in_progress')}
                 </span>
               </div>
               <div className="text-base font-black text-slate-900 mt-0.5">
@@ -273,7 +275,7 @@ export const HomePage: React.FC = () => {
           </div>
 
           <div className="text-left sm:text-right">
-            <div className="text-[11px] font-semibold text-slate-500">Remaining Tasks</div>
+            <div className="text-[11px] font-semibold text-slate-500">{t('home_remaining_tasks')}</div>
             <div className="text-2xl font-black text-slate-900 font-mono">
               {remainingTasks}{' '}
               <span className="text-xs font-normal text-slate-500">/ {totalAssigned}</span>
@@ -284,19 +286,19 @@ export const HomePage: React.FC = () => {
         {/* Quick Metrics Bar */}
         <div className="grid grid-cols-4 divide-x divide-slate-100 p-3 bg-slate-50 text-center">
           <div>
-            <div className="text-xs font-bold text-slate-400 uppercase">Assigned</div>
+            <div className="text-xs font-bold text-slate-400 uppercase">{t('home_total_tasks')}</div>
             <div className="text-base font-extrabold text-slate-800 font-mono">{totalAssigned}</div>
           </div>
           <div>
-            <div className="text-xs font-bold text-emerald-600 uppercase">Completed</div>
+            <div className="text-xs font-bold text-emerald-600 uppercase">{t('home_completed')}</div>
             <div className="text-base font-extrabold text-emerald-700 font-mono">{countCompleted}</div>
           </div>
           <div>
-            <div className="text-xs font-bold text-blue-600 uppercase">In Progress</div>
+            <div className="text-xs font-bold text-blue-600 uppercase">{t('home_in_progress')}</div>
             <div className="text-base font-extrabold text-blue-700 font-mono">{countInProgress}</div>
           </div>
           <div>
-            <div className="text-xs font-bold text-rose-600 uppercase">Delayed</div>
+            <div className="text-xs font-bold text-rose-600 uppercase">{t('home_delayed')}</div>
             <div className="text-base font-extrabold text-rose-700 font-mono">{countDelayed}</div>
           </div>
         </div>
@@ -330,7 +332,7 @@ export const HomePage: React.FC = () => {
             {loadingSubmissions ? '...' : matchedCount}
           </div>
           <div className="text-[10px] font-semibold text-emerald-700 uppercase tracking-wider">
-            Matched Logs
+            {t('home_status_matched')}
           </div>
         </Card>
 
@@ -342,7 +344,7 @@ export const HomePage: React.FC = () => {
             {loadingSubmissions ? '...' : pendingCount}
           </div>
           <div className="text-[10px] font-semibold text-amber-700 uppercase tracking-wider">
-            In Review
+            {t('home_status_pending')}
           </div>
         </Card>
 
@@ -354,7 +356,7 @@ export const HomePage: React.FC = () => {
             {loadingSubmissions ? '...' : rejectedCount}
           </div>
           <div className="text-[10px] font-semibold text-rose-700 uppercase tracking-wider">
-            Held / Discrepancy
+            {t('home_status_rejected')}
           </div>
         </Card>
       </div>
@@ -367,13 +369,13 @@ export const HomePage: React.FC = () => {
           </div>
           <div>
             <div className="text-xs font-bold flex items-center gap-1.5">
-              <span>Site Files &amp; Field Documents</span>
+              <span>{t('home_site_files')}</span>
               <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-400/30">
                 P&amp;ID · Photos · DPR
               </span>
             </div>
             <div className="text-[11px] text-slate-300">
-              Access engineering drawings, BBS sheets, and upload site photos/reports
+              {language === 'hi' ? 'इंजीनियरिंग ड्रॉइंग, BBS शीट देखें और साइट फोटो/रिपोर्ट अपलोड करें' : 'Access engineering drawings, BBS sheets, and upload site photos/reports'}
             </div>
           </div>
         </div>
@@ -381,7 +383,7 @@ export const HomePage: React.FC = () => {
           onClick={() => navigate('/supervisor/files')}
           className="px-3 py-1.5 text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-lg shadow-sm flex items-center gap-1 transition-all active:scale-95 flex-shrink-0"
         >
-          <span>Files</span>
+          <span>{t('nav_files')}</span>
           <ChevronRight className="w-3.5 h-3.5" />
         </button>
       </div>
@@ -391,10 +393,9 @@ export const HomePage: React.FC = () => {
         <div className="flex items-center justify-between">
           <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
             <UserCheck className="w-4 h-4 text-oil-800" />
-            Your Assigned Schedule Activities ({allActivities.length})
+            {t('home_assigned_activities_title')} ({allActivities.length})
           </h3>
         </div>
-
 
         {/* Search Bar & Status Filter Tabs */}
         <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-xs space-y-2.5">
@@ -402,7 +403,7 @@ export const HomePage: React.FC = () => {
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
             <input
               type="text"
-              placeholder="Search assigned activities by ID or name (e.g. L6-PIP-101, Hydrotest)..."
+              placeholder={t('home_search_placeholder')}
               value={activitySearch}
               onChange={(e) => setActivitySearch(e.target.value)}
               className="w-full pl-9 pr-4 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-oil-600 focus:border-transparent"
@@ -427,7 +428,7 @@ export const HomePage: React.FC = () => {
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
-              All ({allActivities.length})
+              {t('home_filter_all')} ({allActivities.length})
             </button>
             <button
               onClick={() => setStatusFilter('IN_PROGRESS')}
@@ -437,7 +438,7 @@ export const HomePage: React.FC = () => {
                   : 'bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200'
               }`}
             >
-              In Progress ({inProgressCount})
+              {t('home_filter_in_progress')} ({inProgressCount})
             </button>
             <button
               onClick={() => setStatusFilter('COMPLETED')}
@@ -447,7 +448,7 @@ export const HomePage: React.FC = () => {
                   : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'
               }`}
             >
-              Completed ({completedCount})
+              {t('home_filter_completed')} ({completedCount})
             </button>
             <button
               onClick={() => setStatusFilter('DELAYED')}
@@ -457,7 +458,7 @@ export const HomePage: React.FC = () => {
                   : 'bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200'
               }`}
             >
-              Delayed ({delayedCount})
+              {t('home_filter_delayed')} ({delayedCount})
             </button>
             <button
               onClick={() => setStatusFilter('PLANNED')}
@@ -467,7 +468,7 @@ export const HomePage: React.FC = () => {
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
-              Planned ({plannedCount})
+              {t('home_filter_planned')} ({plannedCount})
             </button>
           </div>
         </div>
@@ -514,7 +515,7 @@ export const HomePage: React.FC = () => {
                             {act.activity_id}
                           </span>
                           <span className="text-xs font-bold text-slate-900">
-                            {act.activity_name}
+                            {translateActivityName(act.activity_id, act.activity_name, language)}
                           </span>
                           {/* Status Badge */}
                           <span
@@ -528,7 +529,7 @@ export const HomePage: React.FC = () => {
                                 : 'bg-slate-100 text-slate-700 border border-slate-200'
                             }`}
                           >
-                            {safeStatus.replace('_', ' ')}
+                            {translateStatus(safeStatus, language)}
                           </span>
 
                           {/* Dynamic Timeline Assignment Badge */}
@@ -556,7 +557,7 @@ export const HomePage: React.FC = () => {
                               return (
                                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-300">
                                   <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                                  Completed
+                                  {translateTimeline('Completed', undefined, language)}
                                 </span>
                               );
                             }
@@ -565,7 +566,7 @@ export const HomePage: React.FC = () => {
                               return (
                                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-900 border border-amber-300 shadow-xs">
                                   <Clock className="w-3 h-3 text-amber-700" />
-                                  {timelineText}
+                                  {translateTimeline(timelineText, act.starts_in_days || matchingTask?.starts_in_days, language)}
                                 </span>
                               );
                             }
@@ -573,27 +574,27 @@ export const HomePage: React.FC = () => {
                             return (
                               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-900 border border-blue-300 shadow-xs">
                                 <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse"></span>
-                                {timelineText}
+                                {translateTimeline(timelineText, undefined, language)}
                               </span>
                             );
                           })()}
                         </div>
 
                         <div className="flex items-center gap-3 text-[11px] text-slate-500 flex-wrap">
-                          <span className="font-medium text-slate-700 capitalize">{act.discipline}</span>
+                          <span className="font-medium text-slate-700 capitalize">{translateDiscipline(act.discipline, language)}</span>
                           <span>·</span>
-                          <span>Planned: {act.planned_finish || '—'}</span>
+                          <span>{language === 'hi' ? 'नियोजित समाप्त:' : 'Planned:'} {act.planned_finish || '—'}</span>
                           {act.actual_finish && (
                             <>
                               <span>·</span>
-                              <span className="text-emerald-700 font-medium">Finished: {act.actual_finish}</span>
+                              <span className="text-emerald-700 font-medium">{language === 'hi' ? 'वास्तविक समाप्त:' : 'Finished:'} {act.actual_finish}</span>
                             </>
                           )}
                           {act.days_overdue > 0 && (
                             <>
                               <span>·</span>
                               <span className="text-rose-600 font-bold">
-                                {act.days_overdue}d overdue
+                                {act.days_overdue} {language === 'hi' ? 'दिन अतिदेय' : 'd overdue'}
                               </span>
                             </>
                           )}
@@ -604,7 +605,7 @@ export const HomePage: React.FC = () => {
                       <div className="flex items-center gap-2 self-end sm:self-center">
                         {isManual && (
                           <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
-                            Manual Reassigned
+                            {language === 'hi' ? 'मैन्युअल पुनः सौंपा गया' : 'Manual Reassigned'}
                           </span>
                         )}
 
@@ -615,7 +616,7 @@ export const HomePage: React.FC = () => {
                             title="Raise a blocker specifically for this activity"
                           >
                             <AlertTriangle className="w-3 h-3 text-rose-600" />
-                            Flag Blocker
+                            {t('home_raise_blocker_action')}
                           </button>
                         )}
 
@@ -625,7 +626,7 @@ export const HomePage: React.FC = () => {
                             title="Activity is completed (100%). Progress cannot be logged again."
                           >
                             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 stroke-[2.5]" />
-                            Completed · Locked
+                            {language === 'hi' ? 'पूर्ण · लॉक' : 'Completed · Locked'}
                           </span>
                         ) : (
                           <Button
@@ -640,7 +641,7 @@ export const HomePage: React.FC = () => {
                             className="text-xs py-1 px-3 bg-oil-800 hover:bg-oil-900 text-white font-semibold flex items-center gap-1 transition-transform active:scale-95"
                           >
                             <Plus className="w-3.5 h-3.5" />
-                            Log Progress
+                            {t('home_log_progress_btn')}
                           </Button>
                         )}
                       </div>
@@ -756,13 +757,13 @@ export const HomePage: React.FC = () => {
       <div>
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-            Recent Site Logs
+            {t('home_recent_field_logs')}
           </h3>
           <button
             onClick={() => navigate('/supervisor/submissions')}
             className="text-xs text-oil-800 font-semibold hover:underline flex items-center"
           >
-            View all <ChevronRight className="w-3.5 h-3.5" />
+            {t('home_view_all_history')} <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>
 
@@ -778,7 +779,7 @@ export const HomePage: React.FC = () => {
               <CardContent className="p-3.5 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-semibold text-slate-500">
-                    #{sub.id} · {sub.date} · {sub.discipline}
+                    #{sub.id} · {sub.date} · {translateDiscipline(sub.discipline, language)}
                   </span>
                   <StatusPill status={sub.status} />
                 </div>
@@ -787,7 +788,7 @@ export const HomePage: React.FC = () => {
                 </p>
                 <div className="pt-1 border-t border-slate-100">
                   <div className="text-[10px] text-slate-500 mb-1 truncate">
-                    Matched: <span className="font-semibold text-slate-700">{sub.suggested_activity_name || 'Awaiting match'}</span>
+                    {language === 'hi' ? 'मैच हुआ:' : 'Matched:'} <span className="font-semibold text-slate-700">{translateActivityName(sub.suggested_activity_id, sub.suggested_activity_name, language) || (language === 'hi' ? 'मैच की प्रतीक्षा है' : 'Awaiting match')}</span>
                   </div>
                   <ConfidenceBar score={sub.confidence} size="sm" />
                 </div>
@@ -804,7 +805,7 @@ export const HomePage: React.FC = () => {
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2 text-rose-700">
                 <AlertOctagon className="w-5 h-5" />
-                <h3 className="font-bold text-slate-900 text-sm">Raise Site Blocker / Operational Issue</h3>
+                <h3 className="font-bold text-slate-900 text-sm">{t('home_modal_blocker_title')}</h3>
               </div>
               <button
                 onClick={() => setIsBlockerModalOpen(false)}
@@ -820,47 +821,49 @@ export const HomePage: React.FC = () => {
                   <Check className="w-6 h-6 stroke-[3]" />
                 </div>
                 <div className="font-bold text-slate-900 text-sm">{blockerSuccessMsg}</div>
-                <p className="text-xs text-slate-500">Closing window...</p>
+                <p className="text-xs text-slate-500">{language === 'hi' ? 'खिड़की बंद हो रही है...' : 'Closing window...'}</p>
               </div>
             ) : (
               <form onSubmit={handleBlockerSubmit} className="mt-4 space-y-4">
                 <p className="text-xs text-slate-500">
-                  Log operational issues (material delays, labor shortage, access permits) directly to the Planner Cockpit.
+                  {language === 'hi'
+                    ? 'सामग्री की कमी, श्रमिकों की अनुपलब्धता या परमिट में देरी जैसी समस्याओं को सीधे प्लानर कॉकपिट में दर्ज करें।'
+                    : 'Log operational issues (material delays, labor shortage, access permits) directly to the Planner Cockpit.'}
                 </p>
 
                 {/* Blocker Category */}
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Issue Category *
+                    {t('home_modal_category')} *
                   </label>
                   <select
                     value={blockerCategory}
                     onChange={(e) => setBlockerCategory(e.target.value as ComplaintCategory)}
                     className="w-full text-xs font-semibold border border-slate-300 rounded-lg p-2.5 bg-white focus:ring-2 focus:ring-oil-600 focus:outline-none"
                   >
-                    <option value="MATERIAL">Material Delay / Shortage (e.g. pipes, fittings, cable)</option>
-                    <option value="LABOR">Labor Shortage / Absenteeism (fitters, welders, riggers)</option>
-                    <option value="ACCESS">Site Access / Civil Clearance / Permit to Work (PTW)</option>
-                    <option value="EQUIPMENT">Equipment Breakdown / Mobilization (cranes, compressors)</option>
-                    <option value="SAFETY">Safety Hold / Weather Stoppage (HSE stop, heavy rain)</option>
-                    <option value="OTHER">Other Operational Disruption</option>
+                    <option value="MATERIAL">{language === 'hi' ? 'सामग्री देरी / कमी (पाइप, फिटिंग, केबल)' : 'Material Delay / Shortage (e.g. pipes, fittings, cable)'}</option>
+                    <option value="LABOR">{language === 'hi' ? 'श्रमिकों की कमी / अनुपस्थिति (फिटर, वेल्डर, रिगर)' : 'Labor Shortage / Absenteeism (fitters, welders, riggers)'}</option>
+                    <option value="ACCESS">{language === 'hi' ? 'साइट पहुंच / सिविल क्लीयरेंस / परमिट (PTW)' : 'Site Access / Civil Clearance / Permit to Work (PTW)'}</option>
+                    <option value="EQUIPMENT">{language === 'hi' ? 'उपकरण खराबी / मोबिलाइज़ेशन (क्रेन, कंप्रेसर)' : 'Equipment Breakdown / Mobilization (cranes, compressors)'}</option>
+                    <option value="SAFETY">{language === 'hi' ? 'सुरक्षा रोक / मौसम व्यवधान (HSE रोक, भारी बारिश)' : 'Safety Hold / Weather Stoppage (HSE stop, heavy rain)'}</option>
+                    <option value="OTHER">{language === 'hi' ? 'अन्य परिचालन व्यवधान' : 'Other Operational Disruption'}</option>
                   </select>
                 </div>
 
                 {/* Linked Activity */}
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Link to Specific Assigned Activity (Optional)
+                    {language === 'hi' ? 'विशिष्ट सौंपी गई गतिविधि से लिंक करें (वैकल्पिक)' : 'Link to Specific Assigned Activity (Optional)'}
                   </label>
                   <select
                     value={blockerActivityId}
                     onChange={(e) => setBlockerActivityId(e.target.value)}
                     className="w-full text-xs border border-slate-300 rounded-lg p-2.5 bg-white focus:ring-2 focus:ring-oil-600 focus:outline-none"
                   >
-                    <option value="">-- General Site Issue (No specific activity) --</option>
+                    <option value="">{language === 'hi' ? '-- सामान्य साइट समस्या (कोई विशिष्ट गतिविधि नहीं) --' : '-- General Site Issue (No specific activity) --'}</option>
                     {allActivities.map((act) => (
                       <option key={act.activity_id} value={act.activity_id}>
-                        {act.activity_id} — {act.activity_name} ({act.status})
+                        {act.activity_id} — {translateActivityName(act.activity_id, act.activity_name, language)} ({translateStatus(act.status, language)})
                       </option>
                     ))}
                   </select>
@@ -869,13 +872,13 @@ export const HomePage: React.FC = () => {
                 {/* Detailed Description */}
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Issue Description &amp; Required Action *
+                    {t('home_modal_desc')} *
                   </label>
                   <textarea
                     rows={4}
                     value={blockerDescription}
                     onChange={(e) => setBlockerDescription(e.target.value)}
-                    placeholder="Describe the exact site bottleneck (e.g., 24-inch header delivery delayed by vendor; need planner to expedite warehouse release)..."
+                    placeholder={t('home_modal_desc_placeholder')}
                     className="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-oil-600 focus:outline-none leading-relaxed"
                     required
                   />
@@ -889,7 +892,7 @@ export const HomePage: React.FC = () => {
                     onClick={() => setIsBlockerModalOpen(false)}
                     className="text-xs"
                   >
-                    Cancel
+                    {t('home_modal_cancel')}
                   </Button>
                   <Button
                     type="submit"
@@ -899,7 +902,7 @@ export const HomePage: React.FC = () => {
                     className="text-xs bg-rose-600 hover:bg-rose-700 text-white font-bold flex items-center gap-1.5"
                   >
                     <Send className="w-3.5 h-3.5" />
-                    Submit Blocker
+                    {t('home_modal_submit')}
                   </Button>
                 </div>
               </form>

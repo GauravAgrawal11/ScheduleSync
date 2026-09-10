@@ -22,6 +22,12 @@ export const AdminLoginPage: React.FC = () => {
   const setAuth = useAuthStore((state) => state.setAuth);
   const navigate = useNavigate();
 
+  React.useEffect(() => {
+    setUsername('');
+    setPassword('');
+    setError(null);
+  }, []);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -86,7 +92,7 @@ export const AdminLoginPage: React.FC = () => {
           )}
 
           {/* Input Form */}
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleLogin} autoComplete="off" className="space-y-4">
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-slate-700 flex items-center justify-between">
                 <span>Enterprise User ID / Email</span>
@@ -98,6 +104,9 @@ export const AdminLoginPage: React.FC = () => {
                 </div>
                 <input
                   type="email"
+                  name="admin_work_identifier"
+                  id="admin_work_identifier"
+                  autoComplete="off"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required
@@ -118,6 +127,9 @@ export const AdminLoginPage: React.FC = () => {
                 </div>
                 <input
                   type="password"
+                  name="admin_work_secret"
+                  id="admin_work_secret"
+                  autoComplete="new-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required

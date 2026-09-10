@@ -123,14 +123,31 @@ def _call_gemini_full_extraction(raw_text: str, base_date: date, api_key: str) -
     Return ONLY a valid JSON array of objects.
     """
 
-    response = client.models.generate_content(
-        model=model_name,
-        contents=prompt,
-        config=types.GenerateContentConfig(
-            response_mime_type="application/json",
-            temperature=0.1,
-        ),
-    )
+    models_to_try = [
+        os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite"),
+        "gemini-3.5-flash-lite",
+        "gemini-3.6-flash",
+        "gemini-3.7-flash",
+    ]
+    seen_m = set()
+    models_to_try = [m for m in models_to_try if not (m in seen_m or seen_m.add(m))]
+
+    response = None
+    for model_candidate in models_to_try:
+        try:
+            response = client.models.generate_content(
+                model=model_candidate,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    temperature=0.1,
+                ),
+            )
+            if response and response.text:
+                break
+        except Exception as e:
+            logger.warning(f"Gemini extraction with {model_candidate} failed: {e}. Trying next fallback...")
+            continue
 
     if not response or not response.text:
         return []

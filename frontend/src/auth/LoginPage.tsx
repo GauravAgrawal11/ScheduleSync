@@ -47,10 +47,16 @@ export const LoginPage: React.FC<LoginPageProps> = ({ defaultPortal }) => {
     if (defaultPortal) {
       setActivePortal(defaultPortal);
     }
+    // Guarantee input fields start clean without browser autofill
+    setUsername('');
+    setPassword('');
+    setError(null);
   }, [defaultPortal]);
 
   const handlePortalSwitch = (portal: 'planner' | 'supervisor') => {
     setActivePortal(portal);
+    setUsername('');
+    setPassword('');
     setError(null);
   };
 
@@ -98,8 +104,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ defaultPortal }) => {
       {/* Main Authentication Container */}
       <main className="flex-1 flex items-center justify-center p-4 sm:p-6 z-10 my-4">
         <div className="max-w-xl w-full">
-          {/* Dual Portal Selector Tabs */}
-          <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-1.5 shadow-2xl mb-4 flex gap-1.5">
+          {/* Portal Selector Tabs */}
+          <div className="bg-slate-900/90 border border-slate-800 p-1.5 rounded-2xl flex gap-1 mb-4 shadow-xl backdrop-blur-md">
             <button
               type="button"
               onClick={() => handlePortalSwitch('planner')}
@@ -171,7 +177,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ defaultPortal }) => {
             )}
 
             {/* Input Form */}
-            <form onSubmit={handleLogin} className="space-y-4">
+            <form onSubmit={handleLogin} autoComplete="off" className="space-y-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-300 flex items-center justify-between">
                   <span>{activePortal === 'planner' ? 'Planner Enterprise User ID' : 'Site Supervisor Email / ID'}</span>
@@ -183,6 +189,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ defaultPortal }) => {
                   </div>
                   <input
                     type="email"
+                    name="portal_user_identifier"
+                    id="portal_user_identifier"
+                    autoComplete="off"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     required
@@ -203,6 +212,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ defaultPortal }) => {
                   </div>
                   <input
                     type="password"
+                    name="portal_user_key"
+                    id="portal_user_key"
+                    autoComplete="new-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Download, X, Share2, Smartphone, Check } from 'lucide-react';
+import { useLanguageStore } from '../languageStore';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -7,12 +8,19 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export const InstallAppBanner: React.FC = () => {
+  const { language, t } = useLanguageStore();
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isStandalone, setIsStandalone] = useState(false);
   const [isAlreadyInstalled, setIsAlreadyInstalled] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [showIOSPrompt, setShowIOSPrompt] = useState(false);
-  const [dismissed, setDismissed] = useState(false);
+  const [dismissed, setDismissed] = useState(() => {
+    try {
+      return sessionStorage.getItem('schedulesync_pwa_dismissed') === 'true';
+    } catch {
+      return false;
+    }
+  });
   const [installedSuccessfully, setInstalledSuccessfully] = useState(false);
 
   useEffect(() => {
@@ -21,14 +29,8 @@ export const InstallAppBanner: React.FC = () => {
       return;
     }
 
-    // 2. Check if already installed in localStorage
-    const savedInstallState = localStorage.getItem('schedulesync_pwa_installed');
-    if (savedInstallState === 'true') {
-      setIsAlreadyInstalled(true);
-      return;
-    }
-
-    // 3. Check if currently running as installed standalone app
+    // 2. Check if currently running INSIDE the installed standalone PWA app
+    // When running inside the installed system app, NEVER show the download/install option!
     const isStandaloneMode =
       window.matchMedia('(display-mode: standalone)').matches ||
       (window.navigator as any).standalone === true ||
@@ -36,30 +38,27 @@ export const InstallAppBanner: React.FC = () => {
 
     if (isStandaloneMode) {
       setIsStandalone(true);
-      localStorage.setItem('schedulesync_pwa_installed', 'true');
       return;
     }
 
-    // 4. Check if iOS device
+    // 3. Check if iOS device
     const userAgent = window.navigator.userAgent.toLowerCase();
     const isIosDevice = /iphone|ipad|ipod/.test(userAgent);
     setIsIOS(isIosDevice);
 
-    // 5. Listen for Android/Chrome/Edge beforeinstallprompt
+    // 4. Listen for Android/Chrome/Edge beforeinstallprompt
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
     };
 
-    // 6. When app finishes installing, auto-remove download banner permanently
+    // 5. When app finishes installing in this session
     const handleAppInstalled = () => {
-      localStorage.setItem('schedulesync_pwa_installed', 'true');
       setInstalledSuccessfully(true);
       setDeferredPrompt(null);
-      // Auto-remove banner from DOM after brief confirmation
       setTimeout(() => {
         setIsAlreadyInstalled(true);
-      }, 2500);
+      }, 3000);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -76,10 +75,17 @@ export const InstallAppBanner: React.FC = () => {
     return null;
   }
 
-  // Auto-remove: Don't render if already installed, in standalone mode, or dismissed
+  // Auto-remove when inside installed standalone app, already finished install in current view, or dismissed for this session
   if (isStandalone || isAlreadyInstalled || dismissed) {
     return null;
   }
+
+  const handleDismiss = () => {
+    setDismissed(true);
+    try {
+      sessionStorage.setItem('schedulesync_pwa_dismissed', 'true');
+    } catch {}
+  };
 
   const handleInstallClick = async () => {
     if (deferredPrompt) {
@@ -87,24 +93,23 @@ export const InstallAppBanner: React.FC = () => {
       await deferredPrompt.prompt();
       const choiceResult = await deferredPrompt.userChoice;
       if (choiceResult.outcome === 'accepted') {
-        localStorage.setItem('schedulesync_pwa_installed', 'true');
         setInstalledSuccessfully(true);
         setTimeout(() => {
           setIsAlreadyInstalled(true);
-        }, 2500);
+        }, 3000);
       }
       setDeferredPrompt(null);
     } else if (isIOS) {
       // Show iOS specific instruction
       setShowIOSPrompt(true);
+    } else {
+      // Fallback for browsers without beforeinstallprompt: display guidance
+      setShowIOSPrompt(true);
     }
   };
 
   const handleIOSGotIt = () => {
-    // Save to localStorage so iOS users who added to home screen won't see it again
-    localStorage.setItem('schedulesync_pwa_installed', 'true');
     setShowIOSPrompt(false);
-    setIsAlreadyInstalled(true);
   };
 
   return (
@@ -116,8 +121,8 @@ export const InstallAppBanner: React.FC = () => {
             <Check className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-xs font-bold text-emerald-300">App Installed to Home Screen!</div>
-            <p className="text-[11px] text-slate-300">You can now launch ScheduleSync directly from your mobile apps.</p>
+            <div className="text-xs font-bold text-emerald-300">{t('pwa_banner_installed_title')}</div>
+            <p className="text-[11px] text-slate-300">{t('pwa_banner_installed_desc')}</p>
           </div>
         </div>
       ) : (
@@ -132,19 +137,19 @@ export const InstallAppBanner: React.FC = () => {
               />
               <div>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-black tracking-tight text-white">ScheduleSync Field</span>
+                  <span className="text-xs font-black tracking-tight text-white">{t('pwa_banner_app_title')}</span>
                   <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold">
-                    PWA APP
+                    {t('pwa_banner_tag')}
                   </span>
                 </div>
                 <p className="text-[10px] text-slate-300 leading-tight mt-0.5">
-                  Install to home screen for 1-tap offline site progress logging
+                  {t('pwa_banner_desc')}
                 </p>
               </div>
             </div>
 
             <button
-              onClick={() => setDismissed(true)}
+              onClick={handleDismiss}
               className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
               title="Dismiss banner"
             >
@@ -156,7 +161,7 @@ export const InstallAppBanner: React.FC = () => {
           <div className="mt-2.5 pt-2.5 border-t border-white/10 flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5 text-[10px] text-slate-300">
               <Smartphone className="w-3.5 h-3.5 text-amber-400" />
-              <span>Full-screen · Zero lag · Works offline</span>
+              <span>{t('pwa_banner_offline_tag')}</span>
             </div>
 
             <button
@@ -164,7 +169,7 @@ export const InstallAppBanner: React.FC = () => {
               className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-md active:scale-95 transition-all cursor-pointer"
             >
               <Download className="w-3.5 h-3.5" />
-              <span>Install App</span>
+              <span>{t('pwa_banner_install_btn')}</span>
             </button>
           </div>
 

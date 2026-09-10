@@ -865,12 +865,16 @@ export const api = {
 
   transcribeVoice: async (
     audioBlob: Blob,
-    filename: string = "site_recording.webm"
+    filename: string = "site_recording.webm",
+    language?: string
   ): Promise<{ text: string; language_detected?: string; duration_seconds?: number }> => {
     try {
       const formData = new FormData();
       formData.append("file", audioBlob, filename);
       formData.append("audio", audioBlob, filename);
+      if (language) {
+        formData.append("language", language);
+      }
 
       const res = await fetch(`${API_BASE_URL}/voice/transcribe`, {
         method: "POST",
@@ -888,6 +892,26 @@ export const api = {
       console.warn("Voice transcribe fetch failed:", e);
     }
     return { text: "", language_detected: "en", duration_seconds: 0 };
+  },
+
+  translateText: async (
+    text: string,
+    target_lang: 'en' | 'hi' | string = 'en',
+    source_lang?: string
+  ): Promise<{ original_text: string; translated_text: string; target_lang: string }> => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/voice/translate`, {
+        method: "POST",
+        headers: getAuthHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify({ text, target_lang, source_lang }),
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (e) {
+      console.warn("Translation request failed:", e);
+    }
+    return { original_text: text, translated_text: text, target_lang };
   },
 
   getMySubmissions: async (): Promise<SubmissionSummary[]> => {

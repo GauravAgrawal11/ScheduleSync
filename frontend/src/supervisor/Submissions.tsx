@@ -8,12 +8,14 @@ import { ConfidenceBar } from '../components/ui/ConfidenceBar';
 import { ArrowLeft, Search, Bot, User, ShieldCheck, Clock, ChevronRight, WifiOff, RefreshCw } from 'lucide-react';
 import { getQueuedReports } from './offline/queue';
 import { onSyncCompleted, flushQueue } from './offline/syncManager';
+import { useLanguageStore, translateActivityName, translateDiscipline, translateLocation, translateStatus } from './languageStore';
 
 export const Submissions: React.FC = () => {
   const [filter, setFilter] = useState<'all' | 'matched' | 'pending' | 'rejected'>('all');
   const [search, setSearch] = useState('');
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { language, t } = useLanguageStore();
 
   // Listen for sync completions to automatically refresh queued and server lists
   useEffect(() => {
@@ -82,8 +84,8 @@ export const Submissions: React.FC = () => {
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div>
-          <h2 className="text-base font-bold text-slate-800">My Site Reports &amp; Match Log</h2>
-          <p className="text-[11px] text-slate-500">Historical field reports with AI matching &amp; planner verification trail</p>
+          <h2 className="text-base font-bold text-slate-800">{t('sub_title')}</h2>
+          <p className="text-[11px] text-slate-500">{t('sub_subtitle')}</p>
         </div>
       </div>
 
@@ -92,13 +94,13 @@ export const Submissions: React.FC = () => {
         <div className="bg-amber-50 border border-amber-300 rounded-xl p-3 flex items-center justify-between gap-2 shadow-2xs">
           <div className="flex items-center gap-2 text-xs text-amber-900 font-bold">
             <Clock className="w-4 h-4 text-amber-600 flex-shrink-0 animate-pulse" />
-            <span>{queuedReports.length} report(s) queued locally for automatic sync</span>
+            <span>{queuedReports.length} {t('sub_queued_banner')}</span>
           </div>
           <button
             onClick={() => flushQueue()}
             className="px-2.5 py-1 rounded-lg bg-amber-200/80 hover:bg-amber-300 text-amber-900 font-bold text-[10px] flex items-center gap-1 transition-colors cursor-pointer"
           >
-            <RefreshCw className="w-3 h-3" /> Sync Now
+            <RefreshCw className="w-3 h-3" /> {t('sub_sync_now')}
           </button>
         </div>
       )}
@@ -109,14 +111,14 @@ export const Submissions: React.FC = () => {
           <Bot className="w-4 h-4 text-emerald-600 flex-shrink-0" />
           <div>
             <div className="text-xs font-black text-emerald-900">{aiVerified}</div>
-            <div className="text-[10px] text-emerald-700 font-medium">AI Auto-Verified</div>
+            <div className="text-[10px] text-emerald-700 font-medium">{t('sub_ai_auto_verified')}</div>
           </div>
         </div>
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-2.5 flex items-center gap-2">
           <User className="w-4 h-4 text-blue-600 flex-shrink-0" />
           <div>
             <div className="text-xs font-black text-blue-900">{manualVerified}</div>
-            <div className="text-[10px] text-blue-700 font-medium">Planner Verified</div>
+            <div className="text-[10px] text-blue-700 font-medium">{t('sub_planner_verified')}</div>
           </div>
         </div>
       </div>
@@ -127,7 +129,7 @@ export const Submissions: React.FC = () => {
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
           <input
             type="text"
-            placeholder="Search report text..."
+            placeholder={t('sub_search_placeholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-oil-600 focus:outline-none bg-white"
@@ -144,7 +146,7 @@ export const Submissions: React.FC = () => {
                 : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
             }`}
           >
-            All ({mergedSubmissions.length})
+            {t('sub_filter_all')} ({mergedSubmissions.length})
           </button>
           <button
             onClick={() => setFilter('matched')}
@@ -154,7 +156,7 @@ export const Submissions: React.FC = () => {
                 : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
             }`}
           >
-            Verified &amp; Matched ({matchedCount})
+            {t('sub_filter_verified_matched')} ({matchedCount})
           </button>
           <button
             onClick={() => setFilter('pending')}
@@ -164,7 +166,7 @@ export const Submissions: React.FC = () => {
                 : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
             }`}
           >
-            In Review / Queued ({pendingCount})
+            {t('sub_filter_in_review')} ({pendingCount})
           </button>
           <button
             onClick={() => setFilter('rejected')}
@@ -174,7 +176,7 @@ export const Submissions: React.FC = () => {
                 : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
             }`}
           >
-            Held / Unmatched
+            {t('sub_filter_unmatched')}
           </button>
         </div>
       </div>
@@ -182,10 +184,10 @@ export const Submissions: React.FC = () => {
       {/* List */}
       <div className="space-y-3">
         {isLoading && queuedReports.length === 0 ? (
-          <div className="p-8 text-center text-xs text-slate-400">Loading submissions...</div>
+          <div className="p-8 text-center text-xs text-slate-400">{t('sub_loading')}</div>
         ) : filtered.length === 0 ? (
           <div className="p-8 text-center text-xs text-slate-400 bg-white rounded-xl border border-slate-200">
-            No submissions found for this filter.
+            {t('sub_no_submissions')}
           </div>
         ) : (
           filtered.map((sub: any) => {
@@ -200,13 +202,13 @@ export const Submissions: React.FC = () => {
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
                         <span className="text-[11px] font-bold text-amber-900">
-                          Offline Queue
+                          {t('sub_offline_queue')}
                         </span>
                         <span className="text-[10px] text-slate-400">{sub.date} {sub.time}</span>
                       </div>
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs">
                         <Clock className="w-3 h-3 text-amber-600 animate-pulse" />
-                        Queued — will send when online
+                        {t('sub_queued_will_send')}
                       </span>
                     </div>
 
@@ -215,8 +217,8 @@ export const Submissions: React.FC = () => {
                     </p>
 
                     <div className="pt-2 border-t border-amber-200/60 flex items-center justify-between text-[10px] text-slate-600">
-                      <span>Discipline: <strong>{sub.discipline}</strong> · Location: <strong>{sub.location}</strong></span>
-                      <span className="text-amber-800 font-semibold italic">Stored in IndexedDB</span>
+                      <span>{t('sub_discipline')}: <strong>{translateDiscipline(sub.discipline, language)}</strong> · {t('sub_location')}: <strong>{translateLocation(sub.location, language)}</strong></span>
+                      <span className="text-amber-800 font-semibold italic">{t('sub_stored_idb')}</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -234,7 +236,7 @@ export const Submissions: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="text-[11px] font-bold text-oil-800">
-                        Report #{sub.id}
+                        {t('sub_report_hash')} #{sub.id}
                       </span>
                       <span className="text-[10px] text-slate-400">{sub.date}</span>
                     </div>
@@ -252,7 +254,7 @@ export const Submissions: React.FC = () => {
                         )
                       ) : (
                         <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
-                          <Clock className="w-2.5 h-2.5" /> Review
+                          <Clock className="w-2.5 h-2.5" /> {t('sub_review_status')}
                         </span>
                       )}
                       <StatusPill status={sub.status} />
@@ -268,31 +270,31 @@ export const Submissions: React.FC = () => {
                     <div className="pt-2 border-t border-slate-100 space-y-1.5">
                       <div className="flex items-center justify-between text-[10px]">
                         <span className="text-slate-500">
-                          Matched Activity:
+                          {t('sub_matched_activity')}
                         </span>
                         <span className="font-mono font-bold text-oil-900 bg-oil-50 px-1 py-0.5 rounded border border-oil-200 text-[10px]">
                           {bestMatch.activity_id}
                         </span>
                       </div>
                       <div className="text-[10px] text-slate-700 font-medium truncate">
-                        {bestMatch.activity_name}
+                        {translateActivityName(bestMatch.activity_id, bestMatch.activity_name, language)}
                       </div>
                       <div className="flex items-center gap-3 text-[9px] text-slate-400 font-mono">
-                        <span>Sem: {Math.round(bestMatch.semantic_score * 100)}%</span>
-                        <span>Ent: {Math.round(bestMatch.entity_score * 100)}%</span>
-                        <span>Meta: {Math.round(bestMatch.metadata_score * 100)}%</span>
+                        <span>{t('sub_score_sem')}: {Math.round(bestMatch.semantic_score * 100)}%</span>
+                        <span>{t('sub_score_ent')}: {Math.round(bestMatch.entity_score * 100)}%</span>
+                        <span>{t('sub_score_meta')}: {Math.round(bestMatch.metadata_score * 100)}%</span>
                       </div>
                       <ConfidenceBar score={bestMatch.final_confidence} size="sm" />
                       {sub.is_verified && (
                         <div className="text-[10px] text-slate-500">
-                          Verified by <strong className="text-slate-700">{sub.verified_by}</strong> on {sub.verified_at}
+                          {t('sub_verified_by')} <strong className="text-slate-700">{sub.verified_by}</strong> {t('sub_on')} {sub.verified_at}
                         </div>
                       )}
                     </div>
                   )}
 
                   <div className="flex items-center justify-end text-[10px] text-oil-700 font-semibold">
-                    View full audit log <ChevronRight className="w-3 h-3" />
+                    {t('sub_view_audit_log')} <ChevronRight className="w-3 h-3" />
                   </div>
                 </CardContent>
               </Card>

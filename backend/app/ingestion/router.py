@@ -4,11 +4,14 @@ Provides endpoints for site supervisors to submit progress reports (text, files,
 triggers document parsing, entity extraction, and coordinates with Member C's matching engine.
 """
 
+import logging
 from typing import Optional, List
 from datetime import datetime
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
+
+logger = logging.getLogger(__name__)
 
 from app.core.database import get_db
 from app.auth import get_current_user
@@ -222,6 +225,18 @@ async def ingest_report(
         raw_text = f"{input_text}\n\n{extracted_file_text}" if input_text else extracted_file_text
     else:
         raw_text = input_text or ""
+
+    # SIH26122 Requirement: All reports stored for central admin/planner review and Primavera P6 matching must be in English.
+    # If supervisor wrote or spoke in Hindi or regional languages (Indic Unicode range \u0900-\u0D7F), auto-translate to English.
+    import re
+    if raw_text and re.search(r'[\u0900-\u0D7F]', raw_text):
+        try:
+            from app.voice.router import translate_text_internal
+            english_text = translate_text_internal(raw_text, target_lang="en")
+            if english_text and english_text.strip():
+                raw_text = english_text.strip()
+        except Exception as trans_err:
+            logger.warning(f"Failed to auto-translate raw_text to English: {trans_err}")
 
     # 1. Create Report row in database
     report = Report(

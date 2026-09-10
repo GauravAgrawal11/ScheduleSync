@@ -66,3 +66,5 @@ test_runner.db
 Thumbs.db
 .vscode/
 .idea/
+scratch/
+backend/scratch/
