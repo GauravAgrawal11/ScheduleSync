@@ -4,25 +4,18 @@ import { useAuthStore } from './authStore';
 import { api } from '../api/client';
 import { Button } from '../components/ui/Button';
 import {
-  HardHat,
   Lock,
   Mail,
   ArrowRight,
   AlertCircle,
-  Wrench,
-  Zap,
-  Check,
-  Building,
   Shield,
-  Smartphone,
 } from 'lucide-react';
 import { InstallAppBanner } from '../supervisor/offline/InstallAppBanner';
 import { BrandLogo } from '../components/BrandLogo';
 
 export const SupervisorLoginPage: React.FC = () => {
-  const [username, setUsername] = useState<string>('piping.sup1@oilindia.in');
-  const [password, setPassword] = useState<string>('SecureSupervisorPassword123!');
-  const [selectedDiscipline, setSelectedDiscipline] = useState<'PIPING' | 'CIVIL' | 'ELECTRICAL'>('PIPING');
+  const [username, setUsername] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -43,12 +36,6 @@ export const SupervisorLoginPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const setCredential = (email: string, pass: string) => {
-    setUsername(email);
-    setPassword(pass);
-    setError(null);
   };
 
   return (
@@ -96,171 +83,6 @@ export const SupervisorLoginPage: React.FC = () => {
               </div>
             </div>
           )}
-
-          {/* Quick Select Pre-Assigned Supervisor Personas */}
-          <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-3">
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-semibold text-slate-700 flex items-center gap-1.5">
-                <Smartphone className="w-3.5 h-3.5 text-amber-600" />
-                Select Your Discipline:
-              </span>
-              <span className="text-[10px] font-mono text-slate-400">1-Tap Select</span>
-            </div>
-
-            {/* Discipline Tabs */}
-            <div className="grid grid-cols-3 gap-1 bg-white p-1 rounded-lg border border-slate-200 shadow-2xs">
-              <button
-                type="button"
-                onClick={() => setSelectedDiscipline('PIPING')}
-                className={`py-1.5 text-xs font-semibold rounded-md transition-all flex items-center justify-center gap-1.5 ${
-                  selectedDiscipline === 'PIPING'
-                    ? 'bg-amber-500 text-slate-950 font-bold shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                }`}
-              >
-                <Wrench className="w-3.5 h-3.5" /> Piping
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedDiscipline('CIVIL')}
-                className={`py-1.5 text-xs font-semibold rounded-md transition-all flex items-center justify-center gap-1.5 ${
-                  selectedDiscipline === 'CIVIL'
-                    ? 'bg-amber-500 text-slate-950 font-bold shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                }`}
-              >
-                <Building className="w-3.5 h-3.5" /> Civil
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedDiscipline('ELECTRICAL')}
-                className={`py-1.5 text-xs font-semibold rounded-md transition-all flex items-center justify-center gap-1.5 ${
-                  selectedDiscipline === 'ELECTRICAL'
-                    ? 'bg-amber-500 text-slate-950 font-bold shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                }`}
-              >
-                <Zap className="w-3.5 h-3.5" /> Electrical
-              </button>
-            </div>
-
-            {/* Supervisor Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {selectedDiscipline === 'PIPING' && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => setCredential('piping.sup1@oilindia.in', 'SecureSupervisorPassword123!')}
-                    className={`p-2.5 rounded-lg border text-left transition-all ${
-                      username === 'piping.sup1@oilindia.in'
-                        ? 'bg-amber-50/80 border-amber-400 text-slate-900 ring-1 ring-amber-400/50'
-                        : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
-                    }`}
-                  >
-                    <div className="text-xs font-bold text-slate-900 flex items-center justify-between">
-                      <span>Supervisor 1 - Piping</span>
-                      {username === 'piping.sup1@oilindia.in' && <Check className="w-3.5 h-3.5 text-amber-600" />}
-                    </div>
-                    <div className="text-[10px] text-slate-500 font-mono mt-0.5">piping.sup1@oilindia.in</div>
-                    <div className="text-[10px] text-amber-700 font-medium mt-1">Biren Das · Piping Scope</div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setCredential('piping.sup2@oilindia.in', 'SecureSupervisorPassword123!')}
-                    className={`p-2.5 rounded-lg border text-left transition-all ${
-                      username === 'piping.sup2@oilindia.in'
-                        ? 'bg-amber-50/80 border-amber-400 text-slate-900 ring-1 ring-amber-400/50'
-                        : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
-                    }`}
-                  >
-                    <div className="text-xs font-bold text-slate-900 flex items-center justify-between">
-                      <span>Supervisor 2 - Piping</span>
-                      {username === 'piping.sup2@oilindia.in' && <Check className="w-3.5 h-3.5 text-amber-600" />}
-                    </div>
-                    <div className="text-[10px] text-slate-500 font-mono mt-0.5">piping.sup2@oilindia.in</div>
-                    <div className="text-[10px] text-amber-700 font-medium mt-1">Dipak Kalita · Piping Scope</div>
-                  </button>
-                </>
-              )}
-
-              {selectedDiscipline === 'CIVIL' && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => setCredential('supervisor@oilindia.in', 'SecureSupervisorPassword123!')}
-                    className={`p-2.5 rounded-lg border text-left transition-all ${
-                      username === 'supervisor@oilindia.in'
-                        ? 'bg-blue-50/80 border-blue-400 text-slate-900 ring-1 ring-blue-400/50'
-                        : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
-                    }`}
-                  >
-                    <div className="text-xs font-bold text-slate-900 flex items-center justify-between">
-                      <span>Supervisor 1 - Civil</span>
-                      {username === 'supervisor@oilindia.in' && <Check className="w-3.5 h-3.5 text-blue-600" />}
-                    </div>
-                    <div className="text-[10px] text-slate-500 font-mono mt-0.5">supervisor@oilindia.in</div>
-                    <div className="text-[10px] text-blue-700 font-medium mt-1">Sanjay Supervisor · Civil</div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setCredential('civil.sup2@oilindia.in', 'SecureSupervisorPassword123!')}
-                    className={`p-2.5 rounded-lg border text-left transition-all ${
-                      username === 'civil.sup2@oilindia.in'
-                        ? 'bg-blue-50/80 border-blue-400 text-slate-900 ring-1 ring-blue-400/50'
-                        : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
-                    }`}
-                  >
-                    <div className="text-xs font-bold text-slate-900 flex items-center justify-between">
-                      <span>Supervisor 2 - Civil</span>
-                      {username === 'civil.sup2@oilindia.in' && <Check className="w-3.5 h-3.5 text-blue-600" />}
-                    </div>
-                    <div className="text-[10px] text-slate-500 font-mono mt-0.5">civil.sup2@oilindia.in</div>
-                    <div className="text-[10px] text-blue-700 font-medium mt-1">Manoj Bora · Civil</div>
-                  </button>
-                </>
-              )}
-
-              {selectedDiscipline === 'ELECTRICAL' && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => setCredential('electrical.sup1@oilindia.in', 'SecureSupervisorPassword123!')}
-                    className={`p-2.5 rounded-lg border text-left transition-all ${
-                      username === 'electrical.sup1@oilindia.in'
-                        ? 'bg-purple-50/80 border-purple-400 text-slate-900 ring-1 ring-purple-400/50'
-                        : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
-                    }`}
-                  >
-                    <div className="text-xs font-bold text-slate-900 flex items-center justify-between">
-                      <span>Supervisor 1 - Electrical</span>
-                      {username === 'electrical.sup1@oilindia.in' && <Check className="w-3.5 h-3.5 text-purple-600" />}
-                    </div>
-                    <div className="text-[10px] text-slate-500 font-mono mt-0.5">electrical.sup1@oilindia.in</div>
-                    <div className="text-[10px] text-purple-700 font-medium mt-1">Rajesh Das · Substation</div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setCredential('electrical.sup2@oilindia.in', 'SecureSupervisorPassword123!')}
-                    className={`p-2.5 rounded-lg border text-left transition-all ${
-                      username === 'electrical.sup2@oilindia.in'
-                        ? 'bg-purple-50/80 border-purple-400 text-slate-900 ring-1 ring-purple-400/50'
-                        : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
-                    }`}
-                  >
-                    <div className="text-xs font-bold text-slate-900 flex items-center justify-between">
-                      <span>Supervisor 2 - Electrical</span>
-                      {username === 'electrical.sup2@oilindia.in' && <Check className="w-3.5 h-3.5 text-purple-600" />}
-                    </div>
-                    <div className="text-[10px] text-slate-500 font-mono mt-0.5">electrical.sup2@oilindia.in</div>
-                    <div className="text-[10px] text-purple-700 font-medium mt-1">Kiran Saikia · Substation</div>
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
 
           {/* Credentials Form */}
           <form onSubmit={handleLogin} className="space-y-3.5">

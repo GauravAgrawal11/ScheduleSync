@@ -4,21 +4,18 @@ import { useAuthStore } from './authStore';
 import { api } from '../api/client';
 import { Button } from '../components/ui/Button';
 import {
-  ShieldCheck,
   BarChart3,
   Lock,
   Mail,
   ArrowRight,
   AlertCircle,
-  KeyRound,
-  CheckCircle2,
 } from 'lucide-react';
 
 import { BrandLogo } from '../components/BrandLogo';
 
 export const AdminLoginPage: React.FC = () => {
-  const [username, setUsername] = useState<string>('planner@oilindia.in');
-  const [password, setPassword] = useState<string>('SecurePlannerPassword123!');
+  const [username, setUsername] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -39,12 +36,6 @@ export const AdminLoginPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleQuickFill = () => {
-    setUsername('planner@oilindia.in');
-    setPassword('SecurePlannerPassword123!');
-    setError(null);
   };
 
   return (
@@ -93,45 +84,6 @@ export const AdminLoginPage: React.FC = () => {
               </div>
             </div>
           )}
-
-          {/* 1-Click Quick Login for Admin */}
-          <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2.5">
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-semibold text-slate-700 flex items-center gap-1.5">
-                <KeyRound className="w-3.5 h-3.5 text-emerald-600" />
-                Verified Admin Credentials:
-              </span>
-              <span className="text-[10px] font-mono text-slate-400">1-Click Fill</span>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleQuickFill}
-              className={`w-full p-2.5 rounded-xl border text-left flex items-center justify-between transition-all ${
-                username === 'planner@oilindia.in'
-                  ? 'bg-white border-emerald-500 text-slate-900 shadow-2xs ring-1 ring-emerald-500/20'
-                  : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs">
-                  AD
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-slate-900 flex items-center gap-2">
-                    Admin
-                    {username === 'planner@oilindia.in' && (
-                      <span className="text-[10px] text-emerald-700 font-mono font-bold">Selected</span>
-                    )}
-                  </div>
-                  <div className="text-[11px] text-slate-500 font-mono">planner@oilindia.in</div>
-                </div>
-              </div>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
-                Full Cockpit
-              </span>
-            </button>
-          </div>
 
           {/* Input Form */}
           <form onSubmit={handleLogin} className="space-y-4">
