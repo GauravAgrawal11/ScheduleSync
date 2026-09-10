@@ -10,7 +10,7 @@ Computes schedule performance metrics from live database records:
 
 import os
 import logging
-from typing import List, Optional
+from typing import List, Optional, Dict, Any, Tuple
 from datetime import date
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
