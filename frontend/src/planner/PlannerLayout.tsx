@@ -5,6 +5,7 @@ import { useAuthStore } from '../auth/authStore';
 import { useProjectStore } from './projectStore';
 import { api } from '../api/client';
 import {
+  Home,
   Layers,
   Inbox,
   CalendarRange,
@@ -19,12 +20,15 @@ import {
   Clock,
   FileText,
   Sparkles,
+  Settings,
   ChevronDown,
   ChevronRight,
   Bell,
   HelpCircle,
   Menu,
   User as UserIcon,
+  ShieldCheck,
+  TrendingUp,
 } from 'lucide-react';
 import { WorkflowReportModal } from './WorkflowReportModal';
 import { HelpSupportModal } from '../components/HelpSupportModal';
@@ -48,6 +52,7 @@ export const PlannerLayout: React.FC = () => {
 
   // Sub-menu expansion states
   const [isReportsExpanded, setIsReportsExpanded] = useState<boolean>(true);
+  const [isAiVerificationExpanded, setIsAiVerificationExpanded] = useState<boolean>(false);
 
   const { data: projectsData } = useQuery({
     queryKey: ['projects'],
@@ -94,36 +99,30 @@ export const PlannerLayout: React.FC = () => {
     navigate('/login');
   };
 
-  // Original feature names restored; Dashboard and Review Queue are ONE section (Review Queue)
-  const navItems = [
-    { to: '/planner/schedule',   label: 'Gantt',          icon: CalendarRange },
-    { to: '/planner/review',     label: 'Review Queue',   icon: Inbox,          badge: true, count: queueCount },
-    { to: '/planner/activities', label: 'Activity Audit', icon: ClipboardList },
-    { to: '/planner/analytics',  label: 'Analytics',      icon: Layers },
-    { to: '/planner/complaints', label: 'HSE & Blockers', icon: AlertOctagon,   hseCount: true, count: openComplaintsCount },
-    { to: '/planner/workload',   label: 'Assignments',    icon: Users },
-    { to: '/planner/historical', label: 'Historical',     icon: Brain },
-    { to: '/planner/setup',      label: 'Baseline Setup', icon: FolderKanban },
-  ];
-
   return (
     <div className="h-screen w-screen overflow-hidden flex bg-[#0a0b0e] text-slate-900 font-sans antialiased select-none">
 
       {/* ── Left Stationary Navigation Bar (Fixed & Never Moves on Page Scroll) ── */}
       <aside
-        className={`bg-[#0a0b0e] text-slate-300 flex flex-col flex-shrink-0 z-40 border-r border-slate-800/80 transition-all duration-300 ease-in-out h-screen ${
+        className={`text-slate-300 flex flex-col flex-shrink-0 z-40 border-r border-slate-800/90 transition-all duration-300 ease-in-out h-screen relative ${
           isSidebarCollapsed ? 'w-0 -translate-x-full overflow-hidden' : 'w-64 translate-x-0'
         }`}
+        style={{
+          backgroundColor: '#0a0b0e',
+          backgroundImage: "linear-gradient(to bottom, rgba(10, 11, 14, 0.96) 0%, rgba(10, 11, 14, 0.90) 65%, rgba(10, 11, 14, 0.20) 100%), url('/assets/sidebar-bg.png')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'bottom center',
+          backgroundRepeat: 'no-repeat',
+        }}
       >
         {/* Navigation Bar Header when ON:
             - Logo
             - Name: ScheduleSync
             - Under the name: WHITE color "OIL INDIA LIMITED"
-            - Three lines / Menu button to collapse
+            - Menu toggle to collapse
         */}
-        <div className="h-16 px-4 flex items-center justify-between border-b border-slate-800/60 flex-shrink-0">
+        <div className="h-16 px-4 flex items-center justify-between border-b border-slate-800/80 flex-shrink-0 bg-[#0a0b0e]/90 backdrop-blur-xs">
           <div className="flex items-center gap-2.5 overflow-hidden">
-            {/* New Logo */}
             <img
               src="/assets/logo.png"
               onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/logo.png'; }}
@@ -135,7 +134,6 @@ export const PlannerLayout: React.FC = () => {
                 <span className="text-white">Schedule</span>
                 <span className="text-[#9e1218] ml-0.5" style={{ color: '#9e1218' }}>Sync</span>
               </span>
-              {/* User requirement: Under the name, the white color OIL INDIA LIMITED */}
               <span className="text-[9px] font-black tracking-widest uppercase text-white leading-none mt-1">
                 OIL INDIA LIMITED
               </span>
@@ -152,60 +150,179 @@ export const PlannerLayout: React.FC = () => {
           </button>
         </div>
 
-        {/* Navigation items list - Internally scrollable, independent of page */}
+        {/* Navigation items list - Internally scrollable, independent of page scroll */}
         <nav className="flex-1 py-3 px-2.5 space-y-1 overflow-y-auto custom-scrollbar">
-          {navItems.map((item, index) => {
-            const Icon = item.icon;
-            const isSelected = item.to.startsWith('/') && location.pathname === item.to;
+          {/* Dashboard */}
+          <NavLink
+            to="/planner/review"
+            end
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all duration-150 group cursor-pointer ${
+                location.pathname === '/planner/dashboard' || (location.pathname === '/planner/review' && false)
+                  ? 'bg-[#9e1218] text-white shadow-md shadow-red-950/50'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+              }`
+            }
+          >
+            <Home className="w-4 h-4 flex-shrink-0 text-slate-300 group-hover:text-white" />
+            <span className="truncate flex-1">Dashboard</span>
+          </NavLink>
 
-            return (
-              <NavLink
-                key={index}
-                to={item.to}
-                end={item.to === '/planner/review'}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all duration-150 relative group cursor-pointer ${
-                    isActive
-                      ? 'bg-[#9e1218] text-white shadow-md shadow-red-950/50'
-                      : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-                  }`
-                }
-              >
-                {({ isActive }) => (
-                  <>
-                    <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
-                    <span className="truncate flex-1">{item.label}</span>
+          {/* Review Queue (Highlighted active with solid red pill) */}
+          <NavLink
+            to="/planner/review"
+            end
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all duration-150 group cursor-pointer ${
+                location.pathname === '/planner/review'
+                  ? 'bg-[#9e1218] text-white shadow-md shadow-red-950/50'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+              }`
+            }
+          >
+            <Inbox className={`w-4 h-4 flex-shrink-0 ${location.pathname === '/planner/review' ? 'text-white' : 'text-slate-300 group-hover:text-white'}`} />
+            <span className="truncate flex-1">Review Queue</span>
+            {queueCount > 0 && (
+              <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-[#9e1218] border border-red-700 text-white font-bold leading-none ml-auto">
+                {queueCount}
+              </span>
+            )}
+          </NavLink>
 
-                    {/* Badge Counters */}
-                    {item.badge && item.count !== undefined && item.count > 0 && (
-                      <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-[#9e1218] border border-red-700 text-white font-bold leading-none ml-auto">
-                        {item.count}
-                      </span>
-                    )}
+          {/* Gantt */}
+          <NavLink
+            to="/planner/schedule"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all duration-150 group cursor-pointer ${
+                isActive
+                  ? 'bg-[#9e1218] text-white shadow-md shadow-red-950/50'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+              }`
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <CalendarRange className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-slate-300 group-hover:text-white'}`} />
+                <span className="truncate flex-1">Gantt</span>
+              </>
+            )}
+          </NavLink>
 
-                    {item.hseCount && item.count !== undefined && item.count > 0 && (
-                      <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-rose-700 text-white font-bold leading-none ml-auto">
-                        {item.count}
-                      </span>
-                    )}
-                  </>
+          {/* Activity Audit */}
+          <NavLink
+            to="/planner/activities"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all duration-150 group cursor-pointer ${
+                isActive
+                  ? 'bg-[#9e1218] text-white shadow-md shadow-red-950/50'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+              }`
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <ClipboardList className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-slate-300 group-hover:text-white'}`} />
+                <span className="truncate flex-1">Activity Audit</span>
+              </>
+            )}
+          </NavLink>
+
+          {/* Analytics */}
+          <NavLink
+            to="/planner/analytics"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all duration-150 group cursor-pointer ${
+                isActive
+                  ? 'bg-[#9e1218] text-white shadow-md shadow-red-950/50'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+              }`
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <TrendingUp className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-slate-300 group-hover:text-white'}`} />
+                <span className="truncate flex-1">Analytics</span>
+              </>
+            )}
+          </NavLink>
+
+          {/* HSE & Blockers */}
+          <NavLink
+            to="/planner/complaints"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all duration-150 group cursor-pointer ${
+                isActive
+                  ? 'bg-[#9e1218] text-white shadow-md shadow-red-950/50'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+              }`
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <ShieldCheck className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-slate-300 group-hover:text-white'}`} />
+                <span className="truncate flex-1">HSE &amp; Blockers</span>
+                {openComplaintsCount > 0 && (
+                  <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-rose-700 text-white font-bold leading-none ml-auto">
+                    {openComplaintsCount}
+                  </span>
                 )}
-              </NavLink>
-            );
-          })}
+              </>
+            )}
+          </NavLink>
+
+          {/* Assignments */}
+          <NavLink
+            to="/planner/workload"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all duration-150 group cursor-pointer ${
+                isActive
+                  ? 'bg-[#9e1218] text-white shadow-md shadow-red-950/50'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+              }`
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <Users className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-slate-300 group-hover:text-white'}`} />
+                <span className="truncate flex-1">Assignments</span>
+              </>
+            )}
+          </NavLink>
+
+          {/* History */}
+          <NavLink
+            to="/planner/historical"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all duration-150 group cursor-pointer ${
+                isActive
+                  ? 'bg-[#9e1218] text-white shadow-md shadow-red-950/50'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+              }`
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <Clock className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-slate-300 group-hover:text-white'}`} />
+                <span className="truncate flex-1">History</span>
+              </>
+            )}
+          </NavLink>
+
+          {/* Separator line matching image */}
+          <div className="border-t border-slate-800/80 my-2 pt-1" />
 
           {/* Reports (Expandable) */}
-          <div className="pt-1">
+          <div>
             <button
               onClick={() => setIsReportsExpanded(!isReportsExpanded)}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all cursor-pointer group"
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/60 transition-all cursor-pointer group"
             >
-              <FileText className="w-4 h-4 flex-shrink-0 text-slate-400 group-hover:text-white" />
+              <FileText className="w-4 h-4 flex-shrink-0 text-slate-300 group-hover:text-white" />
               <span className="truncate flex-1 text-left">Reports</span>
               {isReportsExpanded ? (
-                <ChevronDown className="w-3.5 h-3.5 text-slate-500 ml-auto flex-shrink-0" />
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400 ml-auto flex-shrink-0" />
               ) : (
-                <ChevronRight className="w-3.5 h-3.5 text-slate-500 ml-auto flex-shrink-0" />
+                <ChevronRight className="w-3.5 h-3.5 text-slate-400 ml-auto flex-shrink-0" />
               )}
             </button>
 
@@ -222,39 +339,96 @@ export const PlannerLayout: React.FC = () => {
             )}
           </div>
 
+          {/* AI Verification (Expandable) */}
+          <div>
+            <button
+              onClick={() => setIsAiVerificationExpanded(!isAiVerificationExpanded)}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/60 transition-all cursor-pointer group"
+            >
+              <Sparkles className="w-4 h-4 flex-shrink-0 text-slate-300 group-hover:text-white" />
+              <span className="truncate flex-1 text-left">AI Verification</span>
+              {isAiVerificationExpanded ? (
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400 ml-auto flex-shrink-0" />
+              ) : (
+                <ChevronRight className="w-3.5 h-3.5 text-slate-400 ml-auto flex-shrink-0" />
+              )}
+            </button>
+
+            {isAiVerificationExpanded && (
+              <div className="pl-9 pr-2 py-1 space-y-1">
+                <NavLink
+                  to="/planner/review"
+                  className="flex items-center gap-2 text-xs text-slate-400 hover:text-white py-1 transition-colors cursor-pointer"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />
+                  <span>Verification Pipeline</span>
+                </NavLink>
+                <NavLink
+                  to="/planner/review"
+                  className="flex items-center gap-2 text-xs text-slate-400 hover:text-white py-1 transition-colors cursor-pointer"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />
+                  <span>Candidate Matches</span>
+                </NavLink>
+              </div>
+            )}
+          </div>
+
+          {/* Separator line matching image */}
+          <div className="border-t border-slate-800/80 my-2 pt-1" />
+
+          {/* Settings (Baseline Setup) */}
+          <NavLink
+            to="/planner/setup"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all duration-150 group cursor-pointer ${
+                isActive
+                  ? 'bg-[#9e1218] text-white shadow-md shadow-red-950/50'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+              }`
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <Settings className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-slate-300 group-hover:text-white'}`} />
+                <span className="truncate flex-1">Settings</span>
+              </>
+            )}
+          </NavLink>
+
           {/* Help & Support */}
           <button
             onClick={() => setIsHelpModalOpen(true)}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all cursor-pointer group text-left"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/60 transition-all cursor-pointer group text-left"
           >
-            <HelpCircle className="w-4 h-4 flex-shrink-0 text-slate-400 group-hover:text-white" />
-            <span className="truncate flex-1">Help & Support</span>
+            <HelpCircle className="w-4 h-4 flex-shrink-0 text-slate-300 group-hover:text-white" />
+            <span className="truncate flex-1">Help &amp; Support</span>
           </button>
         </nav>
 
-        {/* Sidebar Footer: Energy For a Stronger Tomorrow */}
-        <div className="p-4 border-t border-slate-800/60 bg-gradient-to-t from-black/90 to-transparent relative overflow-hidden flex-shrink-0">
-          <div className="flex items-end gap-2.5">
-            <div className="w-10 h-10 opacity-70 flex-shrink-0">
-              <img
-                src="/assets/logo.png"
-                onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/logo.png'; }}
-                alt="Oilfield"
-                className="w-full h-full object-contain filter invert opacity-80"
-              />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-[9px] uppercase tracking-wider text-slate-400 font-bold leading-tight">
-                ENERGY
-              </span>
-              <span className="text-[10px] uppercase tracking-wider text-white font-extrabold leading-tight">
-                FOR A STRONGER
-              </span>
-              <span className="text-[10px] uppercase tracking-wider text-white font-extrabold leading-tight">
-                TOMORROW
-              </span>
-              <div className="w-8 h-0.5 bg-[#9e1218] mt-1 rounded-full" />
-            </div>
+        {/* Sidebar Footer: Exact Oilfield Pumpjack photo artwork with ENERGY FOR A STRONGER TOMORROW */}
+        <div
+          className="w-full h-44 bg-cover bg-bottom flex-shrink-0 relative overflow-hidden flex flex-col justify-end p-4 border-t border-slate-800/80"
+          style={{
+            backgroundImage: "url('/assets/sidebar-bottom-energy.png')",
+            backgroundSize: 'cover',
+            backgroundPosition: 'bottom center',
+            backgroundRepeat: 'no-repeat',
+          }}
+        >
+          {/* Overlay to ensure ultra-clear typography */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
+          <div className="relative z-10 flex flex-col text-left pl-14">
+            <span className="text-[10px] uppercase tracking-wider text-slate-300 font-bold leading-tight">
+              ENERGY
+            </span>
+            <span className="text-[11px] uppercase tracking-wider text-white font-extrabold leading-tight">
+              FOR A STRONGER
+            </span>
+            <span className="text-[11px] uppercase tracking-wider text-white font-extrabold leading-tight">
+              TOMORROW
+            </span>
+            <div className="w-8 h-0.5 bg-[#9e1218] mt-1 rounded-full" />
           </div>
         </div>
       </aside>
@@ -262,9 +436,18 @@ export const PlannerLayout: React.FC = () => {
       {/* ── Main Layout Column: Only this area scrolls when scrolling down ── */}
       <div className="flex-1 flex flex-col h-screen overflow-y-auto min-w-0 bg-slate-50 relative">
 
-        {/* ── Top Header Bar ── */}
-        <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs flex-shrink-0">
-          <div className="flex items-center h-16 px-4 md:px-6 justify-between gap-3 w-full">
+        {/* ── Top Header Bar with header-bg background ── */}
+        <header
+          className="border-b border-slate-200 sticky top-0 z-30 shadow-xs flex-shrink-0 relative overflow-hidden"
+          style={{
+            backgroundColor: '#ffffff',
+            backgroundImage: "linear-gradient(to right, rgba(255,255,255,1) 0%, rgba(255,255,255,0.96) 45%, rgba(255,255,255,0.45) 85%, rgba(255,255,255,0.92) 100%), url('/assets/header-bg.png')",
+            backgroundSize: 'cover',
+            backgroundPosition: 'right center',
+            backgroundRepeat: 'no-repeat',
+          }}
+        >
+          <div className="flex items-center h-16 px-4 md:px-6 justify-between gap-3 w-full relative z-10">
 
             {/* Left Header Area:
                 - If sidebar is ON: Show Project Name & Project Switcher
@@ -273,10 +456,10 @@ export const PlannerLayout: React.FC = () => {
             <div className="flex items-center gap-3 md:gap-4 flex-shrink-0">
               {isSidebarCollapsed ? (
                 <>
-                  {/* Three lines / Menu button to open navigation bar */}
+                  {/* Menu button to open navigation bar */}
                   <button
                     onClick={() => setIsSidebarCollapsed(false)}
-                    className="p-2 rounded-lg hover:bg-slate-100 text-slate-700 hover:text-black border border-slate-200 transition-all cursor-pointer flex items-center justify-center shadow-2xs"
+                    className="p-2 rounded-lg hover:bg-slate-100 text-slate-700 hover:text-black border border-slate-200 transition-all cursor-pointer flex items-center justify-center shadow-2xs bg-white/90"
                     title="Open Navigation Bar"
                     aria-label="Open Navigation Bar"
                   >
@@ -296,7 +479,6 @@ export const PlannerLayout: React.FC = () => {
                         <span className="text-black">Schedule</span>
                         <span className="text-[#9e1218]" style={{ color: '#9e1218' }}>Sync</span>
                       </h1>
-                      {/* Under name, black color OIL INDIA LIMITED */}
                       <span
                         className="text-[9px] font-black uppercase tracking-widest leading-none mt-1 text-black"
                         style={{ color: '#000000', fontWeight: 900 }}
@@ -310,12 +492,12 @@ export const PlannerLayout: React.FC = () => {
 
                   {/* Project Name when OFF */}
                   <div className="hidden sm:flex items-center gap-2">
-                    <Building2 className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                    <Building2 className="w-4 h-4 text-slate-500 flex-shrink-0" />
                     <select
                       aria-label="Active Project"
                       value={selectedProjectId}
                       onChange={handleProjectChange}
-                      className="bg-slate-50 text-slate-800 font-semibold text-xs rounded border border-slate-200 px-2 py-1 focus:outline-none cursor-pointer max-w-[220px] truncate"
+                      className="bg-white/90 text-slate-800 font-semibold text-xs rounded border border-slate-200 px-2 py-1 focus:outline-none cursor-pointer max-w-[220px] truncate shadow-2xs"
                     >
                       {projects.map((p) => (
                         <option key={p.id} value={p.id}>{p.name} ({p.activity_count ?? 0} acts)</option>
@@ -340,7 +522,7 @@ export const PlannerLayout: React.FC = () => {
                     aria-label="Switch Project"
                     value={selectedProjectId}
                     onChange={handleProjectChange}
-                    className="ml-2 bg-slate-50 text-slate-700 font-medium text-[11px] rounded border border-slate-200 px-2 py-1 focus:outline-none cursor-pointer hidden md:block"
+                    className="ml-2 bg-white/90 text-slate-700 font-medium text-[11px] rounded border border-slate-200 px-2 py-1 focus:outline-none cursor-pointer hidden md:block shadow-2xs"
                   >
                     {projects.map((p) => (
                       <option key={p.id} value={p.id}>{p.name} ({p.activity_count ?? 0} acts)</option>
@@ -359,20 +541,22 @@ export const PlannerLayout: React.FC = () => {
               )}
             </div>
 
-            {/* Right Header Area:
-                - Energy For A Stronger Tomorrow illustration
-                - Notification bell with red counter badge
-                - User avatar + Admin / Lead Planner
+            {/* Right Header Area matching media_1789137169776.png:
+                - Oil Rigs artwork + Energy For A Stronger Tomorrow
+                - Divider |
+                - Notification bell with red badge (4)
+                - Divider |
+                - Avatar + Admin Lead Planner
+                - Divider |
                 - Red outlined "Sign Out" button
             */}
-            <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0">
-              {/* Energy For A Stronger Tomorrow Graphic */}
-              <div className="hidden lg:flex items-center gap-2.5 pr-3 border-r border-slate-200">
+            <div className="flex items-center gap-3 sm:gap-3.5 flex-shrink-0">
+              {/* Energy For A Stronger Tomorrow with Oil Rig Towers background graphic */}
+              <div className="hidden lg:flex items-center gap-3 pr-2">
                 <img
-                  src="/assets/logo.png"
-                  onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/logo.png'; }}
-                  alt="Oilfield"
-                  className="w-7 h-7 object-contain opacity-75"
+                  src="/assets/oil-rigs-header.png"
+                  alt="Oilfield Rigs"
+                  className="h-10 object-contain opacity-85"
                 />
                 <div className="flex flex-col text-left">
                   <span className="text-[8px] uppercase tracking-wider text-slate-600 font-bold leading-tight">
@@ -388,11 +572,14 @@ export const PlannerLayout: React.FC = () => {
                 </div>
               </div>
 
+              {/* Vertical divider line */}
+              <div className="h-6 w-px bg-slate-300/80 hidden sm:block" />
+
               {/* Notification Bell with red badge */}
               <div className="relative">
                 <button
                   onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                  className="p-2 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-all cursor-pointer relative"
+                  className="p-2 rounded-lg hover:bg-slate-100 text-slate-700 hover:text-slate-900 transition-all cursor-pointer relative"
                   title="Notifications"
                   aria-label="Notifications"
                 >
@@ -428,8 +615,11 @@ export const PlannerLayout: React.FC = () => {
                 )}
               </div>
 
+              {/* Vertical divider line */}
+              <div className="h-6 w-px bg-slate-300/80 hidden sm:block" />
+
               {/* User Profile Avatar & Info */}
-              <div className="flex items-center gap-2 pl-1 sm:pl-2">
+              <div className="flex items-center gap-2 pl-0.5">
                 <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center">
                   <UserIcon className="w-4 h-4 text-white" />
                 </div>
@@ -443,10 +633,13 @@ export const PlannerLayout: React.FC = () => {
                 </div>
               </div>
 
-              {/* Red Outlined Sign Out Button with darker red */}
+              {/* Vertical divider line */}
+              <div className="h-6 w-px bg-slate-300/80 hidden sm:block" />
+
+              {/* Red Outlined Sign Out Button matching image */}
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-300 text-[#9e1218] hover:bg-red-50 hover:border-[#9e1218] text-xs font-bold transition-all cursor-pointer shadow-2xs"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-300 text-[#9e1218] hover:bg-red-50 hover:border-[#9e1218] text-xs font-bold transition-all cursor-pointer shadow-2xs bg-white/90"
                 title="Sign Out"
               >
                 <LogOut className="w-4 h-4 text-[#9e1218]" />
