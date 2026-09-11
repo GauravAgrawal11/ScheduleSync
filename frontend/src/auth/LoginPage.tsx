@@ -13,6 +13,8 @@ import {
   Mail,
   ArrowRight,
   CheckCircle2,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { BrandLogo } from '../components/BrandLogo';
 
@@ -36,6 +38,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ defaultPortal }) => {
   // Form states
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -180,23 +183,22 @@ export const LoginPage: React.FC<LoginPageProps> = ({ defaultPortal }) => {
             <form onSubmit={handleLogin} autoComplete="off" className="space-y-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-300 flex items-center justify-between">
-                  <span>{activePortal === 'planner' ? 'Planner Enterprise User ID' : 'Site Supervisor Email / ID'}</span>
-                  <span className="text-[10px] text-slate-500 font-mono">@oilindia.in</span>
+                  <span>{activePortal === 'planner' ? 'Planner Username or Email' : 'Supervisor Username or Email'}</span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
                     <Mail className="w-4 h-4" />
                   </div>
                   <input
-                    type="email"
+                    type="text"
                     name="portal_user_identifier"
                     id="portal_user_identifier"
                     autoComplete="off"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     required
-                    placeholder="name@oilindia.in"
-                    className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-600 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+                    placeholder={activePortal === 'planner' ? 'Enter planner username or email' : 'Enter supervisor username or email'}
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 text-xs focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-[#9e1218] transition-all"
                   />
                 </div>
               </div>
@@ -204,14 +206,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ defaultPortal }) => {
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-300 flex items-center justify-between">
                   <span>Security Password</span>
-                  <span className="text-[10px] text-slate-500 font-mono">Encrypted</span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
                     <Lock className="w-4 h-4" />
                   </div>
                   <input
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     name="portal_user_key"
                     id="portal_user_key"
                     autoComplete="new-password"
@@ -219,8 +220,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({ defaultPortal }) => {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     placeholder="Enter security password"
-                    className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-600 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+                    className="w-full pl-9 pr-10 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 text-xs focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-[#9e1218] transition-all"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-white cursor-pointer transition-colors"
+                    title={showPassword ? 'Hide password' : 'Show password'}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
               </div>
 

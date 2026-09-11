@@ -127,14 +127,14 @@ export const PlannerLayout: React.FC = () => {
               src="/assets/logo.png"
               onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/logo.png'; }}
               alt="ScheduleSync Logo"
-              className="w-10 h-10 rounded-full object-contain flex-shrink-0"
+              className="w-9 h-9 rounded-full object-contain flex-shrink-0"
             />
-            <div className="flex flex-col text-left">
-              <span className="text-base font-black tracking-tight leading-none flex items-center">
+            <div className="flex flex-col justify-between text-left py-0.5 h-9">
+              <span className="text-[15px] font-black tracking-tight leading-none flex items-center">
                 <span className="text-white">Schedule</span>
                 <span className="text-[#9e1218] ml-0.5" style={{ color: '#9e1218' }}>Sync</span>
               </span>
-              <span className="text-[9px] font-black tracking-widest uppercase text-white leading-none mt-1">
+              <span className="text-[9px] font-black tracking-widest uppercase text-white leading-none">
                 OIL INDIA LIMITED
               </span>
             </div>
@@ -472,15 +472,15 @@ export const PlannerLayout: React.FC = () => {
                       src="/assets/logo.png"
                       onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/logo.png'; }}
                       alt="Oil India Limited"
-                      className="w-10 h-10 rounded-full object-contain flex-shrink-0"
+                      className="w-9 h-9 rounded-full object-contain flex-shrink-0"
                     />
-                    <div className="flex flex-col justify-center">
-                      <h1 className="text-base font-black tracking-tight leading-none flex items-center">
+                    <div className="flex flex-col justify-between text-left py-0.5 h-9">
+                      <h1 className="text-[15px] font-black tracking-tight leading-none flex items-center">
                         <span className="text-black">Schedule</span>
                         <span className="text-[#9e1218]" style={{ color: '#9e1218' }}>Sync</span>
                       </h1>
                       <span
-                        className="text-[9px] font-black uppercase tracking-widest leading-none mt-1 text-black"
+                        className="text-[9px] font-black uppercase tracking-widest leading-none text-black"
                         style={{ color: '#000000', fontWeight: 900 }}
                       >
                         OIL INDIA LIMITED
