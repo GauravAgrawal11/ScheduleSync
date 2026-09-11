@@ -114,16 +114,6 @@ export const InstallAppBanner: React.FC = () => {
     }
   }, [deferredPrompt]);
 
-  // Strict check: Only supervisor panel
-  if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/supervisor')) {
-    return null;
-  }
-
-  // Auto-remove when inside installed standalone app or already finished install in current view
-  if (isStandalone || isAlreadyInstalled) {
-    return null;
-  }
-
   const handleDismiss = () => {
     setDismissed(true);
     try {
@@ -139,6 +129,9 @@ export const InstallAppBanner: React.FC = () => {
         const choiceResult = await promptToUse.userChoice;
         if (choiceResult.outcome === 'accepted') {
           setInstalledSuccessfully(true);
+          try {
+            localStorage.setItem('schedulesync_pwa_installed', 'true');
+          } catch {}
           setTimeout(() => {
             setIsAlreadyInstalled(true);
           }, 3000);
@@ -157,10 +150,16 @@ export const InstallAppBanner: React.FC = () => {
     }
   };
 
+  const showInlineBanner =
+    !isStandalone &&
+    !isAlreadyInstalled &&
+    !dismissed &&
+    (typeof window === 'undefined' || window.location.pathname.startsWith('/supervisor'));
+
   return (
     <>
-      {/* Inline Banner (shown unless user dismissed banner this session) */}
-      {!dismissed && (
+      {/* Inline Banner (shown unless user dismissed banner this session or running in standalone app) */}
+      {showInlineBanner && (
         <div className="mx-3 my-2 bg-gradient-to-r from-slate-900 to-oil-900 text-white rounded-2xl p-3.5 shadow-lg border border-oil-700/50 relative animate-fadeIn">
           {installedSuccessfully ? (
             <div className="flex items-center gap-2.5 py-1">

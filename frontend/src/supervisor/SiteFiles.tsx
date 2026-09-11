@@ -36,6 +36,7 @@ export interface SiteDocument {
   uploadedAt: string;
   uploadedBy: string;
   description?: string;
+  fileDataUrl?: string;
 }
 
 const INITIAL_DOCUMENTS: SiteDocument[] = [
@@ -178,51 +179,145 @@ export const SiteFiles: React.FC = () => {
     e.preventDefault();
     if (!uploadFile && !docName) return;
 
-    const newDoc: SiteDocument = {
-      id: `doc-${Date.now()}`,
-      name: docName || uploadFile?.name || 'Uploaded Site Document',
-      filename: uploadFile?.name || `${docName.toLowerCase().replace(/\s+/g, '_')}.pdf`,
-      category: docCategory,
-      discipline: docDiscipline,
-      location: docLocation,
-      fileSize: uploadFile ? `${(uploadFile.size / (1024 * 1024)).toFixed(1)} MB` : '1.2 MB',
-      uploadedAt: new Date().toISOString().split('T')[0],
-      uploadedBy: user?.name || 'Site Supervisor',
-      description: docDescription || 'Uploaded via Field Supervisor Workspace.',
+    const finalizeSubmission = (fileDataUrl?: string) => {
+      const newDoc: SiteDocument = {
+        id: `doc-${Date.now()}`,
+        name: docName || uploadFile?.name || 'Uploaded Site Document',
+        filename: uploadFile?.name || `${docName.toLowerCase().replace(/\s+/g, '_')}.pdf`,
+        category: docCategory,
+        discipline: docDiscipline,
+        location: docLocation,
+        fileSize: uploadFile ? `${(uploadFile.size / (1024 * 1024)).toFixed(1)} MB` : '1.2 MB',
+        uploadedAt: new Date().toISOString().split('T')[0],
+        uploadedBy: user?.name || 'Site Supervisor',
+        description: docDescription || 'Uploaded via Field Supervisor Workspace.',
+        fileDataUrl,
+      };
+
+      setDocuments((prev) => [newDoc, ...prev]);
+      setUploadSuccess(true);
+      setTimeout(() => {
+        setUploadSuccess(false);
+        setShowUploadModal(false);
+        setUploadFile(null);
+        setDocName('');
+        setDocDescription('');
+      }, 1200);
     };
 
-    setDocuments((prev) => [newDoc, ...prev]);
-    setUploadSuccess(true);
-    setTimeout(() => {
-      setUploadSuccess(false);
-      setShowUploadModal(false);
-      setUploadFile(null);
-      setDocName('');
-      setDocDescription('');
-    }, 1200);
+    if (uploadFile) {
+      const reader = new FileReader();
+      reader.onload = () => finalizeSubmission(reader.result as string);
+      reader.onerror = () => finalizeSubmission();
+      reader.readAsDataURL(uploadFile);
+    } else {
+      finalizeSubmission();
+    }
   };
 
   const handleDownload = (doc: SiteDocument) => {
-    // Simulated clean browser file download
-    const blob = new Blob(
-      [
-        `ScheduleSync Site Document: ${doc.name}\n` +
-          `Filename: ${doc.filename}\n` +
-          `Discipline: ${doc.discipline}\n` +
-          `Location: ${doc.location}\n` +
-          `Uploaded By: ${doc.uploadedBy} on ${doc.uploadedAt}\n\n` +
-          `Notes: ${doc.description || 'N/A'}\n`,
-      ],
-      { type: 'text/plain;charset=utf-8' }
-    );
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = doc.filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    try {
+      if (doc.fileDataUrl) {
+        const a = document.createElement('a');
+        a.href = doc.fileDataUrl;
+        a.download = doc.filename;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          if (document.body.contains(a)) document.body.removeChild(a);
+        }, 3000);
+        return;
+      }
+
+      const ext = doc.filename.split('.').pop()?.toLowerCase() || '';
+
+      if (ext === 'pdf') {
+        const pdfContent = `%PDF-1.4\n1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj\n3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >> endobj\n4 0 obj << /Length 210 >> stream\nBT\n/F1 18 Tf\n50 720 Td (${doc.name.replace(/[()]/g, '')}) Tj\n0 -30 Td /F1 12 Tf (Numaligarh Refinery Expansion Project) Tj\n0 -20 Td (Discipline: ${doc.discipline} | Location: ${doc.location}) Tj\n0 -20 Td (Uploaded By: ${doc.uploadedBy} on ${doc.uploadedAt}) Tj\n0 -20 Td (Filename: ${doc.filename}) Tj\nET\nendstream\nendobj\n5 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj\nxref\n0 6\n0000000000 65535 f \n0000000009 00000 n \n0000000058 00000 n \n0000000115 00000 n \n0000000266 00000 n \n0000000528 00000 n \ntrailer << /Size 6 /Root 1 0 R >>\nstartxref\n604\n%%EOF`;
+        const blob = new Blob([pdfContent], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = doc.filename;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          if (document.body.contains(a)) document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 5000);
+      } else if (ext === 'xlsx' || ext === 'xls' || ext === 'csv') {
+        const csvContent = `ID,Document Name,Discipline,Location,Uploaded By,Date,Description\n"${doc.id}","${doc.name}","${doc.discipline}","${doc.location}","${doc.uploadedBy}","${doc.uploadedAt}","${doc.description || ''}"\n`;
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = doc.filename.endsWith('.csv') ? doc.filename : doc.filename.replace(/\.xlsx?$/i, '.csv');
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          if (document.body.contains(a)) document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 5000);
+      } else if (ext === 'jpg' || ext === 'jpeg' || ext === 'png') {
+        const canvas = document.createElement('canvas');
+        canvas.width = 1200;
+        canvas.height = 800;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.fillStyle = '#0f172a';
+          ctx.fillRect(0, 0, 1200, 800);
+          ctx.fillStyle = '#9e1218';
+          ctx.fillRect(0, 0, 1200, 16);
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 36px sans-serif';
+          ctx.fillText(doc.name, 60, 120);
+          ctx.fillStyle = '#94a3b8';
+          ctx.font = '22px sans-serif';
+          ctx.fillText(`Numaligarh Refinery Expansion — Discipline: ${doc.discipline}`, 60, 180);
+          ctx.fillText(`Location: ${doc.location} | Date: ${doc.uploadedAt}`, 60, 220);
+          ctx.fillText(`Filename: ${doc.filename}`, 60, 260);
+          ctx.fillStyle = '#f59e0b';
+          ctx.font = 'bold 20px monospace';
+          ctx.fillText('SCHEDULESYNC OIL INDIA FIELD RECORD', 60, 720);
+        }
+        canvas.toBlob((blob) => {
+          if (!blob) return;
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = doc.filename;
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => {
+            if (document.body.contains(a)) document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          }, 5000);
+        }, 'image/jpeg', 0.95);
+      } else {
+        const blob = new Blob(
+          [
+            `ScheduleSync Site Document: ${doc.name}\n` +
+              `Filename: ${doc.filename}\n` +
+              `Discipline: ${doc.discipline}\n` +
+              `Location: ${doc.location}\n` +
+              `Uploaded By: ${doc.uploadedBy} on ${doc.uploadedAt}\n\n` +
+              `Notes: ${doc.description || 'N/A'}\n`,
+          ],
+          { type: 'text/plain;charset=utf-8' }
+        );
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = doc.filename;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          if (document.body.contains(a)) document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 5000);
+      }
+    } catch (err) {
+      console.error('Failed to download document:', err);
+    }
   };
 
   const filteredDocs = documents.filter((doc) => {

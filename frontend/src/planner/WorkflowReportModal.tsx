@@ -66,7 +66,9 @@ export const WorkflowReportModal: React.FC<WorkflowReportModalProps> = ({
     a.download = `${safeName}_workflow_report.pdf`;
     document.body.appendChild(a);
     a.click();
-    document.body.removeChild(a);
+    setTimeout(() => {
+      if (document.body.contains(a)) document.body.removeChild(a);
+    }, 3000);
   };
 
   const handleOpenNewTab = () => {
