@@ -32,7 +32,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
   const isDark = theme === 'dark';
 
   const content = (
-    <div className={`flex items-center gap-2.5 select-none ${className}`}>
+    <div className={`flex items-center gap-2 sm:gap-2.5 select-none min-w-0 ${className}`}>
       {/* Brand Logo with pumpjack badge or official logo */}
       <img
         src="/assets/logo.png"
@@ -40,21 +40,21 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
         alt="Oil India Limited ScheduleSync Logo"
         className={`${iconSize} rounded-full object-contain flex-shrink-0`}
       />
-      <div className={`flex flex-col justify-between text-left py-0.5 ${textHeight}`}>
-        <div className="flex items-center gap-1.5 leading-none">
+      <div className={`flex flex-col justify-between text-left py-0.5 ${textHeight} min-w-0`}>
+        <div className="flex items-center gap-1 sm:gap-1.5 leading-none flex-wrap">
           <span className={`${titleSize} font-black tracking-tight leading-none flex items-center`}>
             <span className={isDark ? 'text-white' : 'text-black'}>Schedule</span>
             <span className="text-[#9e1218] ml-0.5">Sync</span>
           </span>
           {roleTag && (
-            <span className={`text-[9px] font-mono px-1.5 py-0.2 rounded font-bold border ${tagColorClass}`}>
+            <span className={`text-[8.5px] sm:text-[9px] font-mono px-1 sm:px-1.5 py-0.2 rounded font-bold border ${tagColorClass} whitespace-nowrap`}>
               {roleTag}
             </span>
           )}
         </div>
         {/* User requirement: Under schedule sync, small "OIL INDIA LIMITED" */}
         <span
-          className={`${subSize} font-black uppercase tracking-widest leading-none ${
+          className={`${subSize} font-black uppercase tracking-wider sm:tracking-widest leading-none truncate ${
             isDark ? 'text-white' : 'text-black'
           }`}
           style={{ fontWeight: 900 }}

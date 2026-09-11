@@ -200,7 +200,7 @@ export const HomePage: React.FC = () => {
 
               <div className="inline-flex items-center gap-1 bg-white/10 px-2 py-0.5 rounded-full text-[10px] text-slate-300 border border-white/15">
                 <HardHat className="w-3 h-3 text-amber-400" />
-                <span>{t('home_site_terminal')}: <strong>{user?.name || currentSupervisorMeta.name}</strong></span>
+                <span><strong className="text-white">{user?.name || currentSupervisorMeta.name}</strong></span>
               </div>
             </div>
             <h2 className="text-lg font-bold">{t('home_workspace_title')}</h2>
