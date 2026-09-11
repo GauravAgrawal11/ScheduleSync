@@ -130,20 +130,6 @@ export const ProjectSetup: React.FC = () => {
             Configure capital project boundaries and upload baseline WBS schedules (.xlsx or Primavera .xer)
           </p>
         </div>
-        <Button
-          onClick={() => {
-            const currentProj = projectsData?.projects.find((p) => p.id === (selectedProjectId || 1));
-            setPreviewModalProject({
-              id: selectedProjectId || 1,
-              name: currentProj?.name || selectedProjectName || 'Project Workflow Report',
-            });
-          }}
-          size="sm"
-          className="bg-oil-800 hover:bg-oil-900 text-white font-bold text-xs flex items-center gap-2 shadow-xs shrink-0 cursor-pointer"
-        >
-          <FileDown className="w-4 h-4 text-emerald-400" />
-          View / Download Workflow Report
-        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
