@@ -328,17 +328,6 @@ export const Analytics: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-3 shrink-0 flex-wrap sm:flex-nowrap">
-              {/* Option to view real-time workflow report */}
-              <button
-                type="button"
-                onClick={() => setIsReportModalOpen(true)}
-                className="px-3 py-2 rounded-xl text-xs font-bold border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
-                title="View Real-Time Workflow Report (PDF)"
-              >
-                <FileText className="w-3.5 h-3.5 text-[#9e1218]" />
-                <span>View Real-Time Workflow Report</span>
-              </button>
-
               {/* Overall Physical Progress Gauge */}
               <div className="flex items-center gap-4 bg-slate-50 p-2.5 rounded-xl border border-slate-200 shrink-0">
                 <div className="text-right">
@@ -361,7 +350,182 @@ export const Analytics: React.FC = () => {
           </div>
         </CardHeader>
 
-        <CardContent className="p-5 space-y-4">
+        <CardContent className="p-5 space-y-6">
+          {/* 1. Real-Time Activity Completion Status Breakdown Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 shadow-2xs space-y-1">
+              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total WBS Scope</div>
+              <div className="text-xl font-black text-slate-900 font-mono">{totalActs}</div>
+              <div className="text-[10px] font-semibold text-slate-500">100% Master Baseline</div>
+            </div>
+
+            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 shadow-2xs space-y-1">
+              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Planned / Queued</div>
+              <div className="text-xl font-black text-slate-700 font-mono">{scheduledCount}</div>
+              <div className="text-[10px] font-semibold text-slate-500">{scheduledPct}% Awaiting Sequence</div>
+            </div>
+
+            <div className="p-3 rounded-xl bg-blue-50/70 border border-blue-200 shadow-2xs space-y-1">
+              <div className="text-[10px] font-bold text-blue-700 uppercase tracking-wider">In Progress (Site)</div>
+              <div className="text-xl font-black text-blue-900 font-mono">{inProgressCount}</div>
+              <div className="text-[10px] font-semibold text-blue-600">{inProgressPct}% Active Execution</div>
+            </div>
+
+            <div className="p-3 rounded-xl bg-rose-50/70 border border-rose-200 shadow-2xs space-y-1">
+              <div className="text-[10px] font-bold text-rose-700 uppercase tracking-wider">Delayed / At Risk</div>
+              <div className="text-xl font-black text-rose-900 font-mono">{delayedCount}</div>
+              <div className="text-[10px] font-semibold text-rose-600">{delayedPct}% Needs Intervention</div>
+            </div>
+
+            <div className="p-3 rounded-xl bg-emerald-50/70 border border-emerald-200 shadow-2xs space-y-1 col-span-2 sm:col-span-1">
+              <div className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Completed & Reconciled</div>
+              <div className="text-xl font-black text-emerald-900 font-mono">{completedCount}</div>
+              <div className="text-[10px] font-semibold text-emerald-600">{completedPct}% 100% P6 Closed</div>
+            </div>
+          </div>
+
+          {/* 2. Visual Real-Time Workflow Pipeline Architecture */}
+          <div className="p-4 rounded-2xl bg-gradient-to-br from-[#0a0b0e] via-[#12151c] to-slate-900 text-white shadow-md space-y-4 border border-slate-800">
+            <div className="flex items-center justify-between flex-wrap gap-2 border-b border-white/10 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                </span>
+                <span className="text-xs font-black uppercase tracking-wider text-emerald-400">
+                  Real-Time Activity Completion Workflow
+                </span>
+              </div>
+              <div className="text-[11px] text-slate-300 font-mono flex items-center gap-1.5">
+                <span>P6 Live Synchronization</span>
+                <span>·</span>
+                <strong className="text-emerald-400 font-bold">{completedCount} of {totalActs} Activities Completed ({completedPct}%)</strong>
+              </div>
+            </div>
+
+            {/* 4-Stage Connected Workflow Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 relative">
+              {/* Stage 1: Planned Scope */}
+              <div className="p-3.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all space-y-2 relative group">
+                <div className="flex items-center justify-between">
+                  <span className="w-6 h-6 rounded-lg bg-slate-700/80 text-slate-200 text-[10px] font-black flex items-center justify-center">
+                    01
+                  </span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+                    Planned Baseline
+                  </span>
+                </div>
+                <div>
+                  <div className="text-xs font-black text-white flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                    P6 WBS Scheduling
+                  </div>
+                  <p className="text-[11px] text-slate-300 mt-0.5">
+                    Activities staged in master baseline awaiting predecessor sequence clearance.
+                  </p>
+                </div>
+                <div className="pt-2 border-t border-white/10 flex items-center justify-between text-xs">
+                  <span className="text-slate-400 text-[11px]">Queued Scope:</span>
+                  <strong className="font-mono text-slate-200">{scheduledCount} activities ({scheduledPct}%)</strong>
+                </div>
+              </div>
+
+              {/* Stage 2: Field Data Capture */}
+              <div className="p-3.5 rounded-xl bg-blue-500/10 hover:bg-blue-500/15 border border-blue-500/30 transition-all space-y-2 relative group">
+                <div className="flex items-center justify-between">
+                  <span className="w-6 h-6 rounded-lg bg-blue-600 text-white text-[10px] font-black flex items-center justify-center shadow-xs">
+                    02
+                  </span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-400/30 animate-pulse">
+                    Live Field Logging
+                  </span>
+                </div>
+                <div>
+                  <div className="text-xs font-black text-white flex items-center gap-1.5">
+                    <Radio className="w-3.5 h-3.5 text-blue-400" />
+                    Supervisor Capture
+                  </div>
+                  <p className="text-[11px] text-slate-300 mt-0.5">
+                    Daily voice logs, inspection photos, and DPR updates ingested in real-time from mobile PWA.
+                  </p>
+                </div>
+                <div className="pt-2 border-t border-white/10 flex items-center justify-between text-xs">
+                  <span className="text-blue-300 text-[11px]">Underway at Site:</span>
+                  <strong className="font-mono text-blue-300">{inProgressCount} activities ({inProgressPct}%)</strong>
+                </div>
+              </div>
+
+              {/* Stage 3: AI Hybrid Matching & Gate */}
+              <div className="p-3.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/15 border border-amber-500/30 transition-all space-y-2 relative group">
+                <div className="flex items-center justify-between">
+                  <span className="w-6 h-6 rounded-lg bg-amber-600 text-white text-[10px] font-black flex items-center justify-center shadow-xs">
+                    03
+                  </span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-400/30">
+                    Sequence Gate & Linking
+                  </span>
+                </div>
+                <div>
+                  <div className="text-xs font-black text-white flex items-center gap-1.5">
+                    <GitMerge className="w-3.5 h-3.5 text-amber-400" />
+                    Reconciliation Engine
+                  </div>
+                  <p className="text-[11px] text-slate-300 mt-0.5">
+                    3-signal matching (semantic, entity, WBS) verifies predecessors and flags sequence delay risks.
+                  </p>
+                </div>
+                <div className="pt-2 border-t border-white/10 flex items-center justify-between text-xs">
+                  <span className="text-amber-300 text-[11px]">Triage & Checks:</span>
+                  <strong className="font-mono text-amber-300">{reviewCount} in review · {delayedCount} flagged</strong>
+                </div>
+              </div>
+
+              {/* Stage 4: P6 Actualized & Closed */}
+              <div className="p-3.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/15 border border-emerald-500/30 transition-all space-y-2 relative group">
+                <div className="flex items-center justify-between">
+                  <span className="w-6 h-6 rounded-lg bg-emerald-600 text-white text-[10px] font-black flex items-center justify-center shadow-xs">
+                    04
+                  </span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                    100% Completed
+                  </span>
+                </div>
+                <div>
+                  <div className="text-xs font-black text-white flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                    Master P6 Actualized
+                  </div>
+                  <p className="text-[11px] text-slate-300 mt-0.5">
+                    Physical progress verified, signed off by central planner, and written back to master schedule.
+                  </p>
+                </div>
+                <div className="pt-2 border-t border-white/10 flex items-center justify-between text-xs">
+                  <span className="text-emerald-300 text-[11px]">Fully Reconciled:</span>
+                  <strong className="font-mono text-emerald-300">{completedCount} activities ({completedPct}%)</strong>
+                </div>
+              </div>
+            </div>
+
+            {/* Stacked Progress Bar */}
+            <div className="space-y-1.5 pt-2 border-t border-white/10">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-300 font-medium">Real-Time Project Completion Distribution</span>
+                <span className="font-bold text-emerald-400 font-mono">{completedPct}% Verified Complete</span>
+              </div>
+              <div className="w-full h-2.5 bg-white/10 rounded-full overflow-hidden flex">
+                <div style={{ width: `${completedPct}%` }} className="bg-emerald-500 h-full transition-all" title={`Completed: ${completedCount} (${completedPct}%)`} />
+                <div style={{ width: `${inProgressPct}%` }} className="bg-blue-500 h-full transition-all" title={`In Progress: ${inProgressCount} (${inProgressPct}%)`} />
+                <div style={{ width: `${delayedPct}%` }} className="bg-rose-500 h-full transition-all" title={`Delayed: ${delayedCount} (${delayedPct}%)`} />
+                <div style={{ width: `${scheduledPct}%` }} className="bg-slate-600 h-full transition-all" title={`Planned: ${scheduledCount} (${scheduledPct}%)`} />
+              </div>
+              <div className="flex items-center justify-between text-[10px] text-slate-400 pt-0.5 flex-wrap gap-2">
+                <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald-500"></span> Completed ({completedCount} · {completedPct}%)</span>
+                <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-blue-500"></span> In Progress ({inProgressCount} · {inProgressPct}%)</span>
+                <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-rose-500"></span> Delayed / At Risk ({delayedCount} · {delayedPct}%)</span>
+                <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-slate-600"></span> Planned Baseline ({scheduledCount} · {scheduledPct}%)</span>
+              </div>
+            </div>
+          </div>
 
           {/* Discipline Real-Time Progress Matrix */}
           <div>
