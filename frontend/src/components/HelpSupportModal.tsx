@@ -39,7 +39,7 @@ export const HelpSupportModal: React.FC<HelpSupportModalProps> = ({
         <div className="px-6 py-4 border-b border-slate-200 bg-[#0a0b0e] text-white flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-red-600/20 border border-red-500/40 flex items-center justify-center text-red-500">
-              <HelpCircle className="w-5 h-5 text-[#c5161d]" />
+              <HelpCircle className="w-5 h-5 text-[#9e1218]" />
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -70,7 +70,7 @@ export const HelpSupportModal: React.FC<HelpSupportModalProps> = ({
             onClick={() => setActiveTab('GUIDE')}
             className={`px-4 py-2.5 text-xs font-bold transition-all border-b-2 ${
               activeTab === 'GUIDE'
-                ? 'border-[#c5161d] text-[#c5161d]'
+                ? 'border-[#9e1218] text-[#9e1218]'
                 : 'border-transparent text-slate-600 hover:text-slate-900'
             }`}
           >
@@ -80,7 +80,7 @@ export const HelpSupportModal: React.FC<HelpSupportModalProps> = ({
             onClick={() => setActiveTab('FAQ')}
             className={`px-4 py-2.5 text-xs font-bold transition-all border-b-2 ${
               activeTab === 'FAQ'
-                ? 'border-[#c5161d] text-[#c5161d]'
+                ? 'border-[#9e1218] text-[#9e1218]'
                 : 'border-transparent text-slate-600 hover:text-slate-900'
             }`}
           >
@@ -90,7 +90,7 @@ export const HelpSupportModal: React.FC<HelpSupportModalProps> = ({
             onClick={() => setActiveTab('CONTACT')}
             className={`px-4 py-2.5 text-xs font-bold transition-all border-b-2 ${
               activeTab === 'CONTACT'
-                ? 'border-[#c5161d] text-[#c5161d]'
+                ? 'border-[#9e1218] text-[#9e1218]'
                 : 'border-transparent text-slate-600 hover:text-slate-900'
             }`}
           >
@@ -106,7 +106,7 @@ export const HelpSupportModal: React.FC<HelpSupportModalProps> = ({
                 <>
                   <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
                     <div className="flex items-center gap-2 font-bold text-slate-900 text-sm">
-                      <Mic className="w-4 h-4 text-[#c5161d]" />
+                      <Mic className="w-4 h-4 text-[#9e1218]" />
                       Voice &amp; Multi-Modal Progress Logging
                     </div>
                     <p className="text-slate-600">
@@ -138,7 +138,7 @@ export const HelpSupportModal: React.FC<HelpSupportModalProps> = ({
                 <>
                   <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
                     <div className="flex items-center gap-2 font-bold text-slate-900 text-sm">
-                      <Sparkles className="w-4 h-4 text-[#c5161d]" />
+                      <Sparkles className="w-4 h-4 text-[#9e1218]" />
                       3-Signal Confidence Fusion Matching
                     </div>
                     <p className="text-slate-600">
@@ -195,15 +195,15 @@ export const HelpSupportModal: React.FC<HelpSupportModalProps> = ({
                 <div className="font-bold text-slate-900 text-sm">Numaligarh Refinery Expansion Project Office</div>
                 <div className="space-y-2 text-slate-600">
                   <div className="flex items-center gap-2">
-                    <Phone className="w-4 h-4 text-[#c5161d]" />
+                    <Phone className="w-4 h-4 text-[#9e1218]" />
                     <span>Control Room Hotline: <strong>+91 (03776) 265000 / 265001</strong></span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Mail className="w-4 h-4 text-[#c5161d]" />
+                    <Mail className="w-4 h-4 text-[#9e1218]" />
                     <span>Engineering Planning Desk: <strong>planner@oilindia.in</strong></span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Mail className="w-4 h-4 text-[#c5161d]" />
+                    <Mail className="w-4 h-4 text-[#9e1218]" />
                     <span>Technical Support: <strong>support.schedulesync@oilindia.in</strong></span>
                   </div>
                 </div>
@@ -224,7 +224,7 @@ export const HelpSupportModal: React.FC<HelpSupportModalProps> = ({
           <Button
             size="sm"
             onClick={onClose}
-            className="bg-[#c5161d] hover:bg-[#a51016] text-white font-bold text-xs px-4 py-1.5 rounded-lg"
+            className="bg-[#9e1218] hover:bg-[#a51016] text-white font-bold text-xs px-4 py-1.5 rounded-lg"
           >
             Close Help
           </Button>

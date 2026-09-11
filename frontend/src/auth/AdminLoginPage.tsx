@@ -60,7 +60,7 @@ export const AdminLoginPage: React.FC = () => {
           <BrandLogo roleTag="ADMIN COCKPIT" tagColor="slate" size="md" />
 
           <div className="hidden sm:flex items-center gap-2 text-xs font-mono text-slate-600 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200">
-            <span className="w-2 h-2 rounded-full bg-[#c5161d] animate-pulse" />
+            <span className="w-2 h-2 rounded-full bg-[#9e1218] animate-pulse" />
             <span>Secure Central Planner Gateway</span>
           </div>
         </div>
@@ -73,14 +73,14 @@ export const AdminLoginPage: React.FC = () => {
           <div className="border-b border-slate-100 pb-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-red-50 text-[#c5161d] border border-red-200 flex items-center justify-center">
+                <div className="w-7 h-7 rounded-lg bg-red-50 text-[#9e1218] border border-red-200 flex items-center justify-center">
                   <BarChart3 className="w-4 h-4" />
                 </div>
                 <h1 className="text-base font-black text-slate-900 tracking-tight">
                   Central Planner Sign-In
                 </h1>
               </div>
-              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-red-50 text-[#c5161d] border border-red-200">
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-red-50 text-[#9e1218] border border-red-200">
                 ADMIN ACCESS
               </span>
             </div>
@@ -119,7 +119,7 @@ export const AdminLoginPage: React.FC = () => {
                   onChange={(e) => setUsername(e.target.value)}
                   required
                   placeholder="planner@oilindia.in"
-                  className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 placeholder-slate-400 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-[#c5161d] transition-all shadow-2xs"
+                  className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 placeholder-slate-400 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-[#9e1218] transition-all shadow-2xs"
                 />
               </div>
             </div>
@@ -142,7 +142,7 @@ export const AdminLoginPage: React.FC = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   placeholder="Enter administrator password"
-                  className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 placeholder-slate-400 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-[#c5161d] transition-all shadow-2xs"
+                  className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 placeholder-slate-400 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-[#9e1218] transition-all shadow-2xs"
                 />
               </div>
             </div>
@@ -150,7 +150,7 @@ export const AdminLoginPage: React.FC = () => {
             <Button
               type="submit"
               isLoading={loading}
-              className="w-full py-2.5 text-xs font-bold rounded-xl bg-[#c5161d] hover:bg-[#a51016] text-white shadow-md shadow-red-950/20 transition-all flex items-center justify-center gap-2 mt-2"
+              className="w-full py-2.5 text-xs font-bold rounded-xl bg-[#9e1218] hover:bg-[#a51016] text-white shadow-md shadow-red-950/20 transition-all flex items-center justify-center gap-2 mt-2"
             >
               <span>Sign In to Central Planner Cockpit</span>
               <ArrowRight className="w-4 h-4" />

@@ -61,7 +61,7 @@ export const SupervisorLoginPage: React.FC = () => {
           <BrandLogo roleTag="FIELD" tagColor="slate" size="sm" />
 
           <div className="flex items-center gap-1 text-[11px] font-mono text-red-700 bg-red-50 px-2.5 py-0.5 rounded-md border border-red-200 font-medium">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#c5161d] animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[#9e1218] animate-pulse" />
             <span>Site Link</span>
           </div>
         </div>
@@ -80,7 +80,7 @@ export const SupervisorLoginPage: React.FC = () => {
               <h1 className="text-base font-black text-slate-900 tracking-tight">
                 Supervisor Sign-In
               </h1>
-              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-red-50 text-[#c5161d] border border-red-200">
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-red-50 text-[#9e1218] border border-red-200">
                 DIRECT FIELD PORTAL
               </span>
             </div>
@@ -118,7 +118,7 @@ export const SupervisorLoginPage: React.FC = () => {
                   onChange={(e) => setUsername(e.target.value)}
                   required
                   placeholder="name@oilindia.in"
-                  className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 placeholder-slate-400 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-[#c5161d] transition-all shadow-2xs"
+                  className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 placeholder-slate-400 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-[#9e1218] transition-all shadow-2xs"
                 />
               </div>
             </div>
@@ -140,7 +140,7 @@ export const SupervisorLoginPage: React.FC = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   placeholder="Enter supervisor password"
-                  className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 placeholder-slate-400 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-[#c5161d] transition-all shadow-2xs"
+                  className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 placeholder-slate-400 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-[#9e1218] transition-all shadow-2xs"
                 />
               </div>
             </div>
@@ -148,7 +148,7 @@ export const SupervisorLoginPage: React.FC = () => {
             <Button
               type="submit"
               isLoading={loading}
-              className="w-full py-3 text-xs font-bold rounded-xl bg-[#c5161d] hover:bg-[#a51016] text-white shadow-md shadow-red-950/20 transition-all flex items-center justify-center gap-2 mt-2"
+              className="w-full py-3 text-xs font-bold rounded-xl bg-[#9e1218] hover:bg-[#a51016] text-white shadow-md shadow-red-950/20 transition-all flex items-center justify-center gap-2 mt-2"
             >
               <span>Enter Site Terminal</span>
               <ArrowRight className="w-4 h-4" />

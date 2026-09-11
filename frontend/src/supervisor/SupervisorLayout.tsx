@@ -95,10 +95,10 @@ export const SupervisorLayout: React.FC = () => {
             <button
               onClick={() => setIsHelpOpen(true)}
               title="Help & Support"
-              className="p-1.5 rounded-lg text-slate-500 hover:text-[#c5161d] hover:bg-slate-100 transition-colors"
+              className="p-1.5 rounded-lg text-slate-500 hover:text-[#9e1218] hover:bg-slate-100 transition-colors"
               aria-label="Help & Support"
             >
-              <HelpCircle className="w-4 h-4 text-[#c5161d]" />
+              <HelpCircle className="w-4 h-4 text-[#9e1218]" />
             </button>
 
             {/* Language Switcher Pill EN | हिन्दी */}
@@ -129,7 +129,7 @@ export const SupervisorLayout: React.FC = () => {
               >
                 <Bell className="w-4 h-4" />
                 {unreadCount > 0 && (
-                  <span className="absolute top-0 right-0 w-4 h-4 bg-[#c5161d] text-white text-[9px] font-bold rounded-full flex items-center justify-center animate-pulse">
+                  <span className="absolute top-0 right-0 w-4 h-4 bg-[#9e1218] text-white text-[9px] font-bold rounded-full flex items-center justify-center animate-pulse">
                     {unreadCount > 9 ? '9+' : unreadCount}
                   </span>
                 )}
@@ -191,7 +191,7 @@ export const SupervisorLayout: React.FC = () => {
               )}
             </div>
 
-            <span className="px-2 py-0.5 rounded-full bg-red-50 text-[10px] font-mono font-bold text-[#c5161d] border border-red-200">
+            <span className="px-2 py-0.5 rounded-full bg-red-50 text-[10px] font-mono font-bold text-[#9e1218] border border-red-200">
               {t('home_site_terminal')}
             </span>
 
@@ -220,7 +220,7 @@ export const SupervisorLayout: React.FC = () => {
             end
             className={({ isActive }) =>
               `flex flex-col items-center gap-1 text-[11px] font-medium transition-colors ${
-                isActive ? 'text-[#c5161d] font-bold' : 'text-slate-500 hover:text-slate-800'
+                isActive ? 'text-[#9e1218] font-bold' : 'text-slate-500 hover:text-slate-800'
               }`
             }
           >
@@ -232,11 +232,11 @@ export const SupervisorLayout: React.FC = () => {
             to="/supervisor/log"
             className={({ isActive }) =>
               `flex flex-col items-center gap-1 text-[11px] font-medium transition-colors ${
-                isActive ? 'text-[#c5161d] font-bold' : 'text-slate-500 hover:text-slate-800'
+                isActive ? 'text-[#9e1218] font-bold' : 'text-slate-500 hover:text-slate-800'
               }`
             }
           >
-            <div className="w-11 h-11 -mt-5 rounded-full bg-[#c5161d] hover:bg-[#a51016] text-white flex items-center justify-center shadow-md shadow-red-950/40 active:scale-95 transition-transform">
+            <div className="w-11 h-11 -mt-5 rounded-full bg-[#9e1218] hover:bg-[#a51016] text-white flex items-center justify-center shadow-md shadow-red-950/40 active:scale-95 transition-transform">
               <PlusCircle className="w-6 h-6" />
             </div>
             <span>{t('nav_log')}</span>
@@ -246,7 +246,7 @@ export const SupervisorLayout: React.FC = () => {
             to="/supervisor/files"
             className={({ isActive }) =>
               `flex flex-col items-center gap-1 text-[11px] font-medium transition-colors ${
-                isActive ? 'text-[#c5161d] font-bold' : 'text-slate-500 hover:text-slate-800'
+                isActive ? 'text-[#9e1218] font-bold' : 'text-slate-500 hover:text-slate-800'
               }`
             }
           >
@@ -258,7 +258,7 @@ export const SupervisorLayout: React.FC = () => {
             to="/supervisor/submissions"
             className={({ isActive }) =>
               `flex flex-col items-center gap-1 text-[11px] font-medium transition-colors ${
-                isActive ? 'text-[#c5161d] font-bold' : 'text-slate-500 hover:text-slate-800'
+                isActive ? 'text-[#9e1218] font-bold' : 'text-slate-500 hover:text-slate-800'
               }`
             }
           >

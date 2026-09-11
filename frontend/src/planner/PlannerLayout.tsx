@@ -16,15 +16,15 @@ import {
   AlertOctagon,
   ClipboardList,
   FileDown,
-  ShieldAlert,
   Clock,
   FileText,
   Sparkles,
-  Settings,
-  MoreHorizontal,
   ChevronDown,
+  ChevronRight,
   Bell,
   HelpCircle,
+  Menu,
+  User as UserIcon,
 } from 'lucide-react';
 import { WorkflowReportModal } from './WorkflowReportModal';
 import { HelpSupportModal } from '../components/HelpSupportModal';
@@ -45,6 +45,9 @@ export const PlannerLayout: React.FC = () => {
   const [isReportModalOpen, setIsReportModalOpen] = useState<boolean>(false);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState<boolean>(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState<boolean>(false);
+
+  // Sub-menu expansion states
+  const [isReportsExpanded, setIsReportsExpanded] = useState<boolean>(true);
 
   const { data: projectsData } = useQuery({
     queryKey: ['projects'],
@@ -91,7 +94,7 @@ export const PlannerLayout: React.FC = () => {
     navigate('/login');
   };
 
-  // Nav items: EXACT previous names maintained, "Dashboard" removed as requested
+  // Original feature names restored; Dashboard and Review Queue are ONE section (Review Queue)
   const navItems = [
     { to: '/planner/schedule',   label: 'Gantt',          icon: CalendarRange },
     { to: '/planner/review',     label: 'Review Queue',   icon: Inbox,          badge: true, count: queueCount },
@@ -101,146 +104,141 @@ export const PlannerLayout: React.FC = () => {
     { to: '/planner/workload',   label: 'Assignments',    icon: Users },
     { to: '/planner/historical', label: 'Historical',     icon: Brain },
     { to: '/planner/setup',      label: 'Baseline Setup', icon: FolderKanban },
-    {
-      to: '#reports',
-      label: 'Reports',
-      icon: FileText,
-      hasDropdown: true,
-      onClick: (e: React.MouseEvent) => {
-        e.preventDefault();
-        setIsReportModalOpen(true);
-      },
-    },
-    { to: '/planner/review',     label: 'AI Verification',icon: Sparkles,      hasDropdown: true },
-    { to: '/planner/setup',      label: 'Settings',       icon: Settings,      hasDropdown: true },
-    {
-      to: '#help',
-      label: 'Help & Support',
-      icon: HelpCircle,
-      onClick: (e: React.MouseEvent) => {
-        e.preventDefault();
-        setIsHelpModalOpen(true);
-      },
-    },
   ];
 
   return (
-    <div className="min-h-screen bg-slate-900 flex text-slate-900 font-sans antialiased overflow-x-hidden">
+    <div className="h-screen w-screen overflow-hidden flex bg-[#0a0b0e] text-slate-900 font-sans antialiased select-none">
 
-      {/* ── Left Vertical Dark Sidebar ── */}
-      {/* Three dots are inside the navigation bar header when open */}
+      {/* ── Left Stationary Navigation Bar (Fixed & Never Moves on Page Scroll) ── */}
       <aside
-        className={`bg-[#0a0b0e] text-slate-300 flex flex-col flex-shrink-0 z-40 border-r border-slate-800/80 transition-all duration-300 ease-in-out select-none ${
+        className={`bg-[#0a0b0e] text-slate-300 flex flex-col flex-shrink-0 z-40 border-r border-slate-800/80 transition-all duration-300 ease-in-out h-screen ${
           isSidebarCollapsed ? 'w-0 -translate-x-full overflow-hidden' : 'w-64 translate-x-0'
-        } min-h-screen fixed lg:static top-0 bottom-0 left-0`}
+        }`}
       >
-        {/* Navigation Bar Header: Logo + Title + Three Dots Toggle (Inside Nav Bar as requested) */}
+        {/* Navigation Bar Header when ON:
+            - Logo
+            - Name: ScheduleSync
+            - Under the name: WHITE color "OIL INDIA LIMITED"
+            - Three lines / Menu button to collapse
+        */}
         <div className="h-16 px-4 flex items-center justify-between border-b border-slate-800/60 flex-shrink-0">
           <div className="flex items-center gap-2.5 overflow-hidden">
-            {/* Oil India emblem */}
-            <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center p-1 border border-red-600/40 flex-shrink-0">
-              <img
-                src="/logo.png"
-                onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/assets/pumpjack-badge.png'; }}
-                alt="Oil India Limited"
-                className="w-full h-full object-contain"
-              />
-            </div>
+            {/* New Logo */}
+            <img
+              src="/assets/logo.png"
+              onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/logo.png'; }}
+              alt="ScheduleSync Logo"
+              className="w-8 h-8 rounded-full object-contain bg-white/10 p-0.5 border border-red-900/60 flex-shrink-0"
+            />
             <div className="flex flex-col text-left">
-              <span className="text-[10px] text-slate-300 font-semibold leading-tight font-hindi">
-                ऑयल इंडिया लिमिटेड
+              <span className="text-base font-black tracking-tight leading-none flex items-center">
+                <span className="text-white">Schedule</span>
+                <span className="text-[#9e1218] ml-0.5" style={{ color: '#9e1218' }}>Sync</span>
               </span>
-              <span className="text-[11px] font-black tracking-wider text-white uppercase leading-none mt-0.5">
+              {/* User requirement: Under the name, the white color OIL INDIA LIMITED */}
+              <span className="text-[9px] font-black tracking-widest uppercase text-white leading-none mt-1">
                 OIL INDIA LIMITED
               </span>
             </div>
           </div>
 
-          {/* User requirement: The three dots are inside the navigation bar page when open */}
           <button
             onClick={() => setIsSidebarCollapsed(true)}
             className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-all cursor-pointer flex-shrink-0"
             title="Collapse Navigation Bar"
             aria-label="Collapse Navigation Bar"
           >
-            <MoreHorizontal className="w-5 h-5 text-slate-400 hover:text-white" />
+            <Menu className="w-5 h-5 text-slate-300 hover:text-white" />
           </button>
         </div>
 
-        {/* Navigation items list */}
-        <nav className="flex-1 py-4 px-2.5 space-y-1 overflow-y-auto custom-scrollbar">
+        {/* Navigation items list - Internally scrollable, independent of page */}
+        <nav className="flex-1 py-3 px-2.5 space-y-1 overflow-y-auto custom-scrollbar">
           {navItems.map((item, index) => {
             const Icon = item.icon;
             const isSelected = item.to.startsWith('/') && location.pathname === item.to;
 
-            const content = (
-              <div
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all duration-150 relative group cursor-pointer ${
-                  isSelected
-                    ? 'bg-[#c5161d] text-white shadow-md shadow-red-950/40'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-                }`}
-              >
-                <Icon className={`w-4 h-4 flex-shrink-0 ${isSelected ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
-                <span className="truncate flex-1">{item.label}</span>
-
-                {/* Badge Counters */}
-                {item.badge && item.count !== undefined && item.count > 0 && (
-                  <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-red-600 border border-red-500 text-white font-bold leading-none ml-auto">
-                    {item.count}
-                  </span>
-                )}
-
-                {item.hseCount && item.count !== undefined && item.count > 0 && (
-                  <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-rose-600 text-white font-bold leading-none ml-auto">
-                    {item.count}
-                  </span>
-                )}
-
-                {item.hasDropdown && (
-                  <ChevronDown className="w-3.5 h-3.5 text-slate-500 ml-auto flex-shrink-0" />
-                )}
-              </div>
-            );
-
-            if (item.onClick) {
-              return (
-                <button
-                  key={index}
-                  onClick={item.onClick}
-                  className="w-full text-left"
-                >
-                  {content}
-                </button>
-              );
-            }
-
             return (
-              <NavLink key={index} to={item.to} end={item.to === '/planner/review'}>
-                {content}
+              <NavLink
+                key={index}
+                to={item.to}
+                end={item.to === '/planner/review'}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all duration-150 relative group cursor-pointer ${
+                    isActive
+                      ? 'bg-[#9e1218] text-white shadow-md shadow-red-950/50'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                  }`
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
+                    <span className="truncate flex-1">{item.label}</span>
+
+                    {/* Badge Counters */}
+                    {item.badge && item.count !== undefined && item.count > 0 && (
+                      <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-[#9e1218] border border-red-700 text-white font-bold leading-none ml-auto">
+                        {item.count}
+                      </span>
+                    )}
+
+                    {item.hseCount && item.count !== undefined && item.count > 0 && (
+                      <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-rose-700 text-white font-bold leading-none ml-auto">
+                        {item.count}
+                      </span>
+                    )}
+                  </>
+                )}
               </NavLink>
             );
           })}
 
-          {/* Sign Out Button */}
-          <div className="pt-3 border-t border-slate-800/80 mt-2">
+          {/* Reports (Expandable) */}
+          <div className="pt-1">
             <button
-              onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-red-400 hover:bg-red-950/20 transition-all cursor-pointer group"
-              title="Sign Out"
+              onClick={() => setIsReportsExpanded(!isReportsExpanded)}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all cursor-pointer group"
             >
-              <LogOut className="w-4 h-4 flex-shrink-0 group-hover:text-red-400 text-slate-400" />
-              <span>Sign Out</span>
+              <FileText className="w-4 h-4 flex-shrink-0 text-slate-400 group-hover:text-white" />
+              <span className="truncate flex-1 text-left">Reports</span>
+              {isReportsExpanded ? (
+                <ChevronDown className="w-3.5 h-3.5 text-slate-500 ml-auto flex-shrink-0" />
+              ) : (
+                <ChevronRight className="w-3.5 h-3.5 text-slate-500 ml-auto flex-shrink-0" />
+              )}
             </button>
+
+            {isReportsExpanded && (
+              <div className="pl-9 pr-2 py-1">
+                <button
+                  onClick={() => setIsReportModalOpen(true)}
+                  className="flex items-center gap-2 text-xs text-slate-400 hover:text-white py-1 transition-colors w-full text-left cursor-pointer"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />
+                  <span>View Report PDF</span>
+                </button>
+              </div>
+            )}
           </div>
+
+          {/* Help & Support */}
+          <button
+            onClick={() => setIsHelpModalOpen(true)}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all cursor-pointer group text-left"
+          >
+            <HelpCircle className="w-4 h-4 flex-shrink-0 text-slate-400 group-hover:text-white" />
+            <span className="truncate flex-1">Help & Support</span>
+          </button>
         </nav>
 
         {/* Sidebar Footer: Energy For a Stronger Tomorrow */}
-        <div className="p-4 border-t border-slate-800/60 bg-gradient-to-t from-black/80 to-transparent relative overflow-hidden flex-shrink-0">
+        <div className="p-4 border-t border-slate-800/60 bg-gradient-to-t from-black/90 to-transparent relative overflow-hidden flex-shrink-0">
           <div className="flex items-end gap-2.5">
             <div className="w-10 h-10 opacity-70 flex-shrink-0">
               <img
-                src="/assets/pumpjack-badge.png"
+                src="/assets/logo.png"
+                onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/logo.png'; }}
                 alt="Oilfield"
                 className="w-full h-full object-contain filter invert opacity-80"
               />
@@ -255,108 +253,152 @@ export const PlannerLayout: React.FC = () => {
               <span className="text-[10px] uppercase tracking-wider text-white font-extrabold leading-tight">
                 TOMORROW
               </span>
-              <div className="w-8 h-0.5 bg-[#c5161d] mt-1 rounded-full" />
+              <div className="w-8 h-0.5 bg-[#9e1218] mt-1 rounded-full" />
             </div>
           </div>
         </div>
       </aside>
 
-      {/* ── Main Layout Column (Top Bar + Main Work Area with Background) ── */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-screen bg-slate-50">
+      {/* ── Main Layout Column: Only this area scrolls when scrolling down ── */}
+      <div className="flex-1 flex flex-col h-screen overflow-y-auto min-w-0 bg-slate-50 relative">
 
         {/* ── Top Header Bar ── */}
         <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs flex-shrink-0">
           <div className="flex items-center h-16 px-4 md:px-6 justify-between gap-3 w-full">
 
-            {/* Left Area:
-                When closed: Three dots button + Logo + "ScheduleSync" + Black "OIL INDIA LIMITED"
-                When open: Clean minimal left header with project switcher
+            {/* Left Header Area:
+                - If sidebar is ON: Show Project Name & Project Switcher
+                - If sidebar is OFF: Show Menu Toggle + Logo + ScheduleSync + BLACK "OIL INDIA LIMITED" + Project Name
             */}
             <div className="flex items-center gap-3 md:gap-4 flex-shrink-0">
-              {isSidebarCollapsed && (
+              {isSidebarCollapsed ? (
                 <>
-                  {/* Three dots toggle to open navigation bar */}
+                  {/* Three lines / Menu button to open navigation bar */}
                   <button
                     onClick={() => setIsSidebarCollapsed(false)}
                     className="p-2 rounded-lg hover:bg-slate-100 text-slate-700 hover:text-black border border-slate-200 transition-all cursor-pointer flex items-center justify-center shadow-2xs"
                     title="Open Navigation Bar"
                     aria-label="Open Navigation Bar"
                   >
-                    <MoreHorizontal className="w-5 h-5 text-slate-800" />
+                    <Menu className="w-5 h-5 text-slate-800" />
                   </button>
 
-                  {/* Logo + ScheduleSync + Black "OIL INDIA LIMITED" when collapsed */}
+                  {/* Logo + Name + BLACK "OIL INDIA LIMITED" when OFF */}
                   <div className="flex items-center gap-2.5 select-none">
                     <img
-                      src="/assets/pumpjack-badge.png"
+                      src="/assets/logo.png"
                       onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/logo.png'; }}
                       alt="Oil India Limited"
                       className="w-8 h-8 rounded-full object-contain border border-slate-200 bg-white p-0.5"
                     />
                     <div className="flex flex-col justify-center">
-                      <h1 className="text-base md:text-lg font-black tracking-tight leading-none flex items-center">
-                        <span className="text-black" style={{ color: '#000000' }}>Schedule</span>
-                        <span className="text-[#c5161d]" style={{ color: '#c5161d' }}>Sync</span>
+                      <h1 className="text-base font-black tracking-tight leading-none flex items-center">
+                        <span className="text-black">Schedule</span>
+                        <span className="text-[#9e1218]" style={{ color: '#9e1218' }}>Sync</span>
                       </h1>
+                      {/* Under name, black color OIL INDIA LIMITED */}
                       <span
-                        className="text-[10px] font-black uppercase tracking-widest leading-none mt-0.5 text-black"
+                        className="text-[9px] font-black uppercase tracking-widest leading-none mt-1 text-black"
                         style={{ color: '#000000', fontWeight: 900 }}
                       >
                         OIL INDIA LIMITED
                       </span>
                     </div>
                   </div>
+
+                  <div className="h-6 w-px bg-slate-200 mx-1 hidden sm:block" />
+
+                  {/* Project Name when OFF */}
+                  <div className="hidden sm:flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                    <select
+                      aria-label="Active Project"
+                      value={selectedProjectId}
+                      onChange={handleProjectChange}
+                      className="bg-slate-50 text-slate-800 font-semibold text-xs rounded border border-slate-200 px-2 py-1 focus:outline-none cursor-pointer max-w-[220px] truncate"
+                    >
+                      {projects.map((p) => (
+                        <option key={p.id} value={p.id}>{p.name} ({p.activity_count ?? 0} acts)</option>
+                      ))}
+                    </select>
+                  </div>
                 </>
+              ) : (
+                /* When Navigation Bar is ON: Show Project Name in the header */
+                <div className="flex items-center gap-2.5">
+                  <Building2 className="w-4 h-4 text-[#9e1218] flex-shrink-0" />
+                  <div className="flex flex-col">
+                    <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">
+                      Active Capital Project
+                    </span>
+                    <span className="text-xs sm:text-sm font-extrabold text-slate-900 truncate max-w-[220px] md:max-w-md">
+                      {selectedProjectName || 'Numaligarh Refinery Expansion (Unit 3 & Offsites)'}
+                    </span>
+                  </div>
+
+                  <select
+                    aria-label="Switch Project"
+                    value={selectedProjectId}
+                    onChange={handleProjectChange}
+                    className="ml-2 bg-slate-50 text-slate-700 font-medium text-[11px] rounded border border-slate-200 px-2 py-1 focus:outline-none cursor-pointer hidden md:block"
+                  >
+                    {projects.map((p) => (
+                      <option key={p.id} value={p.id}>{p.name} ({p.activity_count ?? 0} acts)</option>
+                    ))}
+                  </select>
+
+                  <button
+                    onClick={() => setIsReportModalOpen(true)}
+                    className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#0a0b0e] hover:bg-[#1a1c22] text-white font-bold text-[11px] shadow-2xs transition-colors cursor-pointer flex-shrink-0 border border-slate-800 ml-2"
+                    title="View and download Workflow PDF Report for selected project"
+                  >
+                    <FileDown className="w-3.5 h-3.5 text-red-400" />
+                    <span>View Report PDF</span>
+                  </button>
+                </div>
               )}
-
-              {/* Active Project Dropdown & Workflow Report PDF button */}
-              <div className="flex items-center gap-2 pl-2">
-                <Building2 className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                <select
-                  aria-label="Active Project"
-                  value={selectedProjectId}
-                  onChange={handleProjectChange}
-                  className="bg-slate-50 text-slate-800 font-semibold text-xs rounded-md border border-slate-200 px-2.5 py-1.5 focus:outline-none cursor-pointer max-w-[220px] truncate"
-                >
-                  {projects.map((p) => (
-                    <option key={p.id} value={p.id}>{p.name} ({p.activity_count ?? 0} acts)</option>
-                  ))}
-                </select>
-
-                <button
-                  onClick={() => setIsReportModalOpen(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#0a0b0e] hover:bg-[#1a1c22] text-white font-bold text-xs shadow-xs transition-colors cursor-pointer flex-shrink-0 border border-slate-800"
-                  title="View and download Workflow PDF Report for selected project"
-                >
-                  <FileDown className="w-3.5 h-3.5 text-red-400" />
-                  <span>View Report PDF</span>
-                </button>
-              </div>
             </div>
 
-            {/* Right: Help & Support trigger, Notifications & User Profile */}
-            <div className="flex items-center gap-3 flex-shrink-0">
-              {/* Quick Help & Support Button in Top Bar */}
-              <button
-                onClick={() => setIsHelpModalOpen(true)}
-                className="p-2 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-[#c5161d] border border-slate-200 transition-all cursor-pointer flex items-center gap-1 text-xs font-semibold"
-                title="Help & Support"
-              >
-                <HelpCircle className="w-4 h-4 text-[#c5161d]" />
-                <span className="hidden sm:inline">Help</span>
-              </button>
+            {/* Right Header Area:
+                - Energy For A Stronger Tomorrow illustration
+                - Notification bell with red counter badge
+                - User avatar + Admin / Lead Planner
+                - Red outlined "Sign Out" button
+            */}
+            <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0">
+              {/* Energy For A Stronger Tomorrow Graphic */}
+              <div className="hidden lg:flex items-center gap-2.5 pr-3 border-r border-slate-200">
+                <img
+                  src="/assets/logo.png"
+                  onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/logo.png'; }}
+                  alt="Oilfield"
+                  className="w-7 h-7 object-contain opacity-75"
+                />
+                <div className="flex flex-col text-left">
+                  <span className="text-[8px] uppercase tracking-wider text-slate-600 font-bold leading-tight">
+                    ENERGY
+                  </span>
+                  <span className="text-[9px] uppercase tracking-wider text-slate-900 font-extrabold leading-tight">
+                    FOR A STRONGER
+                  </span>
+                  <span className="text-[9px] uppercase tracking-wider text-slate-900 font-extrabold leading-tight">
+                    TOMORROW
+                  </span>
+                  <div className="w-7 h-0.5 bg-[#9e1218] mt-0.5 rounded-full" />
+                </div>
+              </div>
 
               {/* Notification Bell with red badge */}
               <div className="relative">
                 <button
                   onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                  className="p-2 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 border border-slate-200 transition-all cursor-pointer relative"
+                  className="p-2 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-all cursor-pointer relative"
                   title="Notifications"
                   aria-label="Notifications"
                 >
-                  <Bell className="w-4 h-4 text-slate-700" />
+                  <Bell className="w-5 h-5 text-slate-700" />
                   {queueCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#c5161d] text-white font-black text-[10px] flex items-center justify-center ring-2 ring-white">
+                    <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#9e1218] text-white font-black text-[10px] flex items-center justify-center ring-2 ring-white">
                       {queueCount}
                     </span>
                   )}
@@ -367,7 +409,7 @@ export const PlannerLayout: React.FC = () => {
                   <div className="absolute right-0 mt-2 w-72 bg-white rounded-xl shadow-xl border border-slate-200 p-3 z-50 space-y-2">
                     <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                       <span className="text-xs font-bold text-slate-900">Activity Queue Alerts</span>
-                      <span className="text-[10px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded">
+                      <span className="text-[10px] font-bold text-[#9e1218] bg-red-50 px-2 py-0.5 rounded">
                         {queueCount} Pending
                       </span>
                     </div>
@@ -386,29 +428,39 @@ export const PlannerLayout: React.FC = () => {
                 )}
               </div>
 
-              {/* User Avatar & Title */}
-              <div className="flex items-center gap-2.5 pl-3 border-l border-slate-200">
-                <div className="w-8 h-8 rounded-full bg-slate-800 text-white font-bold text-xs flex items-center justify-center shadow-xs border border-slate-700">
-                  A
+              {/* User Profile Avatar & Info */}
+              <div className="flex items-center gap-2 pl-1 sm:pl-2">
+                <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center">
+                  <UserIcon className="w-4 h-4 text-white" />
                 </div>
                 <div className="hidden sm:flex flex-col text-left">
                   <span className="text-xs font-bold text-slate-900 leading-none">
-                    {user?.name && !user.name.toLowerCase().includes('arun') ? user.name : 'Admin'}
+                    Admin
                   </span>
                   <span className="text-[10px] text-slate-500 font-medium mt-0.5">
                     Lead Planner
                   </span>
                 </div>
               </div>
+
+              {/* Red Outlined Sign Out Button with darker red */}
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-300 text-[#9e1218] hover:bg-red-50 hover:border-[#9e1218] text-xs font-bold transition-all cursor-pointer shadow-2xs"
+                title="Sign Out"
+              >
+                <LogOut className="w-4 h-4 text-[#9e1218]" />
+                <span className="hidden sm:inline">Sign Out</span>
+              </button>
             </div>
           </div>
         </header>
 
-        {/* ── Main Content Area with Refinery Wallpaper Background ── */}
+        {/* ── Main Scrollable Content Area with Refinery Wallpaper Background ── */}
         <main
-          className="flex-1 w-full p-4 md:p-6 lg:p-8 relative refinery-bg min-h-[calc(100vh-4rem)]"
+          className="flex-1 w-full p-4 md:p-6 lg:p-8 relative refinery-bg min-h-[calc(100vh-8rem)]"
           style={{
-            backgroundImage: `linear-gradient(to bottom, rgba(248, 250, 252, 0.92), rgba(241, 245, 249, 0.95)), url('/assets/refinery-bg.png')`,
+            backgroundImage: `linear-gradient(to bottom, rgba(248, 250, 252, 0.93), rgba(241, 245, 249, 0.96)), url('/assets/refinery-bg.png')`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundAttachment: 'fixed',
@@ -420,8 +472,32 @@ export const PlannerLayout: React.FC = () => {
         </main>
 
         {/* Footer */}
-        <footer className="border-t border-slate-200 bg-white/95 px-6 py-3 text-center text-xs text-slate-500 flex-shrink-0">
-          © 2026 Oil India Limited · ScheduleSync Project Control Platform · Numaligarh Refinery Expansion
+        <footer className="border-t border-slate-200 bg-white/95 px-6 py-3 text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2 flex-shrink-0">
+          <div>
+            © 2026 Oil India Limited. All rights reserved. &nbsp;|&nbsp; ScheduleSync v1.0
+          </div>
+          <div className="flex items-center gap-4 text-slate-400">
+            <button
+              onClick={() => setIsHelpModalOpen(true)}
+              className="hover:text-slate-700 transition-colors cursor-pointer"
+            >
+              Privacy
+            </button>
+            <span>|</span>
+            <button
+              onClick={() => setIsHelpModalOpen(true)}
+              className="hover:text-slate-700 transition-colors cursor-pointer"
+            >
+              Terms
+            </button>
+            <span>|</span>
+            <button
+              onClick={() => setIsHelpModalOpen(true)}
+              className="hover:text-slate-700 transition-colors cursor-pointer"
+            >
+              Support
+            </button>
+          </div>
         </footer>
       </div>
 
