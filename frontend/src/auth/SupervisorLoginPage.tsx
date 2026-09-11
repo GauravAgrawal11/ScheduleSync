@@ -46,14 +46,22 @@ export const SupervisorLoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col justify-between text-slate-800 font-sans antialiased">
+    <div
+      className="min-h-screen flex flex-col justify-between text-slate-800 font-sans antialiased"
+      style={{
+        backgroundImage: `linear-gradient(to bottom, rgba(248, 250, 252, 0.90), rgba(241, 245, 249, 0.93)), url('/assets/refinery-bg.png')`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
+      }}
+    >
       {/* Top Header: High-contrast white bar */}
-      <header className="bg-white border-b border-slate-200 px-5 py-3.5 sticky top-0 z-20 shadow-xs">
+      <header className="bg-white/95 backdrop-blur-xs border-b border-slate-200 px-5 py-3.5 sticky top-0 z-20 shadow-xs">
         <div className="max-w-md mx-auto flex items-center justify-between">
-          <BrandLogo roleTag="FIELD" tagColor="amber" size="sm" />
+          <BrandLogo roleTag="FIELD" tagColor="slate" size="sm" />
 
-          <div className="flex items-center gap-1 text-[11px] font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 font-medium">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <div className="flex items-center gap-1 text-[11px] font-mono text-red-700 bg-red-50 px-2.5 py-0.5 rounded-md border border-red-200 font-medium">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#c5161d] animate-pulse" />
             <span>Site Link</span>
           </div>
         </div>
@@ -65,15 +73,15 @@ export const SupervisorLoginPage: React.FC = () => {
           <InstallAppBanner />
         </div>
 
-        <div className="max-w-md w-full bg-white border border-slate-200 rounded-2xl shadow-sm p-6 space-y-5">
+        <div className="max-w-md w-full bg-white border border-slate-200 rounded-2xl shadow-xl p-6 space-y-5">
           {/* Terminal Title & Brief Context */}
           <div className="border-b border-slate-100 pb-4">
             <div className="flex items-center justify-between">
-              <h1 className="text-base font-bold text-slate-900 tracking-tight">
+              <h1 className="text-base font-black text-slate-900 tracking-tight">
                 Supervisor Sign-In
               </h1>
-              <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
-                Direct Field Portal
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-red-50 text-[#c5161d] border border-red-200">
+                DIRECT FIELD PORTAL
               </span>
             </div>
             <p className="text-xs text-slate-500 mt-1">
@@ -110,7 +118,7 @@ export const SupervisorLoginPage: React.FC = () => {
                   onChange={(e) => setUsername(e.target.value)}
                   required
                   placeholder="name@oilindia.in"
-                  className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 placeholder-slate-400 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all shadow-2xs"
+                  className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 placeholder-slate-400 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-[#c5161d] transition-all shadow-2xs"
                 />
               </div>
             </div>
@@ -132,7 +140,7 @@ export const SupervisorLoginPage: React.FC = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   placeholder="Enter supervisor password"
-                  className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 placeholder-slate-400 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all shadow-2xs"
+                  className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 placeholder-slate-400 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-[#c5161d] transition-all shadow-2xs"
                 />
               </div>
             </div>
@@ -140,7 +148,7 @@ export const SupervisorLoginPage: React.FC = () => {
             <Button
               type="submit"
               isLoading={loading}
-              className="w-full py-3 text-xs font-bold rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 shadow-sm transition-all flex items-center justify-center gap-2 mt-2"
+              className="w-full py-3 text-xs font-bold rounded-xl bg-[#c5161d] hover:bg-[#a51016] text-white shadow-md shadow-red-950/20 transition-all flex items-center justify-center gap-2 mt-2"
             >
               <span>Enter Site Terminal</span>
               <ArrowRight className="w-4 h-4" />
