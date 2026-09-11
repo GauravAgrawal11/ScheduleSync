@@ -77,7 +77,7 @@ def seed():
                 existing.hashed_password = get_password_hash(u_pw)
         db.commit()
 
-        # 3. Create the 1 Active Running Project
+        # 3. Create the Active Running Projects
         p1 = Project(
             id=1,
             name="Numaligarh Refinery Expansion (Unit 3 & Offsites)",
@@ -85,7 +85,21 @@ def seed():
             start_date=date(2026, 1, 1),
             end_date=date(2026, 12, 31),
         )
-        db.add(p1)
+        p2 = Project(
+            id=2,
+            name="Duliajan Central Gas Gathering Station (CGGS-2)",
+            client="Oil India Limited",
+            start_date=date(2026, 1, 15),
+            end_date=date(2026, 11, 30),
+        )
+        p3 = Project(
+            id=3,
+            name="Guwahati-Siliguri Pipeline Modernization (Phase II)",
+            client="Oil India Limited",
+            start_date=date(2026, 2, 1),
+            end_date=date(2027, 3, 31),
+        )
+        db.add_all([p1, p2, p3])
         db.commit()
 
         # 4. Define all 36 activities

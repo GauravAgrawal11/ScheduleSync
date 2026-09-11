@@ -79,6 +79,20 @@ export const PlannerLayout: React.FC = () => {
       activity_count: 36,
       status: 'RUNNING',
     },
+    {
+      id: 2,
+      name: 'Duliajan Central Gas Gathering Station (CGGS-2)',
+      client: 'Oil India Limited',
+      activity_count: 24,
+      status: 'RUNNING',
+    },
+    {
+      id: 3,
+      name: 'Guwahati-Siliguri Pipeline Modernization (Phase II)',
+      client: 'Oil India Limited',
+      activity_count: 18,
+      status: 'RUNNING',
+    },
   ];
 
   const handleProjectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -414,17 +428,8 @@ export const PlannerLayout: React.FC = () => {
       {/* ── Main Layout Column: Only this area scrolls when scrolling down ── */}
       <div className="flex-1 flex flex-col h-screen overflow-y-auto min-w-0 bg-slate-50 relative">
 
-        {/* ── Top Header Bar with header-bg background (Graphic Artwork Only, No Text) ── */}
-        <header
-          className="border-b border-slate-200 sticky top-0 z-30 shadow-xs flex-shrink-0 relative overflow-hidden"
-          style={{
-            backgroundColor: '#ffffff',
-            backgroundImage: "url('/assets/header-bg.png')",
-            backgroundSize: 'contain',
-            backgroundPosition: 'right center',
-            backgroundRepeat: 'no-repeat',
-          }}
-        >
+        {/* ── Top Header Bar: Clean White Enterprise Header without Background Image Text ── */}
+        <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs flex-shrink-0 relative">
           <div className="flex items-center h-16 px-4 md:px-6 justify-between gap-3 w-full relative z-10">
 
             {/* Left Header Area:
@@ -468,14 +473,14 @@ export const PlannerLayout: React.FC = () => {
 
                   <div className="h-6 w-px bg-slate-200 mx-1 hidden sm:block" />
 
-                  {/* Project Name when OFF */}
+                  {/* Project Switcher when sidebar is OFF */}
                   <div className="hidden sm:flex items-center gap-2">
-                    <Building2 className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                    <Building2 className="w-4 h-4 text-[#9e1218] flex-shrink-0" />
                     <select
                       aria-label="Active Project"
                       value={selectedProjectId}
                       onChange={handleProjectChange}
-                      className="bg-white/90 text-slate-800 font-semibold text-xs rounded border border-slate-200 px-2 py-1 focus:outline-none cursor-pointer max-w-[220px] truncate shadow-2xs"
+                      className="bg-slate-50 hover:bg-slate-100 text-slate-900 font-bold text-xs rounded-lg border border-slate-300 px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-[#9e1218] cursor-pointer max-w-[280px] truncate shadow-2xs"
                     >
                       {projects.map((p) => (
                         <option key={p.id} value={p.id}>{p.name} ({p.activity_count ?? 0} acts)</option>
@@ -484,15 +489,15 @@ export const PlannerLayout: React.FC = () => {
                   </div>
                 </>
               ) : (
-                /* When Navigation Bar is ON: Show Project Name in the header */
+                /* When Navigation Bar is ON: Show Project Name & Switcher in the header */
                 <div className="flex items-center gap-2.5">
                   <Building2 className="w-4 h-4 text-[#9e1218] flex-shrink-0" />
                   <div className="flex flex-col">
                     <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">
                       Active Capital Project
                     </span>
-                    <span className="text-xs sm:text-sm font-extrabold text-slate-900 truncate max-w-[220px] md:max-w-md">
-                      {selectedProjectName || 'Numaligarh Refinery Expansion (Unit 3 & Offsites)'}
+                    <span className="text-xs sm:text-sm font-extrabold text-slate-900 truncate max-w-[260px] md:max-w-md lg:max-w-xl">
+                      {projects.find((p) => p.id === selectedProjectId)?.name || selectedProjectName || 'Numaligarh Refinery Expansion (Unit 3 & Offsites)'}
                     </span>
                   </div>
 
@@ -500,7 +505,7 @@ export const PlannerLayout: React.FC = () => {
                     aria-label="Switch Project"
                     value={selectedProjectId}
                     onChange={handleProjectChange}
-                    className="ml-2 bg-white/90 text-slate-700 font-medium text-[11px] rounded border border-slate-200 px-2 py-1 focus:outline-none cursor-pointer hidden md:block shadow-2xs"
+                    className="ml-2 bg-slate-50 hover:bg-slate-100 text-slate-800 font-bold text-[11px] rounded-lg border border-slate-300 px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-[#9e1218] cursor-pointer shadow-2xs"
                   >
                     {projects.map((p) => (
                       <option key={p.id} value={p.id}>{p.name} ({p.activity_count ?? 0} acts)</option>
@@ -509,7 +514,7 @@ export const PlannerLayout: React.FC = () => {
 
                   <button
                     onClick={() => setIsReportModalOpen(true)}
-                    className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#0a0b0e] hover:bg-[#1a1c22] text-white font-bold text-[11px] shadow-2xs transition-colors cursor-pointer flex-shrink-0 border border-slate-800 ml-2"
+                    className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#0a0b0e] hover:bg-[#1a1c22] text-white font-bold text-[11px] shadow-2xs transition-colors cursor-pointer flex-shrink-0 border border-slate-800 ml-2"
                     title="View and download Workflow PDF Report for selected project"
                   >
                     <FileDown className="w-3.5 h-3.5 text-red-400" />
@@ -519,40 +524,12 @@ export const PlannerLayout: React.FC = () => {
               )}
             </div>
 
-            {/* Right Header Area matching media_1789137169776.png:
-                - Oil Rigs artwork + Energy For A Stronger Tomorrow
-                - Divider |
-                - Notification bell with red badge (4)
-                - Divider |
+            {/* Right Header Area:
+                - Notification bell with red badge
                 - Avatar + Admin Lead Planner
-                - Divider |
                 - Red outlined "Sign Out" button
             */}
             <div className="flex items-center gap-3 sm:gap-3.5 flex-shrink-0">
-              {/* Energy For A Stronger Tomorrow with Oil Rig Towers background graphic */}
-              <div className="hidden lg:flex items-center gap-3 pr-2">
-                <img
-                  src="/assets/oil-rigs-header.png"
-                  alt="Oilfield Rigs"
-                  className="h-10 object-contain opacity-85"
-                />
-                <div className="flex flex-col text-left">
-                  <span className="text-[8px] uppercase tracking-wider text-slate-600 font-bold leading-tight">
-                    ENERGY
-                  </span>
-                  <span className="text-[9px] uppercase tracking-wider text-slate-900 font-extrabold leading-tight">
-                    FOR A STRONGER
-                  </span>
-                  <span className="text-[9px] uppercase tracking-wider text-slate-900 font-extrabold leading-tight">
-                    TOMORROW
-                  </span>
-                  <div className="w-7 h-0.5 bg-[#9e1218] mt-0.5 rounded-full" />
-                </div>
-              </div>
-
-              {/* Vertical divider line */}
-              <div className="h-6 w-px bg-slate-300/80 hidden sm:block" />
-
               {/* Notification Bell with red badge */}
               <div className="relative">
                 <button

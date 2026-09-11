@@ -996,7 +996,7 @@ export const api = {
     } catch {}
 
     return {
-      total: 1,
+      total: 3,
       projects: [
         {
           id: 1,
@@ -1005,6 +1005,26 @@ export const api = {
           start_date: "2026-01-01",
           end_date: "2026-12-31",
           activity_count: 36,
+          status: "RUNNING",
+          created_at: "2026-02-01T00:00:00Z",
+        },
+        {
+          id: 2,
+          name: "Duliajan Central Gas Gathering Station (CGGS-2)",
+          client: "Oil India Limited",
+          start_date: "2026-01-15",
+          end_date: "2026-11-30",
+          activity_count: 24,
+          status: "RUNNING",
+          created_at: "2026-02-01T00:00:00Z",
+        },
+        {
+          id: 3,
+          name: "Guwahati-Siliguri Pipeline Modernization (Phase II)",
+          client: "Oil India Limited",
+          start_date: "2026-02-01",
+          end_date: "2027-03-31",
+          activity_count: 18,
           status: "RUNNING",
           created_at: "2026-02-01T00:00:00Z",
         },
