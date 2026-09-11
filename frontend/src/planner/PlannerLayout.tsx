@@ -3,7 +3,7 @@ import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '../auth/authStore';
 import { useProjectStore } from './projectStore';
-import { api } from '../api/client';
+import { api, notificationsApi } from '../api/client';
 import {
   Home,
   Layers,
@@ -15,6 +15,7 @@ import {
   Brain,
   Users,
   AlertOctagon,
+  AlertTriangle,
   ClipboardList,
   FileDown,
   Clock,
@@ -30,7 +31,11 @@ import {
   Menu,
   User as UserIcon,
   ShieldCheck,
+  ShieldAlert,
   TrendingUp,
+  Paperclip,
+  CheckCircle2,
+  ExternalLink,
   X,
 } from 'lucide-react';
 import { WorkflowReportModal } from './WorkflowReportModal';
@@ -52,6 +57,7 @@ export const PlannerLayout: React.FC = () => {
   const [isReportModalOpen, setIsReportModalOpen] = useState<boolean>(false);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState<boolean>(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState<boolean>(false);
+  const [notifFilter, setNotifFilter] = useState<'ALL' | 'BLOCKERS' | 'REVIEWS' | 'RISKS' | 'SYSTEM'>('ALL');
   const notifRef = useRef<HTMLDivElement>(null);
 
   // Close notifications popup when clicking outside
@@ -77,17 +83,40 @@ export const PlannerLayout: React.FC = () => {
     queryFn: () => api.getProjects(),
   });
 
+  // 1. Open site blockers & HSE issues
   const { data: openComplaints = [] } = useQuery({
     queryKey: ['complaints-open-count', selectedProjectId],
     queryFn: () => api.getComplaints(selectedProjectId, 'OPEN'),
+    refetchInterval: 15000,
   });
   const openComplaintsCount = openComplaints.length;
 
+  // 2. Pending match review queue
   const { data: reviewQueue = [] } = useQuery({
     queryKey: ['review-queue'],
     queryFn: () => api.getReviewQueue(),
+    refetchInterval: 15000,
   });
   const queueCount = reviewQueue.length;
+
+  // 3. Out-of-sequence schedule violations & risks
+  const { data: sequenceViolations = [] } = useQuery({
+    queryKey: ['sequence-violations-notif', selectedProjectId],
+    queryFn: () => api.getSequenceViolations(selectedProjectId),
+    refetchInterval: 15000,
+  });
+  const sequenceViolationsCount = sequenceViolations.filter((v) => !v.acknowledged).length;
+
+  // 4. System / Push notifications
+  const { data: systemNotifications = [] } = useQuery({
+    queryKey: ['system-notifications-notif'],
+    queryFn: () => notificationsApi.getMyNotifications(15),
+    refetchInterval: 20000,
+  });
+  const unreadSysNotifCount = systemNotifications.filter((n) => !n.is_read).length;
+
+  // Total unified count
+  const totalAlertsCount = openComplaintsCount + queueCount + sequenceViolationsCount + unreadSysNotifCount;
 
   const projects = projectsData?.projects || [
     {
@@ -508,18 +537,18 @@ export const PlannerLayout: React.FC = () => {
                 - Red outlined "Sign Out" button
             */}
             <div className="flex items-center gap-3 sm:gap-3.5 flex-shrink-0">
-              {/* Notification Bell with red badge & Auto-closing Popup */}
+              {/* Unified Notification Bell with red badge & Auto-closing Popup */}
               <div className="relative" ref={notifRef}>
                 <button
                   onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
                   className="p-2 rounded-lg hover:bg-slate-100 text-slate-700 hover:text-slate-900 transition-all cursor-pointer relative"
-                  title="Notifications"
-                  aria-label="Notifications"
+                  title="Unified Notifications Center"
+                  aria-label="Unified Notifications Center"
                 >
                   <Bell className="w-5 h-5 text-slate-700" />
-                  {queueCount > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#9e1218] text-white font-black text-[10px] flex items-center justify-center ring-2 ring-white animate-pulse">
-                      {queueCount}
+                  {totalAlertsCount > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#9e1218] text-white font-black text-[10px] flex items-center justify-center ring-2 ring-white animate-pulse shadow-sm">
+                      {totalAlertsCount > 99 ? '99+' : totalAlertsCount}
                     </span>
                   )}
                 </button>
@@ -532,68 +561,269 @@ export const PlannerLayout: React.FC = () => {
                   />
                 )}
 
-                {/* Notifications Popup (Always on top of all pages with z-50 and no clipping) */}
+                {/* Comprehensive Notifications Popup (Always on top of all pages with z-50 and no clipping) */}
                 {isNotificationsOpen && (
-                  <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-xl shadow-2xl border border-slate-200 p-3 z-50 space-y-2.5 animate-in fade-in zoom-in-95 duration-150">
-                    <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                      <div className="flex items-center gap-1.5">
-                        <Bell className="w-3.5 h-3.5 text-[#9e1218]" />
-                        <span className="text-xs font-bold text-slate-900">Activity Queue Alerts</span>
+                  <div className="absolute right-0 mt-2 w-88 sm:w-[420px] md:w-[460px] bg-white rounded-2xl shadow-2xl border border-slate-200/90 p-3.5 z-50 space-y-3 animate-in fade-in zoom-in-95 duration-150 text-slate-800">
+                    {/* Header */}
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-lg bg-red-50 text-[#9e1218] flex items-center justify-center">
+                          <Bell className="w-4 h-4 text-[#9e1218]" />
+                        </div>
+                        <div>
+                          <h2 className="text-xs font-black text-slate-900 leading-tight">Site Notifications &amp; Alerts</h2>
+                          <p className="text-[10px] text-slate-500 font-medium">Real-time blockers, review requests &amp; schedule risks</p>
+                        </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-bold text-[#9e1218] bg-red-50 px-2 py-0.5 rounded">
-                          {queueCount} Pending
-                        </span>
+                        {totalAlertsCount > 0 && (
+                          <span className="text-[10px] font-black text-[#9e1218] bg-red-100/80 px-2 py-0.5 rounded-full">
+                            {totalAlertsCount} Total
+                          </span>
+                        )}
                         <button
                           onClick={() => setIsNotificationsOpen(false)}
-                          className="text-slate-400 hover:text-slate-600 p-0.5 rounded cursor-pointer"
+                          className="text-slate-400 hover:text-slate-700 p-1 rounded-md hover:bg-slate-100 transition-colors cursor-pointer"
                           title="Close"
                         >
-                          <X className="w-3.5 h-3.5" />
+                          <X className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
 
-                    <div className="text-xs text-slate-600 space-y-2 max-h-60 overflow-y-auto custom-scrollbar">
-                      {reviewQueue.slice(0, 4).map((q) => (
-                        <div
-                          key={q.match_id}
-                          onClick={() => {
-                            setIsNotificationsOpen(false);
-                            navigate(`/planner/review/${q.match_id}`);
-                          }}
-                          className="p-2.5 bg-slate-50 hover:bg-slate-100 rounded-lg border border-slate-100 hover:border-slate-300 text-[11px] cursor-pointer transition-all space-y-1"
+                    {/* Filter Category Tabs */}
+                    <div className="flex items-center gap-1 overflow-x-auto pb-1 custom-scrollbar text-[11px] font-bold">
+                      <button
+                        onClick={() => setNotifFilter('ALL')}
+                        className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+                          notifFilter === 'ALL'
+                            ? 'bg-[#0a0b0e] text-white shadow-xs'
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        }`}
+                      >
+                        All ({totalAlertsCount})
+                      </button>
+                      <button
+                        onClick={() => setNotifFilter('BLOCKERS')}
+                        className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer whitespace-nowrap flex items-center gap-1 ${
+                          notifFilter === 'BLOCKERS'
+                            ? 'bg-rose-600 text-white shadow-xs'
+                            : 'bg-rose-50 text-rose-700 hover:bg-rose-100'
+                        }`}
+                      >
+                        <AlertOctagon className="w-3 h-3" />
+                        Blockers ({openComplaintsCount})
+                      </button>
+                      <button
+                        onClick={() => setNotifFilter('REVIEWS')}
+                        className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer whitespace-nowrap flex items-center gap-1 ${
+                          notifFilter === 'REVIEWS'
+                            ? 'bg-amber-600 text-white shadow-xs'
+                            : 'bg-amber-50 text-amber-800 hover:bg-amber-100'
+                        }`}
+                      >
+                        <Inbox className="w-3 h-3" />
+                        Reviews ({queueCount})
+                      </button>
+                      <button
+                        onClick={() => setNotifFilter('RISKS')}
+                        className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer whitespace-nowrap flex items-center gap-1 ${
+                          notifFilter === 'RISKS'
+                            ? 'bg-orange-600 text-white shadow-xs'
+                            : 'bg-orange-50 text-orange-800 hover:bg-orange-100'
+                        }`}
+                      >
+                        <AlertTriangle className="w-3 h-3" />
+                        Risks ({sequenceViolationsCount})
+                      </button>
+                      {systemNotifications.length > 0 && (
+                        <button
+                          onClick={() => setNotifFilter('SYSTEM')}
+                          className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer whitespace-nowrap flex items-center gap-1 ${
+                            notifFilter === 'SYSTEM'
+                              ? 'bg-blue-600 text-white shadow-xs'
+                              : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+                          }`}
                         >
-                          <div className="font-bold text-slate-900 truncate flex items-center justify-between">
-                            <span className="truncate">Match #{q.match_id}: {q.suggested_activity?.activity_name}</span>
-                            <span className="text-[9px] font-bold text-[#9e1218] bg-red-50 px-1 py-0.5 rounded shrink-0 ml-1">
-                              {Math.round(q.final_confidence * 100)}%
-                            </span>
+                          <Bell className="w-3 h-3" />
+                          System ({unreadSysNotifCount})
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Scrollable Alerts Feed */}
+                    <div className="space-y-2 max-h-72 sm:max-h-80 overflow-y-auto pr-1 custom-scrollbar">
+                      {/* 1. Open Site Blockers & Complaints */}
+                      {(notifFilter === 'ALL' || notifFilter === 'BLOCKERS') &&
+                        openComplaints.slice(0, notifFilter === 'BLOCKERS' ? 15 : 4).map((comp) => (
+                          <div
+                            key={`comp-${comp.id}`}
+                            onClick={() => {
+                              setIsNotificationsOpen(false);
+                              navigate('/planner/complaints');
+                            }}
+                            className="p-2.5 bg-rose-50/70 hover:bg-rose-100/70 rounded-xl border border-rose-200 text-left cursor-pointer transition-all hover:shadow-xs space-y-1 group"
+                          >
+                            <div className="flex items-center justify-between gap-1.5">
+                              <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-rose-800 bg-rose-200/80 px-1.5 py-0.5 rounded">
+                                <AlertOctagon className="w-3 h-3 text-rose-700" />
+                                Blocker: {comp.category}
+                              </span>
+                              <span className="text-[10px] font-semibold text-rose-600">
+                                {new Date(comp.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+                            <p className="text-xs font-semibold text-slate-900 line-clamp-2 leading-tight">
+                              "{comp.description}"
+                            </p>
+                            <div className="flex items-center justify-between text-[10px] text-slate-500 pt-0.5">
+                              <span className="truncate">
+                                By <strong className="text-slate-700">{comp.supervisor_name}</strong> {comp.supervisor_discipline ? `(${comp.supervisor_discipline})` : ''} · {comp.activity_id || 'General Site'}
+                              </span>
+                              <span className="text-rose-700 font-bold group-hover:underline flex items-center gap-0.5 shrink-0 ml-1">
+                                Resolve &rarr;
+                              </span>
+                            </div>
                           </div>
-                          <div className="text-slate-500 text-[10px] flex items-center justify-between">
-                            <span>{q.discipline} · {q.suggested_activity?.wbs_code || 'WBS'}</span>
-                            <span className="text-[#9e1218] font-semibold text-[10px] hover:underline">Review &rarr;</span>
+                        ))}
+
+                      {/* 2. Candidate Match Review Queue Requests */}
+                      {(notifFilter === 'ALL' || notifFilter === 'REVIEWS') &&
+                        reviewQueue.slice(0, notifFilter === 'REVIEWS' ? 15 : 4).map((q) => (
+                          <div
+                            key={`review-${q.match_id}`}
+                            onClick={() => {
+                              setIsNotificationsOpen(false);
+                              navigate(`/planner/review/${q.match_id}`);
+                            }}
+                            className="p-2.5 bg-amber-50/60 hover:bg-amber-100/60 rounded-xl border border-amber-200 text-left cursor-pointer transition-all hover:shadow-xs space-y-1 group"
+                          >
+                            <div className="flex items-center justify-between gap-1.5">
+                              <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-amber-900 bg-amber-200/80 px-1.5 py-0.5 rounded">
+                                <Inbox className="w-3 h-3 text-amber-700" />
+                                Review Request #{q.match_id}
+                              </span>
+                              <span className="text-[10px] font-black text-amber-900 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-300">
+                                {Math.round(q.final_confidence * 100)}% Match
+                              </span>
+                            </div>
+                            <p className="text-xs font-bold text-slate-900 truncate leading-tight">
+                              {q.suggested_activity?.activity_name || 'Daily Progress Match'}
+                            </p>
+                            <p className="text-[11px] text-slate-600 line-clamp-1 italic">
+                              "{q.report_snippet}"
+                            </p>
+                            <div className="flex items-center justify-between text-[10px] text-slate-500 pt-0.5">
+                              <span className="truncate flex items-center gap-1.5">
+                                <span>{q.discipline} · {q.suggested_activity?.wbs_code || 'WBS'}</span>
+                                {q.has_file && (
+                                  <span className="inline-flex items-center gap-0.5 text-blue-700 font-bold bg-blue-100/70 px-1 rounded">
+                                    <Paperclip className="w-2.5 h-2.5" /> Media
+                                  </span>
+                                )}
+                              </span>
+                              <span className="text-amber-900 font-bold group-hover:underline shrink-0 ml-1">
+                                Review &rarr;
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                      ))}
-                      {queueCount === 0 && (
-                        <div className="text-center py-5 text-slate-400 text-xs">
-                          No pending notifications
+                        ))}
+
+                      {/* 3. Out-of-Sequence Schedule Violations & Risks */}
+                      {(notifFilter === 'ALL' || notifFilter === 'RISKS') &&
+                        sequenceViolations.slice(0, notifFilter === 'RISKS' ? 15 : 4).map((v) => (
+                          <div
+                            key={`viol-${v.id}`}
+                            onClick={() => {
+                              setIsNotificationsOpen(false);
+                              navigate('/planner/review');
+                            }}
+                            className="p-2.5 bg-orange-50/70 hover:bg-orange-100/70 rounded-xl border border-orange-200 text-left cursor-pointer transition-all hover:shadow-xs space-y-1 group"
+                          >
+                            <div className="flex items-center justify-between gap-1.5">
+                              <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-orange-950 bg-orange-200 px-1.5 py-0.5 rounded">
+                                <AlertTriangle className="w-3 h-3 text-orange-700" />
+                                Sequence Risk
+                              </span>
+                              <span className="text-[10px] font-bold text-orange-800">
+                                {v.predecessor_status || 'Predecessor Incomplete'}
+                              </span>
+                            </div>
+                            <p className="text-xs font-bold text-slate-900 truncate leading-tight">
+                              {v.activity_id}: {v.activity_name || 'Activity'}
+                            </p>
+                            <p className="text-[11px] text-slate-600 line-clamp-1">
+                              Started before unfinished predecessor: <strong className="text-slate-800">{v.predecessor_activity_id}</strong> ({v.predecessor_name || 'Predecessor'})
+                            </p>
+                            <div className="flex items-center justify-between text-[10px] text-slate-500 pt-0.5">
+                              <span>Detected {new Date(v.detected_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                              <span className="text-orange-900 font-bold group-hover:underline shrink-0 ml-1">
+                                Inspect &rarr;
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+
+                      {/* 4. System / Push Notifications */}
+                      {(notifFilter === 'ALL' || notifFilter === 'SYSTEM') &&
+                        systemNotifications.slice(0, notifFilter === 'SYSTEM' ? 15 : 3).map((n) => (
+                          <div
+                            key={`sys-${n.id}`}
+                            onClick={() => {
+                              notificationsApi.markRead(n.id);
+                              setIsNotificationsOpen(false);
+                              if (n.link) navigate(n.link);
+                            }}
+                            className={`p-2.5 rounded-xl border text-left cursor-pointer transition-all hover:shadow-xs space-y-1 group ${
+                              n.is_read ? 'bg-slate-50 border-slate-200' : 'bg-blue-50/60 border-blue-200'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between gap-1.5">
+                              <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-slate-700 bg-slate-200 px-1.5 py-0.5 rounded">
+                                <Bell className="w-3 h-3 text-slate-600" />
+                                {n.title}
+                              </span>
+                              <span className="text-[10px] text-slate-500">
+                                {new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+                            <p className="text-xs font-semibold text-slate-800 line-clamp-2 leading-tight">
+                              {n.message}
+                            </p>
+                          </div>
+                        ))}
+
+                      {/* Empty state */}
+                      {totalAlertsCount === 0 && (
+                        <div className="text-center py-8 text-slate-400 text-xs space-y-1.5">
+                          <CheckCircle2 className="w-8 h-8 mx-auto text-emerald-500/80 mb-1" />
+                          <p className="font-bold text-slate-700">All caught up!</p>
+                          <p className="text-[11px] text-slate-500">No pending site blockers, review requests, or sequence risks.</p>
                         </div>
                       )}
                     </div>
 
-                    {queueCount > 0 && (
+                    {/* Bottom Quick-Action Shortcuts */}
+                    <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-100">
+                      <button
+                        onClick={() => {
+                          setIsNotificationsOpen(false);
+                          navigate('/planner/complaints');
+                        }}
+                        className="text-[11px] font-bold text-rose-800 bg-rose-50 hover:bg-rose-100 py-1.5 px-2 rounded-lg text-center transition-colors cursor-pointer border border-rose-200 truncate"
+                      >
+                        View Blockers ({openComplaintsCount})
+                      </button>
                       <button
                         onClick={() => {
                           setIsNotificationsOpen(false);
                           navigate('/planner/review');
                         }}
-                        className="w-full text-center text-xs font-bold text-white bg-[#0a0b0e] hover:bg-[#1a1c22] py-2 rounded-lg transition-colors cursor-pointer shadow-xs"
+                        className="text-[11px] font-bold text-slate-800 bg-slate-100 hover:bg-slate-200 py-1.5 px-2 rounded-lg text-center transition-colors cursor-pointer border border-slate-200 truncate"
                       >
-                        View All in Review Queue ({queueCount})
+                        View Review Queue ({queueCount})
                       </button>
-                    )}
+                    </div>
                   </div>
                 )}
               </div>
