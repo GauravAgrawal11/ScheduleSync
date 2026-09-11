@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../auth/authStore';
-import { Home, PlusCircle, ListOrdered, LogOut, ShieldCheck, Bell, CheckCheck, ExternalLink, FolderOpen, WifiOff, Languages, HelpCircle } from 'lucide-react';
+import { Home, PlusCircle, ListOrdered, LogOut, ShieldCheck, Bell, CheckCheck, ExternalLink, FolderOpen, WifiOff, Languages, HelpCircle, Download } from 'lucide-react';
 import { notificationsApi, AppNotification } from '../api/client';
 import { initSyncManager } from './offline/syncManager';
 import { useOnlineStatus } from './offline/useOnlineStatus';
@@ -21,7 +21,17 @@ export const SupervisorLayout: React.FC = () => {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [showNotifs, setShowNotifs] = useState<boolean>(false);
   const [isHelpOpen, setIsHelpOpen] = useState<boolean>(false);
+  const [isStandalone, setIsStandalone] = useState<boolean>(false);
   const notifRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Detect if running in installed mobile app / standalone mode
+    const isStandaloneMode =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as any).standalone === true ||
+      document.referrer.includes('android-app://');
+    setIsStandalone(isStandaloneMode);
+  }, []);
 
   // Auto-close notifications dropdown when clicking outside
   useEffect(() => {
@@ -111,6 +121,18 @@ export const SupervisorLayout: React.FC = () => {
               <Languages className="w-3.5 h-3.5 text-slate-600 shrink-0" />
               <span>{language === 'en' ? 'हिन्दी' : 'English'}</span>
             </button>
+
+            {/* Install Mobile PWA Button: Visible when opened in browser, hidden when in standalone app */}
+            {!isStandalone && (
+              <button
+                onClick={() => window.dispatchEvent(new CustomEvent('trigger-pwa-install'))}
+                title={language === 'hi' ? 'मोबाइल ऐप इंस्टॉल करें (PWA)' : 'Install Mobile App (PWA)'}
+                className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] sm:text-[11px] font-black bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 shadow-xs transition-all active:scale-95 cursor-pointer shrink-0"
+              >
+                <Download className="w-3.5 h-3.5 text-slate-950" />
+                <span>{language === 'hi' ? 'ऐप इंस्टॉल' : 'Install App'}</span>
+              </button>
+            )}
 
             {!isOnline && (
               <span className="text-[9px] sm:text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 px-1.5 sm:px-2 py-0.5 rounded-full flex items-center gap-1 shadow-2xs shrink-0">

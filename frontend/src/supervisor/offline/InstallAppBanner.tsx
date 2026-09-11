@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Download, X, Share2, Smartphone, Check } from 'lucide-react';
 import { useLanguageStore } from '../languageStore';
+import brandLogoImg from '../../assets/logo.png';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -61,14 +62,22 @@ export const InstallAppBanner: React.FC = () => {
       }, 3000);
     };
 
+    // 6. External trigger listener (e.g. clicked from Top Header)
+    const handleExternalTrigger = () => {
+      setDismissed(false);
+      handleInstallClick();
+    };
+
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', handleAppInstalled);
+    window.addEventListener('trigger-pwa-install', handleExternalTrigger);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
+      window.removeEventListener('trigger-pwa-install', handleExternalTrigger);
     };
-  }, []);
+  }, [deferredPrompt, isIOS]);
 
   // Strict check: Only supervisor panel
   if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/supervisor')) {
@@ -131,9 +140,9 @@ export const InstallAppBanner: React.FC = () => {
             <div className="flex items-center gap-2.5">
               {/* High-res App Icon */}
               <img
-                src="/pwa-192x192.png"
+                src={brandLogoImg}
                 alt="ScheduleSync Icon"
-                className="w-10 h-10 rounded-xl shadow-md border border-white/20 flex-shrink-0 bg-oil-800 object-cover"
+                className="w-10 h-10 rounded-xl shadow-md border border-white/20 flex-shrink-0 bg-white p-0.5 object-contain"
               />
               <div>
                 <div className="flex items-center gap-1.5">
