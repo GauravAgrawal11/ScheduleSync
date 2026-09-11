@@ -26,10 +26,26 @@ import { HistoricalMemoryPanel } from './planner/HistoricalMemoryPanel';
 import { SupervisorWorkload } from './planner/SupervisorWorkload';
 import { ComplaintsPanel } from './planner/ComplaintsPanel';
 
+import { useAuthStore } from './auth/authStore';
+
+const RootRedirect: React.FC = () => {
+  const { isAuthenticated, user } = useAuthStore();
+  if (!isAuthenticated || !user) {
+    return <Navigate to="/login" replace />;
+  }
+  if (user.role === 'supervisor') {
+    return <Navigate to="/supervisor" replace />;
+  }
+  return <Navigate to="/planner/review" replace />;
+};
+
 export const AppRoutes: React.FC = () => {
   return (
     <ErrorBoundary fallbackTitle="Application Navigation Interrupted">
       <Routes>
+        {/* Root Redirect based on authentication & role */}
+        <Route path="/" element={<RootRedirect />} />
+
         {/* Dedicated Admin / Planner Login */}
         <Route path="/login" element={<AdminLoginPage />} />
         <Route path="/admin/login" element={<AdminLoginPage />} />

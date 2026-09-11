@@ -10,7 +10,9 @@ const API_BASE_URL = (import.meta.env?.VITE_API_BASE_URL || "http://localhost:80
 
 // Helper to add auth header
 function getAuthHeaders(extraHeaders: Record<string, string> = {}): Record<string, string> {
-  const token = useAuthStore.getState().token;
+  const token =
+    useAuthStore.getState().token ||
+    (typeof localStorage !== 'undefined' ? localStorage.getItem('schedulesync_token') || localStorage.getItem('token') : null);
   const headers: Record<string, string> = { ...extraHeaders };
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;

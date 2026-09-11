@@ -22,8 +22,19 @@ export const SupervisorLoginPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
-  const setAuth = useAuthStore((state) => state.setAuth);
+  const { isAuthenticated, user, setAuth } = useAuthStore();
   const navigate = useNavigate();
+
+  // If already authenticated, redirect straight to supervisor portal without re-login
+  React.useEffect(() => {
+    if (isAuthenticated && user) {
+      if (user.role === 'supervisor') {
+        navigate('/supervisor', { replace: true });
+      } else {
+        navigate('/planner/review', { replace: true });
+      }
+    }
+  }, [isAuthenticated, user, navigate]);
 
   // Guarantee fields are completely blank and not auto-filled on mount
   React.useEffect(() => {

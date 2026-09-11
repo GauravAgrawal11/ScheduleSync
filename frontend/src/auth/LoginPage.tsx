@@ -273,7 +273,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ defaultPortal }) => {
             &copy; 2026 Oil India Limited · Numaligarh Refinery Expansion (Unit 3 &amp; Offsites)
           </div>
           <div className="flex items-center gap-3 text-[11px] font-mono text-slate-400">
-            <span>Zero-LocalStorage Security</span>
+            <span>Encrypted Session Auth</span>
             <span>·</span>
             <span>Role-Enforced RBAC</span>
             <span>·</span>

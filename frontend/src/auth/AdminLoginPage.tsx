@@ -40,8 +40,19 @@ export const AdminLoginPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
-  const setAuth = useAuthStore((state) => state.setAuth);
+  const { isAuthenticated, user, setAuth } = useAuthStore();
   const navigate = useNavigate();
+
+  // If already authenticated, redirect straight to their workspace without re-login
+  React.useEffect(() => {
+    if (isAuthenticated && user) {
+      if (user.role === 'supervisor') {
+        navigate('/supervisor', { replace: true });
+      } else {
+        navigate('/planner/review', { replace: true });
+      }
+    }
+  }, [isAuthenticated, user, navigate]);
 
   React.useEffect(() => {
     setUsername('');
@@ -420,7 +431,7 @@ export const AdminLoginPage: React.FC = () => {
             &copy; 2026 Oil India Limited. All rights reserved.
           </div>
           <div className="flex items-center gap-3 font-mono text-slate-400">
-            <span>Zero-LocalStorage Security</span>
+            <span>Encrypted Session Auth</span>
             <span>·</span>
             <span>Role-Enforced RBAC</span>
           </div>
