@@ -70,7 +70,9 @@ export const AppRoutes: React.FC = () => {
           }
         >
           <Route index element={<Navigate to="/planner/review" replace />} />
+          <Route path="dashboard" element={<Navigate to="/planner/review" replace />} />
           <Route path="setup" element={<ProjectSetup />} />
+          <Route path="ingestion" element={<ProjectSetup />} />
           <Route path="review" element={<ReviewQueue />} />
           <Route path="review/:id" element={<MatchReview />} />
           <Route path="schedule" element={<Schedule />} />

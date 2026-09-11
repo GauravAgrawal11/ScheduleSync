@@ -406,27 +406,7 @@ export const PlannerLayout: React.FC = () => {
             )}
           </div>
 
-          {/* Separator line matching image */}
-          <div className="border-t border-slate-800/80 my-2 pt-1" />
 
-          {/* Project Ingestion (Baseline Setup) */}
-          <NavLink
-            to="/planner/setup"
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all duration-150 group cursor-pointer ${
-                isActive
-                  ? 'bg-[#9e1218] text-white shadow-md shadow-red-950/50'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
-              }`
-            }
-          >
-            {({ isActive }) => (
-              <>
-                <FolderInput className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-slate-300 group-hover:text-white'}`} />
-                <span className="truncate flex-1">Project Ingestion</span>
-              </>
-            )}
-          </NavLink>
 
           {/* Help & Support */}
           <button

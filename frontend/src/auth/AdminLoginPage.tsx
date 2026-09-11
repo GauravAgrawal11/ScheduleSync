@@ -133,11 +133,11 @@ export const AdminLoginPage: React.FC = () => {
               onClick={() => { setAuthMode('login'); setError(null); }}
               className={`flex-1 py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 authMode === 'login'
-                  ? 'bg-white text-slate-900 shadow-xs'
-                  : 'text-slate-500 hover:text-slate-800'
+                  ? 'bg-[#9e1218] text-white shadow-sm shadow-red-950/30'
+                  : 'text-slate-600 hover:text-[#9e1218] hover:bg-red-50/70'
               }`}
             >
-              <BarChart3 className="w-3.5 h-3.5 text-[#9e1218]" />
+              <BarChart3 className={`w-3.5 h-3.5 ${authMode === 'login' ? 'text-white' : 'text-[#9e1218]'}`} />
               <span>Sign In</span>
             </button>
             <button
@@ -145,11 +145,11 @@ export const AdminLoginPage: React.FC = () => {
               onClick={() => { setAuthMode('register'); setError(null); }}
               className={`flex-1 py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 authMode === 'register'
-                  ? 'bg-white text-slate-900 shadow-xs'
-                  : 'text-slate-500 hover:text-slate-800'
+                  ? 'bg-[#9e1218] text-white shadow-sm shadow-red-950/30'
+                  : 'text-slate-600 hover:text-[#9e1218] hover:bg-red-50/70'
               }`}
             >
-              <UserPlus className="w-3.5 h-3.5 text-[#9e1218]" />
+              <UserPlus className={`w-3.5 h-3.5 ${authMode === 'register' ? 'text-white' : 'text-[#9e1218]'}`} />
               <span>Register Account</span>
             </button>
           </div>
@@ -214,7 +214,7 @@ export const AdminLoginPage: React.FC = () => {
                     onChange={(e) => setUsername(e.target.value)}
                     required
                     placeholder="Enter administrator email or username"
-                    className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 placeholder-slate-400 text-xs focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-[#9e1218] transition-all shadow-2xs"
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 placeholder-slate-400 text-xs focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-[#9e1218] caret-[#9e1218] transition-all shadow-2xs"
                   />
                 </div>
               </div>
@@ -236,7 +236,7 @@ export const AdminLoginPage: React.FC = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     placeholder="Enter administrator password"
-                    className="w-full pl-9 pr-10 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 placeholder-slate-400 text-xs focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-[#9e1218] transition-all shadow-2xs"
+                    className="w-full pl-9 pr-10 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 placeholder-slate-400 text-xs focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-[#9e1218] caret-[#9e1218] transition-all shadow-2xs"
                   />
                   <button
                     type="button"
@@ -276,7 +276,7 @@ export const AdminLoginPage: React.FC = () => {
                     onChange={(e) => setRegName(e.target.value)}
                     required
                     placeholder="e.g. Ramesh Kalita"
-                    className="w-full pl-9 pr-3 py-2 rounded-xl bg-white border border-slate-300 text-slate-900 placeholder-slate-400 text-xs focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-[#9e1218] transition-all shadow-2xs"
+                    className="w-full pl-9 pr-3 py-2 rounded-xl bg-white border border-slate-300 text-slate-900 placeholder-slate-400 text-xs focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-[#9e1218] caret-[#9e1218] transition-all shadow-2xs"
                   />
                 </div>
               </div>
@@ -295,7 +295,7 @@ export const AdminLoginPage: React.FC = () => {
                     onChange={(e) => setRegEmail(e.target.value)}
                     required
                     placeholder="name@oilindia.in"
-                    className="w-full pl-9 pr-3 py-2 rounded-xl bg-white border border-slate-300 text-slate-900 placeholder-slate-400 text-xs focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-[#9e1218] transition-all shadow-2xs"
+                    className="w-full pl-9 pr-3 py-2 rounded-xl bg-white border border-slate-300 text-slate-900 placeholder-slate-400 text-xs focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-[#9e1218] caret-[#9e1218] transition-all shadow-2xs"
                   />
                 </div>
               </div>
