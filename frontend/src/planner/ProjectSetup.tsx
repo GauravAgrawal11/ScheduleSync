@@ -14,7 +14,6 @@ import {
   Building,
   Sparkles,
   Zap,
-  Users,
   ArrowRight,
   FileDown,
   Trash2,
@@ -386,15 +385,6 @@ export const ProjectSetup: React.FC = () => {
             >
               <Zap className="w-3.5 h-3.5 text-slate-950" />
               Run Auto-Assign
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate('/planner/workload')}
-              className="text-xs text-white border-oil-700 hover:bg-oil-800 hover:text-white"
-            >
-              <Users className="w-3.5 h-3.5 mr-1" />
-              Workload Matrix
             </Button>
           </div>
         </CardContent>
