@@ -413,8 +413,17 @@ export const PlannerLayout: React.FC = () => {
       {/* ── Main Layout Column: Only this area scrolls when scrolling down ── */}
       <div className="flex-1 flex flex-col h-screen overflow-y-auto min-w-0 bg-slate-50 relative">
 
-        {/* ── Top Header Bar (Clean professional styling without background image) ── */}
+        {/* ── Top Header Bar with Custom Oilfield Rig Artwork Banner ── */}
         <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs flex-shrink-0 relative">
+          {/* Subtle Right-aligned Oilfield Rig Artwork Banner */}
+          <div className="absolute right-0 top-0 bottom-0 h-full pointer-events-none opacity-85 z-0 flex items-center justify-end overflow-hidden max-w-[50%]">
+            <img
+              src="/assets/header-bg.png"
+              alt="Oilfield Rigs Banner"
+              className="h-full w-auto object-contain object-right select-none"
+            />
+          </div>
+
           <div className="flex items-center h-16 px-4 md:px-6 justify-between gap-3 w-full relative z-10">
 
             {/* Left Header Area:
