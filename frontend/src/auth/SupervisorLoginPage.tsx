@@ -50,13 +50,7 @@ export const SupervisorLoginPage: React.FC = () => {
 
   return (
     <div
-      className="min-h-screen flex flex-col justify-between text-slate-800 font-sans antialiased"
-      style={{
-        backgroundImage: `linear-gradient(to bottom, rgba(248, 250, 252, 0.90), rgba(241, 245, 249, 0.93)), url('/assets/refinery-bg.png')`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundAttachment: 'fixed',
-      }}
+      className="min-h-screen flex flex-col justify-between text-slate-800 font-sans antialiased bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200"
     >
       {/* Top Header: High-contrast white bar */}
       <header className="bg-white/95 backdrop-blur-xs border-b border-slate-200 px-5 py-3.5 sticky top-0 z-20 shadow-xs">

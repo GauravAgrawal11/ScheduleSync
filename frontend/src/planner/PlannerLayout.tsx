@@ -657,22 +657,14 @@ export const PlannerLayout: React.FC = () => {
         </header>
 
         {/* ── Main Scrollable Content Area with Refinery Wallpaper Background ── */}
-        <main
-          className="flex-1 w-full p-4 md:p-6 lg:p-8 relative refinery-bg min-h-[calc(100vh-8rem)]"
-          style={{
-            backgroundImage: `linear-gradient(to bottom, rgba(248, 250, 252, 0.93), rgba(241, 245, 249, 0.96)), url('/assets/refinery-bg.png')`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundAttachment: 'fixed',
-          }}
-        >
+        <main className="flex-1 w-full p-4 md:p-6 lg:p-8 relative min-h-[calc(100vh-8rem)] bg-slate-50">
           <div className="max-w-7xl mx-auto w-full">
             <Outlet />
           </div>
         </main>
 
         {/* Footer */}
-        <footer className="border-t border-slate-200 bg-white/95 px-6 py-3 text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2 flex-shrink-0">
+        <footer className="border-t border-slate-200 bg-white px-6 py-3 text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2 flex-shrink-0 z-10">
           <div>
             © 2026 Oil India Limited. All rights reserved. &nbsp;|&nbsp; ScheduleSync v1.0
           </div>
