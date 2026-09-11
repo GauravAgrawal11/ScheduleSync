@@ -123,6 +123,12 @@ export const PlannerLayout: React.FC = () => {
         className={`text-slate-300 flex flex-col flex-shrink-0 z-40 border-r border-slate-800/90 transition-all duration-300 ease-in-out h-screen relative bg-[#0a0b0e] ${
           isSidebarCollapsed ? 'w-0 -translate-x-full overflow-hidden' : 'w-64 translate-x-0'
         }`}
+        style={{
+          backgroundImage: "linear-gradient(to bottom, rgba(10, 11, 14, 0.88) 0%, rgba(10, 11, 14, 0.78) 40%, rgba(10, 11, 14, 0.90) 100%), url('/assets/sidebar-nav-bg.png')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center top',
+          backgroundRepeat: 'no-repeat',
+        }}
       >
         {/* Navigation Bar Header when ON:
             - Logo
@@ -161,40 +167,28 @@ export const PlannerLayout: React.FC = () => {
 
         {/* Navigation items list - Internally scrollable, independent of page scroll */}
         <nav className="flex-1 py-3 px-2.5 space-y-1 overflow-y-auto custom-scrollbar">
-          {/* Dashboard */}
+          {/* Dashboard / Review Queue (Single merged item) */}
           <NavLink
             to="/planner/review"
             end
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all duration-150 group cursor-pointer ${
-                location.pathname === '/planner/dashboard' || (location.pathname === '/planner/review' && false)
+                location.pathname === '/planner/review' || location.pathname === '/planner/dashboard' || isActive
                   ? 'bg-[#9e1218] text-white shadow-md shadow-red-950/50'
                   : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
               }`
             }
           >
-            <Home className="w-4 h-4 flex-shrink-0 text-slate-300 group-hover:text-white" />
-            <span className="truncate flex-1">Dashboard</span>
-          </NavLink>
-
-          {/* Review Queue (Highlighted active with solid red pill) */}
-          <NavLink
-            to="/planner/review"
-            end
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all duration-150 group cursor-pointer ${
-                location.pathname === '/planner/review'
-                  ? 'bg-[#9e1218] text-white shadow-md shadow-red-950/50'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
-              }`
-            }
-          >
-            <Inbox className={`w-4 h-4 flex-shrink-0 ${location.pathname === '/planner/review' ? 'text-white' : 'text-slate-300 group-hover:text-white'}`} />
-            <span className="truncate flex-1">Review Queue</span>
-            {queueCount > 0 && (
-              <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-[#9e1218] border border-red-700 text-white font-bold leading-none ml-auto">
-                {queueCount}
-              </span>
+            {({ isActive }) => (
+              <>
+                <Inbox className={`w-4 h-4 flex-shrink-0 ${location.pathname === '/planner/review' ? 'text-white' : 'text-slate-300 group-hover:text-white'}`} />
+                <span className="truncate flex-1">Dashboard / Review Queue</span>
+                {queueCount > 0 && (
+                  <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-[#9e1218] border border-red-700 text-white font-bold leading-none ml-auto">
+                    {queueCount}
+                  </span>
+                )}
+              </>
             )}
           </NavLink>
 
@@ -414,17 +408,6 @@ export const PlannerLayout: React.FC = () => {
             <span className="truncate flex-1">Help &amp; Support</span>
           </button>
         </nav>
-
-        {/* Sidebar Footer: Pure Pumpjack photo artwork without any text */}
-        <div
-          className="w-full h-32 bg-cover bg-bottom flex-shrink-0 relative overflow-hidden border-t border-slate-800/80"
-          style={{
-            backgroundImage: "url('/assets/sidebar-bottom-energy.png')",
-            backgroundSize: 'cover',
-            backgroundPosition: 'bottom center',
-            backgroundRepeat: 'no-repeat',
-          }}
-        />
       </aside>
 
       {/* ── Main Layout Column: Only this area scrolls when scrolling down ── */}
