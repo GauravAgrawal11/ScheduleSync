@@ -112,10 +112,9 @@ export const SupervisorLayout: React.FC = () => {
         backgroundAttachment: 'fixed',
       }}
     >
-      <div className="max-w-md w-full min-h-[100dvh] bg-slate-50/85 backdrop-blur-xs flex flex-col border-x border-slate-200 shadow-2xl relative pb-[max(5.5rem,env(safe-area-inset-bottom))]">
-        {/* Top Site Bar: High Contrast White for Outdoor Sunlight */}
+      <div className="max-w-md w-full min-h-[100dvh] bg-slate-50/85 backdrop-blur-xs flex flex-col border-x border-slate-200 shadow-2xl relative pb-[max(5.5rem,env(safe-area-inset-bottom))] overflow-x-hidden">
         {/* Top Site Bar: High Contrast White for Outdoor Sunlight & Responsive Layout */}
-        <header className="bg-white/95 backdrop-blur-xs text-slate-900 border-b border-slate-200 px-2.5 sm:px-4 py-2.5 sm:py-3 sticky top-0 z-30 shadow-2xs flex items-center justify-between gap-1 sm:gap-2">
+        <header className="bg-white/95 backdrop-blur-xs text-slate-900 border-b border-slate-200 px-2 sm:px-3 py-2 sm:py-2.5 sticky top-0 z-30 shadow-2xs flex items-center justify-between gap-1">
           <BrandLogo roleTag="SUPERVISOR" tagColor="slate" size="sm" className="shrink min-w-0" />
 
           <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
@@ -123,7 +122,7 @@ export const SupervisorLayout: React.FC = () => {
             <button
               onClick={() => setIsHelpOpen(true)}
               title="Help & Support"
-              className="p-1 sm:p-1.5 rounded-lg text-slate-500 hover:text-[#9e1218] hover:bg-slate-100 transition-colors cursor-pointer"
+              className="p-1 rounded-lg text-slate-500 hover:text-[#9e1218] hover:bg-slate-100 transition-colors cursor-pointer shrink-0"
               aria-label="Help & Support"
             >
               <HelpCircle className="w-4 h-4 text-[#9e1218]" />
@@ -133,10 +132,11 @@ export const SupervisorLayout: React.FC = () => {
             <button
               onClick={toggleLanguage}
               title={language === 'en' ? 'हिन्दी में बदलें (Switch to Hindi)' : 'Switch to English'}
-              className="flex items-center gap-1 px-1.5 sm:px-2 py-1 rounded-lg text-[10px] sm:text-[11px] font-bold bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 transition-all shadow-2xs cursor-pointer shrink-0"
+              className="flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2 py-1 rounded-lg text-[10px] sm:text-[11px] font-bold bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 transition-all shadow-2xs cursor-pointer shrink-0"
             >
               <Languages className="w-3.5 h-3.5 text-slate-600 shrink-0" />
-              <span>{language === 'en' ? 'हिन्दी' : 'English'}</span>
+              <span className="hidden sm:inline">{language === 'en' ? 'हिन्दी' : 'English'}</span>
+              <span className="sm:hidden font-mono">{language === 'en' ? 'हि' : 'EN'}</span>
             </button>
 
             {/* Install Mobile PWA Button: Visible when opened in browser, hidden when in standalone app */}
@@ -144,10 +144,11 @@ export const SupervisorLayout: React.FC = () => {
               <button
                 onClick={() => window.dispatchEvent(new CustomEvent('trigger-pwa-install'))}
                 title={language === 'hi' ? 'मोबाइल ऐप इंस्टॉल करें (PWA)' : 'Install Mobile App (PWA)'}
-                className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] sm:text-[11px] font-black bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 shadow-xs transition-all active:scale-95 cursor-pointer shrink-0"
+                className="flex items-center gap-1 px-1.5 sm:px-2 py-1 rounded-lg text-[10px] sm:text-[11px] font-black bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 shadow-xs transition-all active:scale-95 cursor-pointer shrink-0"
               >
                 <Download className="w-3.5 h-3.5 text-slate-950" />
-                <span>{language === 'hi' ? 'ऐप इंस्टॉल' : 'Install App'}</span>
+                <span className="hidden sm:inline">{language === 'hi' ? 'ऐप इंस्टॉल' : 'Install App'}</span>
+                <span className="sm:hidden text-[9px] font-black">{language === 'hi' ? 'ऐप' : 'App'}</span>
               </button>
             )}
 
@@ -165,7 +166,7 @@ export const SupervisorLayout: React.FC = () => {
                   if (!showNotifs) fetchNotifs();
                 }}
                 title={t('alerts_approvals')}
-                className="p-1 sm:p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors relative cursor-pointer"
+                className="p-1 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors relative cursor-pointer shrink-0"
               >
                 <Bell className="w-4 h-4" />
                 {unreadCount > 0 && (
@@ -235,7 +236,7 @@ export const SupervisorLayout: React.FC = () => {
             <button
               onClick={handleLogout}
               title={t('sign_out')}
-              className="p-1 sm:p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-slate-100 transition-colors cursor-pointer"
+              className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-slate-100 transition-colors cursor-pointer shrink-0"
             >
               <LogOut className="w-4 h-4" />
             </button>
@@ -246,7 +247,7 @@ export const SupervisorLayout: React.FC = () => {
         <InstallAppBanner />
 
         {/* Main Screen Outlet wrapped in ErrorBoundary with smooth momentum scrolling */}
-        <main className="flex-1 p-4 overflow-y-auto -webkit-overflow-scrolling-touch">
+        <main className="flex-1 p-3 sm:p-4 overflow-y-auto overflow-x-hidden min-w-0 max-w-full">
           <Outlet />
         </main>
 
