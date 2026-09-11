@@ -30,7 +30,7 @@
       ]
     },
     {
-      "source": "/(sw.js|registerSW.js|manifest.webmanifest)",
+      "source": "/(sw.js|registerSW.js|manifest.webmanifest|logo.png|assets/logo.png|favicon.png|pwa-192x192.png|pwa-512x512.png)",
       "headers": [
         {
           "key": "Cache-Control",

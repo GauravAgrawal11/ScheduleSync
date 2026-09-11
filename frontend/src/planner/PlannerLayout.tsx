@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '../auth/authStore';
 import { useProjectStore } from './projectStore';
 import { api, notificationsApi } from '../api/client';
+import brandLogoImg from '../assets/logo.png';
 import {
   Home,
   Layers,
@@ -184,10 +185,10 @@ export const PlannerLayout: React.FC = () => {
         <div className="h-16 px-4 flex items-center justify-between border-b border-slate-800/80 flex-shrink-0 bg-[#0a0b0e]/90 backdrop-blur-xs">
           <div className="flex items-center gap-2.5 overflow-hidden">
             <img
-              src="/assets/logo.png"
+              src={brandLogoImg}
               onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/logo.png'; }}
               alt="ScheduleSync Logo"
-              className="w-9 h-9 rounded-full object-contain flex-shrink-0"
+              className="w-9 h-9 rounded-full object-contain flex-shrink-0 bg-white p-0.5 shadow-2xs"
             />
             <div className="flex flex-col justify-between text-left py-0.5 h-9">
               <span className="text-[15px] font-black tracking-tight leading-none flex items-center">
@@ -455,10 +456,10 @@ export const PlannerLayout: React.FC = () => {
                   {/* Logo + Name + BLACK "OIL INDIA LIMITED" when OFF */}
                   <div className="flex items-center gap-2.5 select-none">
                     <img
-                      src="/assets/logo.png"
+                      src={brandLogoImg}
                       onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/logo.png'; }}
                       alt="Oil India Limited"
-                      className="w-9 h-9 rounded-full object-contain flex-shrink-0"
+                      className="w-9 h-9 rounded-full object-contain flex-shrink-0 bg-white p-0.5 shadow-2xs"
                     />
                     <div className="flex flex-col justify-between text-left py-0.5 h-9">
                       <h1 className="text-[15px] font-black tracking-tight leading-none flex items-center">

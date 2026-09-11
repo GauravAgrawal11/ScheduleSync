@@ -1,4 +1,5 @@
 import React from 'react';
+import brandLogoImg from '../assets/logo.png';
 
 interface BrandLogoProps {
   roleTag?: string;
@@ -33,12 +34,12 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
 
   const content = (
     <div className={`flex items-center gap-2 sm:gap-2.5 select-none min-w-0 ${className}`}>
-      {/* Brand Logo with pumpjack badge or official logo */}
+      {/* Brand Logo with official Oil India insignia */}
       <img
-        src="/assets/logo.png"
+        src={brandLogoImg}
         onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/logo.png'; }}
         alt="Oil India Limited ScheduleSync Logo"
-        className={`${iconSize} rounded-full object-contain flex-shrink-0`}
+        className={`${iconSize} rounded-full object-contain flex-shrink-0 bg-white p-0.5 shadow-2xs`}
       />
       <div className={`flex flex-col justify-between text-left py-0.5 ${textHeight} min-w-0`}>
         <div className="flex items-center gap-1 sm:gap-1.5 leading-none flex-wrap">
