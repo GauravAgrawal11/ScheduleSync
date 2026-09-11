@@ -71,7 +71,6 @@ export const PlannerLayout: React.FC = () => {
 
   // Sub-menu expansion states
   const [isReportsExpanded, setIsReportsExpanded] = useState<boolean>(true);
-  const [isAiVerificationExpanded, setIsAiVerificationExpanded] = useState<boolean>(false);
 
   const { data: projectsData } = useQuery({
     queryKey: ['projects'],
@@ -228,7 +227,7 @@ export const PlannerLayout: React.FC = () => {
             )}
           </NavLink>
 
-          {/* Audit Trail */}
+          {/* Activity Audit Trail */}
           <NavLink
             to="/planner/activities"
             className={({ isActive }) =>
@@ -242,7 +241,7 @@ export const PlannerLayout: React.FC = () => {
             {({ isActive }) => (
               <>
                 <History className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-slate-300 group-hover:text-white'}`} />
-                <span className="truncate flex-1">Audit Trail</span>
+                <span className="truncate flex-1">Activity Audit Trail</span>
               </>
             )}
           </NavLink>
@@ -355,41 +354,6 @@ export const PlannerLayout: React.FC = () => {
                   <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />
                   <span>View Report PDF</span>
                 </button>
-              </div>
-            )}
-          </div>
-
-          {/* Audit Trail & Verification (Expandable) */}
-          <div>
-            <button
-              onClick={() => setIsAiVerificationExpanded(!isAiVerificationExpanded)}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/60 transition-all cursor-pointer group"
-            >
-              <Sparkles className="w-4 h-4 flex-shrink-0 text-slate-300 group-hover:text-white" />
-              <span className="truncate flex-1 text-left">Audit &amp; Verification</span>
-              {isAiVerificationExpanded ? (
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400 ml-auto flex-shrink-0" />
-              ) : (
-                <ChevronRight className="w-3.5 h-3.5 text-slate-400 ml-auto flex-shrink-0" />
-              )}
-            </button>
-
-            {isAiVerificationExpanded && (
-              <div className="pl-9 pr-2 py-1 space-y-1">
-                <NavLink
-                  to="/planner/activities"
-                  className="flex items-center gap-2 text-xs text-slate-400 hover:text-white py-1 transition-colors cursor-pointer"
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                  <span>Activity Audit Trail</span>
-                </NavLink>
-                <NavLink
-                  to="/planner/review"
-                  className="flex items-center gap-2 text-xs text-slate-400 hover:text-white py-1 transition-colors cursor-pointer"
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                  <span>AI Verification Queue</span>
-                </NavLink>
               </div>
             )}
           </div>
@@ -664,11 +628,11 @@ export const PlannerLayout: React.FC = () => {
         </main>
 
         {/* Footer */}
-        <footer className="border-t border-slate-200 bg-white px-6 py-3 text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2 flex-shrink-0 z-10">
-          <div>
-            © 2026 Oil India Limited. All rights reserved. &nbsp;|&nbsp; ScheduleSync v1.0
+        <footer className="border-t border-slate-200 bg-white px-4 sm:px-6 py-3 text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2 flex-shrink-0 z-10 w-full text-center sm:text-left shadow-2xs">
+          <div className="leading-tight">
+            &copy; 2026 Oil India Limited. All rights reserved. &nbsp;<span className="hidden sm:inline">|</span>&nbsp; ScheduleSync v1.0
           </div>
-          <div className="flex items-center gap-4 text-slate-400">
+          <div className="flex items-center justify-center gap-3 sm:gap-4 text-slate-400">
             <button
               onClick={() => setIsHelpModalOpen(true)}
               className="hover:text-slate-700 transition-colors cursor-pointer"

@@ -769,6 +769,45 @@ export const api = {
     };
   },
 
+  registerUser: async (data: {
+    name: string;
+    email: string;
+    password: string;
+    role?: 'supervisor' | 'planner' | 'admin';
+    discipline?: string;
+  }): Promise<UserResponse> => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: data.name,
+          email: data.email,
+          password: data.password,
+          role: data.role || "supervisor",
+          discipline: data.discipline || null,
+        }),
+      });
+
+      if (res.ok) {
+        return await res.json();
+      }
+      const err = await res.json().catch(() => ({ detail: "Registration failed" }));
+      throw new Error(err.detail || "Registration failed");
+    } catch (e: any) {
+      if (e.message && !e.message.includes("fetch")) throw e;
+      // Demo fallback when offline
+      return {
+        id: Math.floor(Math.random() * 900) + 100,
+        name: data.name,
+        email: data.email,
+        role: data.role || "supervisor",
+        discipline: data.discipline || "General",
+        created_at: new Date().toISOString(),
+      };
+    }
+  },
+
   getMe: async (): Promise<UserResponse> => {
     try {
       const res = await fetch(`${API_BASE_URL}/auth/me`, {
