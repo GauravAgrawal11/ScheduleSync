@@ -40,6 +40,7 @@ import {
   Radio,
   ArrowRight,
 } from 'lucide-react';
+import { WorkflowReportModal } from './WorkflowReportModal';
 
 export const Analytics: React.FC = () => {
   const {
@@ -51,6 +52,7 @@ export const Analytics: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'ALL' | 'COMPLETED' | 'IN_PROGRESS' | 'DELAYED' | 'PLANNED'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [delayViewMode, setDelayViewMode] = useState<'DELAYING_ONLY' | 'ALL_ACTIVITIES'>('DELAYING_ONLY');
+  const [isReportModalOpen, setIsReportModalOpen] = useState<boolean>(false);
 
   // Fetch all available active running projects (strictly running projects only)
   const { data: projectsData } = useQuery({
@@ -325,156 +327,41 @@ export const Analytics: React.FC = () => {
               </CardDescription>
             </div>
 
-            {/* Overall Physical Progress Gauge */}
-            <div className="flex items-center gap-4 bg-slate-50 p-2.5 rounded-xl border border-slate-200 shrink-0">
-              <div className="text-right">
-                <div className="text-[10px] uppercase font-bold text-slate-400">Physical Progress</div>
-                <div className="text-xl font-black text-slate-900 font-mono leading-tight">
-                  {completedPct}%
+            <div className="flex items-center gap-3 shrink-0 flex-wrap sm:flex-nowrap">
+              {/* Option to view real-time workflow report */}
+              <button
+                type="button"
+                onClick={() => setIsReportModalOpen(true)}
+                className="px-3 py-2 rounded-xl text-xs font-bold border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
+                title="View Real-Time Workflow Report (PDF)"
+              >
+                <FileText className="w-3.5 h-3.5 text-[#9e1218]" />
+                <span>View Real-Time Workflow Report</span>
+              </button>
+
+              {/* Overall Physical Progress Gauge */}
+              <div className="flex items-center gap-4 bg-slate-50 p-2.5 rounded-xl border border-slate-200 shrink-0">
+                <div className="text-right">
+                  <div className="text-[10px] uppercase font-bold text-slate-400">Physical Progress</div>
+                  <div className="text-xl font-black text-slate-900 font-mono leading-tight">
+                    {completedPct}%
+                  </div>
+                  <div className="text-[10px] font-semibold text-emerald-600">
+                    {completedCount} of {totalActs} Acts Completed
+                  </div>
                 </div>
-                <div className="text-[10px] font-semibold text-emerald-600">
-                  {completedCount} of {totalActs} Acts Completed
+                <div className="w-24 h-3 bg-slate-200 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-500"
+                    style={{ width: `${completedPct}%` }}
+                  />
                 </div>
-              </div>
-              <div className="w-24 h-3 bg-slate-200 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-500"
-                  style={{ width: `${completedPct}%` }}
-                />
               </div>
             </div>
           </div>
         </CardHeader>
 
-        <CardContent className="p-5 space-y-6">
-          {/* 5-Stage Visual Workflow Pipeline */}
-          <div>
-            <div className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-              <GitMerge className="w-3.5 h-3.5 text-oil-800" /> Pipeline Progression Lifecycle
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 relative">
-              {/* Stage 1: Ingestion */}
-              <div className="p-3.5 rounded-xl bg-white border border-slate-200 shadow-2xs relative flex flex-col justify-between hover:border-slate-300 transition-all">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs border border-blue-100">
-                      1
-                    </span>
-                    <span className="px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">
-                      Stream Active
-                    </span>
-                  </div>
-                  <h4 className="text-xs font-bold text-slate-800 flex items-center gap-1">
-                    <Radio className="w-3 h-3 text-blue-600" /> Site Ingestion
-                  </h4>
-                  <p className="text-[11px] text-slate-500 mt-1 leading-snug">
-                    Supervisor voice logs, daily progress PDFs &amp; mobile WhatsApp scans.
-                  </p>
-                </div>
-                <div className="mt-3 pt-2 border-t border-slate-100 text-[10px] text-slate-600 font-semibold flex items-center justify-between">
-                  <span>Input Status</span>
-                  <span className="font-mono text-emerald-600 font-bold">100% Ingested</span>
-                </div>
-              </div>
-
-              {/* Stage 2: AI Extraction */}
-              <div className="p-3.5 rounded-xl bg-white border border-slate-200 shadow-2xs relative flex flex-col justify-between hover:border-slate-300 transition-all">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="w-7 h-7 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center font-bold text-xs border border-purple-100">
-                      2
-                    </span>
-                    <span className="px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase bg-purple-50 text-purple-700 border border-purple-200">
-                      Gemini 2.5
-                    </span>
-                  </div>
-                  <h4 className="text-xs font-bold text-slate-800 flex items-center gap-1">
-                    <Cpu className="w-3 h-3 text-purple-600" /> Entity Extraction
-                  </h4>
-                  <p className="text-[11px] text-slate-500 mt-1 leading-snug">
-                    Extracts WBS scope, completed %, joint counts, and safety blockers.
-                  </p>
-                </div>
-                <div className="mt-3 pt-2 border-t border-slate-100 text-[10px] text-slate-600 font-semibold flex items-center justify-between">
-                  <span>Parser Accuracy</span>
-                  <span className="font-mono text-purple-700 font-bold">99.4% F1 Score</span>
-                </div>
-              </div>
-
-              {/* Stage 3: Hybrid Matching */}
-              <div className="p-3.5 rounded-xl bg-white border border-slate-200 shadow-2xs relative flex flex-col justify-between hover:border-slate-300 transition-all">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-xs border border-amber-100">
-                      3
-                    </span>
-                    <span className="px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase bg-amber-50 text-amber-700 border border-amber-200">
-                      3-Signal
-                    </span>
-                  </div>
-                  <h4 className="text-xs font-bold text-slate-800 flex items-center gap-1">
-                    <GitMerge className="w-3 h-3 text-amber-600" /> Hybrid Matching
-                  </h4>
-                  <p className="text-[11px] text-slate-500 mt-1 leading-snug">
-                    Triangulates 45% semantic, 35% entity, and 20% WBS schedule metadata.
-                  </p>
-                </div>
-                <div className="mt-3 pt-2 border-t border-slate-100 text-[10px] text-slate-600 font-semibold flex items-center justify-between">
-                  <span>Auto Match</span>
-                  <span className="font-mono text-amber-700 font-bold">≥90% Threshold</span>
-                </div>
-              </div>
-
-              {/* Stage 4: Sequence Validation */}
-              <div className="p-3.5 rounded-xl bg-white border border-slate-200 shadow-2xs relative flex flex-col justify-between hover:border-slate-300 transition-all">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-xs border border-emerald-100">
-                      4
-                    </span>
-                    <span className="px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">
-                      FS Guard
-                    </span>
-                  </div>
-                  <h4 className="text-xs font-bold text-slate-800 flex items-center gap-1">
-                    <ShieldCheck className="w-3 h-3 text-emerald-600" /> Sequence Gate
-                  </h4>
-                  <p className="text-[11px] text-slate-500 mt-1 leading-snug">
-                    Guarantees predecessor tasks are completed before progress is written.
-                  </p>
-                </div>
-                <div className="mt-3 pt-2 border-t border-slate-100 text-[10px] text-slate-600 font-semibold flex items-center justify-between">
-                  <span>Integrity Checks</span>
-                  <span className="font-mono text-emerald-700 font-bold">0 Violations</span>
-                </div>
-              </div>
-
-              {/* Stage 5: Write-Back */}
-              <div className="p-3.5 rounded-xl bg-white border border-slate-200 shadow-2xs relative flex flex-col justify-between hover:border-slate-300 transition-all">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="w-7 h-7 rounded-lg bg-[#9e1218]/10 text-[#9e1218] flex items-center justify-center font-bold text-xs border border-red-200">
-                      5
-                    </span>
-                    <span className="px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase bg-red-50 text-[#9e1218] border border-red-200">
-                      Live Write
-                    </span>
-                  </div>
-                  <h4 className="text-xs font-bold text-slate-800 flex items-center gap-1">
-                    <TrendingUp className="w-3 h-3 text-[#9e1218]" /> P6 Actualization
-                  </h4>
-                  <p className="text-[11px] text-slate-500 mt-1 leading-snug">
-                    Updates Actual Start/Finish dates and synchronizes real-time S-Curve.
-                  </p>
-                </div>
-                <div className="mt-3 pt-2 border-t border-slate-100 text-[10px] text-slate-600 font-semibold flex items-center justify-between">
-                  <span>Progress State</span>
-                  <span className="font-mono text-[#9e1218] font-bold">{completedCount}/{totalActs} Synced</span>
-                </div>
-              </div>
-            </div>
-          </div>
+        <CardContent className="p-5 space-y-4">
 
           {/* Discipline Real-Time Progress Matrix */}
           <div>
@@ -984,6 +871,14 @@ export const Analytics: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Real-Time Workflow Report PDF Modal */}
+      <WorkflowReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        projectId={selectedProjectId || 1}
+        projectName={selectedProjectName || 'Project'}
+      />
     </div>
   );
 };
