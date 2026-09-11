@@ -25,12 +25,29 @@ export const SupervisorLayout: React.FC = () => {
   const notifRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Detect if running in installed mobile app / standalone mode
-    const isStandaloneMode =
-      window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as any).standalone === true ||
-      document.referrer.includes('android-app://');
-    setIsStandalone(isStandaloneMode);
+    // Detect if running in installed mobile app / standalone mode (iPhone iOS or Android)
+    const checkStandalone = () => {
+      const isStandaloneMode =
+        window.matchMedia('(display-mode: standalone)').matches ||
+        (window.navigator as any).standalone === true ||
+        document.referrer.includes('android-app://') ||
+        window.location.search.includes('source=pwa');
+      setIsStandalone(isStandaloneMode);
+    };
+
+    checkStandalone();
+
+    const mediaQuery = window.matchMedia('(display-mode: standalone)');
+    const handler = (e: MediaQueryListEvent) => setIsStandalone(e.matches);
+    try {
+      mediaQuery.addEventListener('change', handler);
+      return () => mediaQuery.removeEventListener('change', handler);
+    } catch {
+      try {
+        mediaQuery.addListener(handler);
+        return () => mediaQuery.removeListener(handler);
+      } catch {}
+    }
   }, []);
 
   // Auto-close notifications dropdown when clicking outside
