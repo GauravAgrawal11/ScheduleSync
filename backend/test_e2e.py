@@ -19,6 +19,7 @@ client = TestClient(app)
 @pytest.fixture(scope="module", autouse=True)
 def setup_test_db():
     """Ensure clean tables are created on isolated test database and cleared of past test runs."""
+    Base.metadata.drop_all(bind=test_engine)
     Base.metadata.create_all(bind=test_engine)
     app.dependency_overrides[get_db] = lambda: TestingSessionLocal()
     db = TestingSessionLocal()
