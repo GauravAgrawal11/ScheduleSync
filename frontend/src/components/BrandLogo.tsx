@@ -37,7 +37,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
         src="/assets/logo.png"
         onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/logo.png'; }}
         alt="Oil India Limited ScheduleSync Logo"
-        className={`${iconSize} rounded-full object-contain shadow-xs border border-slate-200/90 bg-white flex-shrink-0 p-0.5`}
+        className={`${iconSize} rounded-full object-contain flex-shrink-0`}
       />
       <div className="flex flex-col justify-center text-left">
         <div className="flex items-center gap-1.5">

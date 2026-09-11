@@ -127,7 +127,7 @@ export const PlannerLayout: React.FC = () => {
               src="/assets/logo.png"
               onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/logo.png'; }}
               alt="ScheduleSync Logo"
-              className="w-8 h-8 rounded-full object-contain bg-white/10 p-0.5 border border-red-900/60 flex-shrink-0"
+              className="w-10 h-10 rounded-full object-contain flex-shrink-0"
             />
             <div className="flex flex-col text-left">
               <span className="text-base font-black tracking-tight leading-none flex items-center">
@@ -472,7 +472,7 @@ export const PlannerLayout: React.FC = () => {
                       src="/assets/logo.png"
                       onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/logo.png'; }}
                       alt="Oil India Limited"
-                      className="w-8 h-8 rounded-full object-contain border border-slate-200 bg-white p-0.5"
+                      className="w-10 h-10 rounded-full object-contain flex-shrink-0"
                     />
                     <div className="flex flex-col justify-center">
                       <h1 className="text-base font-black tracking-tight leading-none flex items-center">
