@@ -74,7 +74,7 @@ export const HistoricalMemoryPanel: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Top Banner */}
-      <div className="bg-gradient-to-r from-oil-950 via-slate-900 to-oil-900 rounded-xl p-5 text-white border border-oil-800 shadow-md">
+      <div className="bg-gradient-to-r from-neutral-900 via-[#1f2125] to-neutral-900 rounded-xl p-5 text-white border border-neutral-700/80 shadow-md">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-start gap-3">
             <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 mt-1">
@@ -85,11 +85,11 @@ export const HistoricalMemoryPanel: React.FC = () => {
                 <h3 className="text-lg font-bold text-white tracking-tight">
                   Institutional Memory: Closed-Project Knowledge Capture
                 </h3>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-950 text-emerald-300 border border-emerald-800 font-mono">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-700/60 font-mono">
                   Member C · RAG
                 </span>
               </div>
-              <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
+              <p className="text-xs text-zinc-300 mt-1 max-w-2xl leading-relaxed">
                 Aggregated empirical actuals from closed historical projects (HIST-P1: Kaziranga Tank Farm Expansion &amp; HIST-P2: Dhemaji Pipeline Corridor Upgrade).
                 Empowered with 384-dimensional dense semantic vectors (all-MiniLM-L6-v2) for root-cause query retrieval.
               </p>
@@ -98,16 +98,16 @@ export const HistoricalMemoryPanel: React.FC = () => {
 
           {/* Quick metric stats */}
           <div className="flex items-center gap-3 self-start sm:self-center text-xs">
-            <div className="px-3 py-2 rounded-lg bg-oil-900/80 border border-oil-800 text-center">
-              <div className="text-[10px] text-slate-400 uppercase font-semibold">Completed Projects</div>
+            <div className="px-3 py-2 rounded-lg bg-neutral-800/90 border border-neutral-700 text-center">
+              <div className="text-[10px] text-zinc-400 uppercase font-semibold">Completed Projects</div>
               <div className="text-sm font-bold text-emerald-400 font-mono">2 Closed Archive</div>
             </div>
-            <div className="px-3 py-2 rounded-lg bg-oil-900/80 border border-oil-800 text-center">
-              <div className="text-[10px] text-slate-400 uppercase font-semibold">Memory (Not Running)</div>
+            <div className="px-3 py-2 rounded-lg bg-neutral-800/90 border border-neutral-700 text-center">
+              <div className="text-[10px] text-zinc-400 uppercase font-semibold">Memory (Not Running)</div>
               <div className="text-sm font-bold text-white font-mono">36 Historical Acts</div>
             </div>
-            <div className="px-3 py-2 rounded-lg bg-oil-900/80 border border-oil-800 text-center">
-              <div className="text-[10px] text-slate-400 uppercase font-semibold">Vector Column</div>
+            <div className="px-3 py-2 rounded-lg bg-neutral-800/90 border border-neutral-700 text-center">
+              <div className="text-[10px] text-zinc-400 uppercase font-semibold">Vector Column</div>
               <div className="text-sm font-bold text-cyan-400 font-mono">pgvector 384-d</div>
             </div>
           </div>
