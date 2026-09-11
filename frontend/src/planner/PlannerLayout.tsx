@@ -444,12 +444,12 @@ export const PlannerLayout: React.FC = () => {
 
         {/* ── Top Header Bar with Custom Oilfield Rig Artwork Banner ── */}
         <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs flex-shrink-0 relative">
-          {/* Subtle Right-aligned Oilfield Rig Artwork Banner */}
-          <div className="absolute right-0 top-0 bottom-0 h-full pointer-events-none opacity-85 z-0 flex items-center justify-end overflow-hidden max-w-[50%]">
+          {/* Custom Oilfield Rig Artwork Panoramic Header Banner */}
+          <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden flex items-center">
             <img
               src="/assets/header-bg.png"
               alt="Oilfield Rigs Banner"
-              className="h-full w-auto object-contain object-right select-none"
+              className="w-full h-full object-cover object-center select-none opacity-90"
             />
           </div>
 
