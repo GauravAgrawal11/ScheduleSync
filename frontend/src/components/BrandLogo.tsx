@@ -28,16 +28,18 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
 
   const content = (
     <div className={`flex items-center gap-2.5 select-none ${className}`}>
-      {/* Brand Logo Box as sketched */}
+      {/* Brand Logo Box with pumpjack badge or official logo */}
       <img
-        src="/logo.png"
+        src="/assets/pumpjack-badge.png"
+        onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/logo.png'; }}
         alt="Oil India Limited ScheduleSync Logo"
-        className={`${iconSize} rounded-xl object-contain shadow-xs border border-slate-200/90 bg-white flex-shrink-0`}
+        className={`${iconSize} rounded-full object-contain shadow-xs border border-slate-200/90 bg-white flex-shrink-0 p-0.5`}
       />
       <div className="flex flex-col justify-center text-left">
         <div className="flex items-center gap-1.5">
-          <span className={`${titleSize} font-black tracking-tight text-slate-950 leading-tight`}>
-            ScheduleSync
+          <span className={`${titleSize} font-black tracking-tight leading-tight flex items-center`}>
+            <span className="text-black" style={{ color: '#000000' }}>SCHEDULE</span>
+            <span className="text-red-700 ml-0.5" style={{ color: '#c5161d' }}>SYNC</span>
           </span>
           {roleTag && (
             <span className={`text-[9px] font-mono px-1.5 py-0.2 rounded font-bold border ${tagColorClass}`}>
@@ -45,12 +47,12 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
             </span>
           )}
         </div>
-        {/* Requested: "oil india limited" strictly in black color */}
+        {/* User requirement: Under schedule sync, small "OIL INDIA LIMITED" strictly in black color */}
         <span
-          className={`${subSize} font-black uppercase tracking-wider leading-none mt-0.5 text-black`}
+          className={`${subSize} font-black uppercase tracking-widest leading-none mt-0.5 text-black`}
           style={{ color: '#000000', fontWeight: 900 }}
         >
-          oil india limited
+          OIL INDIA LIMITED
         </span>
       </div>
     </div>

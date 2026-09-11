@@ -89,7 +89,7 @@ export const WorkflowReportModal: React.FC<WorkflowReportModalProps> = ({
                 <h3 className="text-sm font-bold text-slate-900 truncate">
                   Project Workflow Report
                 </h3>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-oil-800 text-white font-mono shrink-0">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#0a0b0e] text-white font-mono shrink-0 border border-slate-800">
                   Executive PDF Report
                 </span>
               </div>
@@ -106,10 +106,10 @@ export const WorkflowReportModal: React.FC<WorkflowReportModalProps> = ({
                 <Button
                   size="sm"
                   onClick={handleDownload}
-                  className="bg-oil-800 hover:bg-oil-900 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs cursor-pointer"
+                  className="bg-[#c5161d] hover:bg-[#a51016] text-white font-bold text-xs flex items-center gap-1.5 shadow-xs cursor-pointer"
                   title="Download PDF to computer"
                 >
-                  <Download className="w-3.5 h-3.5 text-emerald-400" />
+                  <Download className="w-3.5 h-3.5 text-white" />
                   <span>Download PDF</span>
                 </Button>
 

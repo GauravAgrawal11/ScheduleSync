@@ -7,6 +7,17 @@ export default {
   theme: {
     extend: {
       colors: {
+        refinery: {
+          950: '#0a0b0e',
+          900: '#111215',
+          850: '#16181d',
+          800: '#1c1e24',
+          700: '#282c35',
+          red: '#c5161d',
+          'red-hover': '#a51016',
+          'red-dark': '#880d12',
+          'red-light': '#f87171',
+        },
         oil: {
           950: '#061325',
           900: '#0B2545',
@@ -18,6 +29,8 @@ export default {
           50: '#F7FAFC',
         },
         brand: {
+          red: '#c5161d',
+          redDark: '#991b1b',
           green: '#10B981',
           amber: '#F59E0B',
           rose: '#EF4444',

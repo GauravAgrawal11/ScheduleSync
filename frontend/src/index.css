@@ -14,14 +14,29 @@
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #0f1115;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #2a2e38;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #c5161d;
+}
+
+/* Industrial Refinery Theme Background */
+.refinery-bg {
+  background-image: linear-gradient(to bottom, rgba(248, 250, 252, 0.93), rgba(241, 245, 249, 0.95)), url('/assets/refinery-bg.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+
+.refinery-bg-subtle {
+  background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.97)), url('/assets/refinery-bg.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
 }
 
 /* Frappe Gantt Custom Styling */

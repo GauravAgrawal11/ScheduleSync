@@ -103,31 +103,31 @@ export const ReviewQueue: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Top Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+      {/* Top Banner with Red Accent Stripe */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200 border-l-4 border-l-[#c5161d] shadow-sm">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-oil-900 text-white uppercase tracking-wider flex items-center gap-1">
-              <Inbox className="w-3 h-3" /> AI Verification Pipeline
+            <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-[#0a0b0e] text-white uppercase tracking-wider flex items-center gap-1">
+              <Inbox className="w-3 h-3 text-red-500" /> AI VERIFICATION PIPELINE
             </span>
-            <span className="text-xs text-slate-500 font-mono">
+            <span className="text-xs text-slate-500 font-medium">
               3-Signal Confidence Fusion (Semantic + Entity + Metadata)
             </span>
           </div>
           <h2 className="text-xl font-black text-slate-900 tracking-tight">
-            Review Queue · Candidate Activity Matches &amp; Unmatched Scope
+            Review Queue : Candidate Activity Matches &amp; Unmatched Scope
           </h2>
         </div>
 
-        <div className="flex items-center gap-2 text-xs text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-200 flex-wrap">
-          <span className="flex items-center gap-1.5 font-medium">
+        <div className="flex items-center gap-3 text-xs text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-200 flex-wrap">
+          <span className="flex items-center gap-1.5 font-bold text-emerald-800">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" /> &gt;90% Auto-linked
           </span>
-          <span className="flex items-center gap-1.5 ml-2 font-medium">
+          <span className="flex items-center gap-1.5 font-bold text-amber-800">
             <span className="w-2.5 h-2.5 rounded-full bg-amber-500" /> 70-90% Review ({reviewCount})
           </span>
-          <span className="flex items-center gap-1.5 ml-2 font-bold text-rose-700">
-            <span className="w-2.5 h-2.5 rounded-full bg-rose-500" /> &lt;70% Unmatched ({unmatchedCount})
+          <span className="flex items-center gap-1.5 font-black text-red-700">
+            <span className="w-2.5 h-2.5 rounded-full bg-red-600" /> &lt;70% Unmatched ({unmatchedCount})
           </span>
         </div>
       </div>
@@ -178,7 +178,7 @@ export const ReviewQueue: React.FC = () => {
                 <button
                   onClick={() => acknowledgeViolationMutation.mutate(v.id)}
                   disabled={acknowledgeViolationMutation.isPending}
-                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-rose-600 text-white hover:bg-rose-700 transition-all flex items-center gap-1.5 self-start sm:self-center flex-shrink-0 shadow-xs cursor-pointer"
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#c5161d] text-white hover:bg-red-700 transition-all flex items-center gap-1.5 self-start sm:self-center flex-shrink-0 shadow-xs cursor-pointer"
                 >
                   <Check className="w-3.5 h-3.5" /> Acknowledge
                 </button>
@@ -188,52 +188,58 @@ export const ReviewQueue: React.FC = () => {
         </Card>
       )}
 
-      {/* KPI Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <Card className="p-4 bg-white border-slate-200 shadow-xs">
-          <div className="text-xs font-bold text-slate-500 uppercase">Total in Queue</div>
-          <div className="text-2xl font-black text-slate-900 mt-1 font-mono">{totalCount}</div>
-          <div className="text-[10px] text-slate-400 mt-0.5">Pending engineering planner action</div>
+      {/* KPI Stats Cards matching Image 1 */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {/* Card 1: Total in Queue */}
+        <Card className="p-5 bg-white border-slate-200 border-l-4 border-l-[#c5161d] shadow-sm relative overflow-hidden">
+          <FileText className="w-5 h-5 text-slate-300 absolute top-4 right-4 stroke-[1.5]" />
+          <div className="text-xs font-bold text-slate-600 uppercase tracking-wider">TOTAL IN QUEUE</div>
+          <div className="text-3xl font-black text-[#c5161d] mt-2 font-mono">{totalCount}</div>
+          <div className="text-[11px] text-slate-500 mt-1 font-medium">Pending engineering planner action</div>
         </Card>
 
-        <Card className="p-4 bg-amber-50/70 border-amber-200 shadow-xs">
-          <div className="text-xs font-bold text-amber-800 uppercase flex items-center gap-1">
-            <Clock className="w-3.5 h-3.5 text-amber-600" /> Needs Review (70-90%)
+        {/* Card 2: Needs Review */}
+        <Card className="p-5 bg-white border-slate-200 border-l-4 border-l-amber-500 shadow-sm relative overflow-hidden">
+          <FileText className="w-5 h-5 text-slate-300 absolute top-4 right-4 stroke-[1.5]" />
+          <div className="text-xs font-bold text-amber-800 uppercase tracking-wider flex items-center gap-1.5">
+            <Clock className="w-3.5 h-3.5 text-amber-600" /> NEEDS REVIEW (70-90%)
           </div>
-          <div className="text-2xl font-black text-amber-950 mt-1 font-mono">{reviewCount}</div>
-          <div className="text-[10px] text-amber-700 mt-0.5">High probability candidate matches</div>
+          <div className="text-3xl font-black text-amber-600 mt-2 font-mono">{reviewCount}</div>
+          <div className="text-[11px] text-slate-500 mt-1 font-medium">High probability candidate matches</div>
         </Card>
 
-        <Card className="p-4 bg-rose-50/70 border-rose-200 shadow-xs">
-          <div className="text-xs font-bold text-rose-800 uppercase flex items-center gap-1">
-            <AlertTriangle className="w-3.5 h-3.5 text-rose-600" /> Unmatched / Novel Scope (&lt;70%)
+        {/* Card 3: Unmatched Scope */}
+        <Card className="p-5 bg-white border-slate-200 border-l-4 border-l-red-600 shadow-sm relative overflow-hidden">
+          <FileText className="w-5 h-5 text-slate-300 absolute top-4 right-4 stroke-[1.5]" />
+          <div className="text-xs font-bold text-red-800 uppercase tracking-wider flex items-center gap-1.5">
+            <AlertTriangle className="w-3.5 h-3.5 text-red-600" /> UNMATCHED / NOVEL SCOPE (&lt;70%)
           </div>
-          <div className="text-2xl font-black text-rose-950 mt-1 font-mono">{unmatchedCount}</div>
-          <div className="text-[10px] text-rose-700 mt-0.5">Discrepancy, new scope, or held reports</div>
+          <div className="text-3xl font-black text-red-600 mt-2 font-mono">{unmatchedCount}</div>
+          <div className="text-[11px] text-slate-500 mt-1 font-medium">Discrepancy, new scope, or held reports</div>
         </Card>
       </div>
 
       {/* Filter & Search Toolbar */}
       <Card className="border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-3.5 bg-slate-50 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="p-4 bg-white border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
           {/* Tier Tabs */}
-          <div className="flex items-center gap-1.5 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={() => setTierFilter('ALL')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
                 tierFilter === 'ALL'
-                  ? 'bg-oil-900 text-white shadow-xs'
-                  : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
+                  ? 'bg-[#c5161d] text-white shadow-xs'
+                  : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
               }`}
             >
               All Candidates ({totalCount})
             </button>
             <button
               onClick={() => setTierFilter('VERIFIED')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
                 tierFilter === 'VERIFIED'
                   ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'bg-white border border-slate-200 text-slate-600 hover:bg-emerald-50 hover:text-emerald-800'
+                  : 'bg-white border border-slate-200 text-slate-700 hover:bg-emerald-50 hover:text-emerald-800'
               }`}
             >
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
@@ -241,10 +247,10 @@ export const ReviewQueue: React.FC = () => {
             </button>
             <button
               onClick={() => setTierFilter('REVIEW')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
                 tierFilter === 'REVIEW'
                   ? 'bg-amber-600 text-white shadow-xs'
-                  : 'bg-white border border-slate-200 text-slate-600 hover:bg-amber-50 hover:text-amber-800'
+                  : 'bg-white border border-slate-200 text-slate-700 hover:bg-amber-50 hover:text-amber-800'
               }`}
             >
               <Clock className="w-3.5 h-3.5 text-amber-500" />
@@ -252,70 +258,70 @@ export const ReviewQueue: React.FC = () => {
             </button>
             <button
               onClick={() => setTierFilter('UNMATCHED')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
                 tierFilter === 'UNMATCHED'
-                  ? 'bg-rose-600 text-white shadow-xs'
-                  : 'bg-white border border-slate-200 text-slate-600 hover:bg-rose-50 hover:text-rose-700'
+                  ? 'bg-red-600 text-white shadow-xs'
+                  : 'bg-white border border-slate-200 text-slate-700 hover:bg-red-50 hover:text-red-700'
               }`}
             >
-              <AlertTriangle className="w-3.5 h-3.5 text-rose-500" />
+              <AlertTriangle className="w-3.5 h-3.5 text-red-500" />
               Unmatched Scope ({unmatchedCount})
             </button>
           </div>
 
-          {/* Discipline Pills & Search */}
-          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-            <div className="flex items-center gap-1 text-[11px] font-bold">
+          {/* Discipline Pills & Search Input */}
+          <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
+            <div className="flex items-center gap-1 text-xs font-bold">
               <button
                 onClick={() => setDisciplineFilter('ALL')}
-                className={`px-2 py-1 rounded transition-all ${
+                className={`px-2.5 py-1 rounded-md transition-all ${
                   disciplineFilter === 'ALL'
-                    ? 'bg-slate-800 text-white'
-                    : 'text-slate-500 hover:text-slate-800'
+                    ? 'bg-[#c5161d] text-white'
+                    : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 All
               </button>
               <button
                 onClick={() => setDisciplineFilter('PIPING')}
-                className={`px-2 py-1 rounded transition-all ${
+                className={`px-2.5 py-1 rounded-md transition-all ${
                   disciplineFilter === 'PIPING'
-                    ? 'bg-amber-600 text-white'
-                    : 'text-amber-700 hover:bg-amber-100'
+                    ? 'bg-[#c5161d] text-white'
+                    : 'text-slate-600 hover:text-red-700'
                 }`}
               >
                 Piping
               </button>
               <button
                 onClick={() => setDisciplineFilter('CIVIL')}
-                className={`px-2 py-1 rounded transition-all ${
+                className={`px-2.5 py-1 rounded-md transition-all ${
                   disciplineFilter === 'CIVIL'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-blue-700 hover:bg-blue-100'
+                    ? 'bg-[#c5161d] text-white'
+                    : 'text-slate-600 hover:text-red-700'
                 }`}
               >
                 Civil
               </button>
               <button
                 onClick={() => setDisciplineFilter('ELECTRICAL')}
-                className={`px-2 py-1 rounded transition-all ${
+                className={`px-2.5 py-1 rounded-md transition-all ${
                   disciplineFilter === 'ELECTRICAL'
-                    ? 'bg-purple-600 text-white'
-                    : 'text-purple-700 hover:bg-purple-100'
+                    ? 'bg-[#c5161d] text-white'
+                    : 'text-slate-600 hover:text-red-700'
                 }`}
               >
                 Electrical
               </button>
             </div>
 
-            <div className="relative min-w-[200px]">
-              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+            <div className="relative min-w-[220px]">
+              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
-                placeholder="Search report text, supervisor..."
+                placeholder="Search report text, supervisor, activity..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-8 pr-3 py-1.5 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-oil-600 bg-white"
+                className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#c5161d] text-slate-800"
               />
             </div>
           </div>
@@ -440,16 +446,11 @@ export const ReviewQueue: React.FC = () => {
                         <span>Meta: {Math.round(item.signals.metadata * 100)}%</span>
                       </div>
 
-                      <Button
-                        size="sm"
-                        className={`w-full text-xs font-bold flex items-center justify-center gap-1 py-1.5 ${
-                          isUnmatched
-                            ? 'bg-rose-600 hover:bg-rose-700 text-white'
-                            : 'bg-oil-800 hover:bg-oil-900 text-white'
-                        }`}
+                      <button
+                        className="w-full text-xs font-bold flex items-center justify-center gap-1.5 py-2.5 bg-[#c5161d] hover:bg-[#a51016] text-white rounded-lg shadow-xs transition-colors cursor-pointer"
                       >
-                        Hero Review &amp; Relink <ArrowUpRight className="w-3.5 h-3.5" />
-                      </Button>
+                        Hero Review &amp; Relink <ArrowUpRight className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
                 );
