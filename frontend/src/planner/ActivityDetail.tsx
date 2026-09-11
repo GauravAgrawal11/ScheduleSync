@@ -33,7 +33,7 @@ export const ActivityDetail: React.FC = () => {
 
   const [selectedActivityId, setSelectedActivityId] = useState<string>('L6-PIP-101');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'COMPLETED' | 'IN_PROGRESS' | 'DELAYED' | 'PLANNED'>('ALL');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'COMPLETED' | 'NON_COMPLETED' | 'IN_PROGRESS' | 'DELAYED' | 'PLANNED'>('ALL');
   const [disciplineFilter, setDisciplineFilter] = useState<'ALL' | 'PIPING' | 'CIVIL' | 'ELECTRICAL'>('ALL');
 
   // Fetch all activities for current project (page 1, size 100 to get all 36)
@@ -122,6 +122,7 @@ export const ActivityDetail: React.FC = () => {
   // Status counts
   const totalCount = activitiesWithMeta.length;
   const completedCount = activitiesWithMeta.filter((a) => a.normalizedStatus === 'COMPLETED').length;
+  const nonCompletedCount = totalCount - completedCount;
   const inProgressCount = activitiesWithMeta.filter((a) => a.normalizedStatus === 'IN_PROGRESS').length;
   const delayedCount = activitiesWithMeta.filter((a) => a.normalizedStatus === 'DELAYED').length;
   const plannedCount = activitiesWithMeta.filter((a) => a.normalizedStatus === 'PLANNED').length;
@@ -140,7 +141,10 @@ export const ActivityDetail: React.FC = () => {
 
       // Status
       const matchesStatus =
-        statusFilter === 'ALL' || act.normalizedStatus === statusFilter;
+        statusFilter === 'ALL' ||
+        (statusFilter === 'NON_COMPLETED'
+          ? act.normalizedStatus !== 'COMPLETED'
+          : act.normalizedStatus === statusFilter);
 
       // Discipline
       const matchesDiscipline =
@@ -174,17 +178,17 @@ export const ActivityDetail: React.FC = () => {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-oil-900 text-white uppercase tracking-wider flex items-center gap-1">
-              <History className="w-3 h-3" /> Activity Intelligence
+              <History className="w-3 h-3" /> Immutable Audit Trail
             </span>
             <span className="text-xs text-slate-500 font-mono">
               Project #{selectedProjectId} · {selectedProjectName}
             </span>
           </div>
           <h2 className="text-xl font-black text-slate-900 tracking-tight">
-            Schedule Activities &amp; Chronological Audit Timeline
+            Schedule Activities &amp; Chronological Audit Trail
           </h2>
           <p className="text-xs text-slate-500 mt-1 max-w-3xl">
-            Explore all schedule activities (completed, in progress, delayed, planned) with assigned supervisors and immutable chronological site audit events.
+            Live lifecycle audit trail showing all activities (completed, in progress, delayed, and planned non-completed) with assigned field supervisors and immutable chronological site verification records.
           </p>
         </div>
 
@@ -197,6 +201,10 @@ export const ActivityDetail: React.FC = () => {
           <div className="px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-center min-w-[70px]">
             <div className="text-[10px] font-bold uppercase text-emerald-600">Completed</div>
             <div className="text-base font-black text-emerald-700 font-mono">{completedCount}</div>
+          </div>
+          <div className="px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-center min-w-[70px]">
+            <div className="text-[10px] font-bold uppercase text-amber-700">Non-Completed</div>
+            <div className="text-base font-black text-amber-800 font-mono">{nonCompletedCount}</div>
           </div>
           <div className="px-3 py-1.5 rounded-xl bg-blue-50 border border-blue-200 text-center min-w-[70px]">
             <div className="text-[10px] font-bold uppercase text-blue-600">Active</div>
@@ -256,6 +264,16 @@ export const ActivityDetail: React.FC = () => {
                   }`}
                 >
                   Completed ({completedCount})
+                </button>
+                <button
+                  onClick={() => setStatusFilter('NON_COMPLETED')}
+                  className={`px-2.5 py-1 rounded-md font-bold transition-all whitespace-nowrap ${
+                    statusFilter === 'NON_COMPLETED'
+                      ? 'bg-amber-600 text-white'
+                      : 'bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200'
+                  }`}
+                >
+                  Non-Completed ({nonCompletedCount})
                 </button>
                 <button
                   onClick={() => setStatusFilter('IN_PROGRESS')}

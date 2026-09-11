@@ -125,7 +125,7 @@ export const ProjectSetup: React.FC = () => {
     <div className="space-y-6 max-w-5xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Baseline Setup & Schedule Import</h2>
+          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Project Ingestion &amp; Baseline Setup</h2>
           <p className="text-xs text-slate-500 mt-0.5">
             Configure capital project boundaries and upload baseline WBS schedules (.xlsx or Primavera .xer)
           </p>

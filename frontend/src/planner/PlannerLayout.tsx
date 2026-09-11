@@ -21,6 +21,8 @@ import {
   FileText,
   Sparkles,
   Settings,
+  FolderInput,
+  History,
   ChevronDown,
   ChevronRight,
   Bell,
@@ -215,7 +217,7 @@ export const PlannerLayout: React.FC = () => {
             )}
           </NavLink>
 
-          {/* Activity Audit */}
+          {/* Audit Trail */}
           <NavLink
             to="/planner/activities"
             className={({ isActive }) =>
@@ -228,8 +230,8 @@ export const PlannerLayout: React.FC = () => {
           >
             {({ isActive }) => (
               <>
-                <ClipboardList className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-slate-300 group-hover:text-white'}`} />
-                <span className="truncate flex-1">Activity Audit</span>
+                <History className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-slate-300 group-hover:text-white'}`} />
+                <span className="truncate flex-1">Audit Trail</span>
               </>
             )}
           </NavLink>
@@ -346,14 +348,14 @@ export const PlannerLayout: React.FC = () => {
             )}
           </div>
 
-          {/* AI Verification (Expandable) */}
+          {/* Audit Trail & Verification (Expandable) */}
           <div>
             <button
               onClick={() => setIsAiVerificationExpanded(!isAiVerificationExpanded)}
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/60 transition-all cursor-pointer group"
             >
               <Sparkles className="w-4 h-4 flex-shrink-0 text-slate-300 group-hover:text-white" />
-              <span className="truncate flex-1 text-left">AI Verification</span>
+              <span className="truncate flex-1 text-left">Audit &amp; Verification</span>
               {isAiVerificationExpanded ? (
                 <ChevronDown className="w-3.5 h-3.5 text-slate-400 ml-auto flex-shrink-0" />
               ) : (
@@ -364,18 +366,18 @@ export const PlannerLayout: React.FC = () => {
             {isAiVerificationExpanded && (
               <div className="pl-9 pr-2 py-1 space-y-1">
                 <NavLink
-                  to="/planner/review"
+                  to="/planner/activities"
                   className="flex items-center gap-2 text-xs text-slate-400 hover:text-white py-1 transition-colors cursor-pointer"
                 >
-                  <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />
-                  <span>Verification Pipeline</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  <span>Activity Audit Trail</span>
                 </NavLink>
                 <NavLink
                   to="/planner/review"
                   className="flex items-center gap-2 text-xs text-slate-400 hover:text-white py-1 transition-colors cursor-pointer"
                 >
-                  <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />
-                  <span>Candidate Matches</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                  <span>AI Verification Queue</span>
                 </NavLink>
               </div>
             )}
@@ -384,7 +386,7 @@ export const PlannerLayout: React.FC = () => {
           {/* Separator line matching image */}
           <div className="border-t border-slate-800/80 my-2 pt-1" />
 
-          {/* Settings (Baseline Setup) */}
+          {/* Project Ingestion (Baseline Setup) */}
           <NavLink
             to="/planner/setup"
             className={({ isActive }) =>
@@ -397,8 +399,8 @@ export const PlannerLayout: React.FC = () => {
           >
             {({ isActive }) => (
               <>
-                <Settings className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-slate-300 group-hover:text-white'}`} />
-                <span className="truncate flex-1">Settings</span>
+                <FolderInput className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-slate-300 group-hover:text-white'}`} />
+                <span className="truncate flex-1">Project Ingestion</span>
               </>
             )}
           </NavLink>
