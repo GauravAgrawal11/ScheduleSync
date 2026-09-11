@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../auth/authStore';
-import { Home, PlusCircle, ListOrdered, LogOut, ShieldCheck, Bell, CheckCheck, ExternalLink, FolderOpen, WifiOff, Languages } from 'lucide-react';
+import { Home, PlusCircle, ListOrdered, LogOut, ShieldCheck, Bell, CheckCheck, ExternalLink, FolderOpen, WifiOff, Languages, HelpCircle } from 'lucide-react';
 import { notificationsApi, AppNotification } from '../api/client';
 import { initSyncManager } from './offline/syncManager';
 import { useOnlineStatus } from './offline/useOnlineStatus';
@@ -9,6 +9,7 @@ import { useLanguageStore } from './languageStore';
 
 import { InstallAppBanner } from './offline/InstallAppBanner';
 import { BrandLogo } from '../components/BrandLogo';
+import { HelpSupportModal } from '../components/HelpSupportModal';
 
 export const SupervisorLayout: React.FC = () => {
   const { user, logout } = useAuthStore();
@@ -19,6 +20,7 @@ export const SupervisorLayout: React.FC = () => {
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [showNotifs, setShowNotifs] = useState<boolean>(false);
+  const [isHelpOpen, setIsHelpOpen] = useState<boolean>(false);
   const notifRef = useRef<HTMLDivElement>(null);
 
   // Auto-close notifications dropdown when clicking outside
@@ -75,20 +77,30 @@ export const SupervisorLayout: React.FC = () => {
 
   return (
     <div
-      className="min-h-screen flex justify-center text-slate-900 font-sans antialiased"
+      className="min-h-screen flex justify-center text-slate-900 font-sans antialiased touch-manipulation"
       style={{
-        backgroundImage: `linear-gradient(to bottom, rgba(248, 250, 252, 0.90), rgba(241, 245, 249, 0.94)), url('/assets/refinery-bg.png')`,
+        backgroundImage: `linear-gradient(to bottom, rgba(248, 250, 252, 0.88), rgba(241, 245, 249, 0.92)), url('/assets/pwa-bg.png')`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundAttachment: 'fixed',
       }}
     >
-      <div className="max-w-md w-full min-h-screen bg-slate-50/90 backdrop-blur-xs flex flex-col border-x border-slate-200 shadow-2xl relative pb-20">
+      <div className="max-w-md w-full min-h-[100dvh] bg-slate-50/85 backdrop-blur-xs flex flex-col border-x border-slate-200 shadow-2xl relative pb-[max(5.5rem,env(safe-area-inset-bottom))]">
         {/* Top Site Bar: High Contrast White for Outdoor Sunlight */}
         <header className="bg-white/95 backdrop-blur-xs text-slate-900 border-b border-slate-200 px-4 py-3 sticky top-0 z-30 shadow-2xs flex items-center justify-between">
           <BrandLogo roleTag="SUPERVISOR" tagColor="slate" size="sm" />
 
           <div className="flex items-center gap-1.5">
+            {/* Help & Support Button */}
+            <button
+              onClick={() => setIsHelpOpen(true)}
+              title="Help & Support"
+              className="p-1.5 rounded-lg text-slate-500 hover:text-[#c5161d] hover:bg-slate-100 transition-colors"
+              aria-label="Help & Support"
+            >
+              <HelpCircle className="w-4 h-4 text-[#c5161d]" />
+            </button>
+
             {/* Language Switcher Pill EN | हिन्दी */}
             <button
               onClick={toggleLanguage}
@@ -196,13 +208,13 @@ export const SupervisorLayout: React.FC = () => {
         {/* PWA Mobile App Install Banner */}
         <InstallAppBanner />
 
-        {/* Main Screen Outlet wrapped in ErrorBoundary */}
-        <main className="flex-1 p-4 overflow-y-auto">
+        {/* Main Screen Outlet wrapped in ErrorBoundary with smooth momentum scrolling */}
+        <main className="flex-1 p-4 overflow-y-auto -webkit-overflow-scrolling-touch">
           <Outlet />
         </main>
 
-        {/* Persistent Bottom Bar */}
-        <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 backdrop-blur-xs border-t border-slate-200 px-6 py-2 flex justify-around items-center z-40 shadow-lg">
+        {/* Persistent Bottom Bar (Safe-Area compliant for iOS home bar) */}
+        <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 backdrop-blur-xs border-t border-slate-200 px-6 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] flex justify-around items-center z-40 shadow-lg">
           <NavLink
             to="/supervisor"
             end
@@ -224,8 +236,8 @@ export const SupervisorLayout: React.FC = () => {
               }`
             }
           >
-            <div className="w-10 h-10 -mt-5 rounded-full bg-[#c5161d] hover:bg-[#a51016] text-white flex items-center justify-center shadow-md shadow-red-950/40 transition-all">
-              <PlusCircle className="w-5 h-5" />
+            <div className="w-11 h-11 -mt-5 rounded-full bg-[#c5161d] hover:bg-[#a51016] text-white flex items-center justify-center shadow-md shadow-red-950/40 active:scale-95 transition-transform">
+              <PlusCircle className="w-6 h-6" />
             </div>
             <span>{t('nav_log')}</span>
           </NavLink>
@@ -255,6 +267,13 @@ export const SupervisorLayout: React.FC = () => {
           </NavLink>
         </nav>
       </div>
+
+      {/* Help & Support Interactive Modal for Field Supervisors */}
+      <HelpSupportModal
+        isOpen={isHelpOpen}
+        onClose={() => setIsHelpOpen(false)}
+        role="supervisor"
+      />
     </div>
   );
 };

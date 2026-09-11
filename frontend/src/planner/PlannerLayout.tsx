@@ -16,8 +16,6 @@ import {
   AlertOctagon,
   ClipboardList,
   FileDown,
-  Home,
-  BarChart3,
   ShieldAlert,
   Clock,
   FileText,
@@ -26,9 +24,10 @@ import {
   MoreHorizontal,
   ChevronDown,
   Bell,
-  CheckCircle2,
+  HelpCircle,
 } from 'lucide-react';
 import { WorkflowReportModal } from './WorkflowReportModal';
+import { HelpSupportModal } from '../components/HelpSupportModal';
 
 export const PlannerLayout: React.FC = () => {
   const { user, logout } = useAuthStore();
@@ -44,6 +43,7 @@ export const PlannerLayout: React.FC = () => {
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState<boolean>(false);
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState<boolean>(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState<boolean>(false);
 
   const { data: projectsData } = useQuery({
@@ -91,16 +91,16 @@ export const PlannerLayout: React.FC = () => {
     navigate('/login');
   };
 
-  // Nav items matching the reference design in Image 1 & 4
+  // Nav items: EXACT previous names maintained, "Dashboard" removed as requested
   const navItems = [
-    { to: '/planner/review',     label: 'Dashboard',      icon: Home,           exact: true },
     { to: '/planner/schedule',   label: 'Gantt',          icon: CalendarRange },
     { to: '/planner/review',     label: 'Review Queue',   icon: Inbox,          badge: true, count: queueCount },
     { to: '/planner/activities', label: 'Activity Audit', icon: ClipboardList },
-    { to: '/planner/analytics',  label: 'Analytics',      icon: BarChart3 },
-    { to: '/planner/complaints', label: 'HSE & Blockers', icon: ShieldAlert,    hseCount: true, count: openComplaintsCount },
+    { to: '/planner/analytics',  label: 'Analytics',      icon: Layers },
+    { to: '/planner/complaints', label: 'HSE & Blockers', icon: AlertOctagon,   hseCount: true, count: openComplaintsCount },
     { to: '/planner/workload',   label: 'Assignments',    icon: Users },
-    { to: '/planner/historical', label: 'History',        icon: Clock },
+    { to: '/planner/historical', label: 'Historical',     icon: Brain },
+    { to: '/planner/setup',      label: 'Baseline Setup', icon: FolderKanban },
     {
       to: '#reports',
       label: 'Reports',
@@ -113,53 +113,61 @@ export const PlannerLayout: React.FC = () => {
     },
     { to: '/planner/review',     label: 'AI Verification',icon: Sparkles,      hasDropdown: true },
     { to: '/planner/setup',      label: 'Settings',       icon: Settings,      hasDropdown: true },
+    {
+      to: '#help',
+      label: 'Help & Support',
+      icon: HelpCircle,
+      onClick: (e: React.MouseEvent) => {
+        e.preventDefault();
+        setIsHelpModalOpen(true);
+      },
+    },
   ];
 
   return (
     <div className="min-h-screen bg-slate-900 flex text-slate-900 font-sans antialiased overflow-x-hidden">
 
-      {/* ── Left Vertical Dark Sidebar (Matches uploaded theme Image 1 & 4) ── */}
+      {/* ── Left Vertical Dark Sidebar ── */}
+      {/* Three dots are inside the navigation bar header when open */}
       <aside
         className={`bg-[#0a0b0e] text-slate-300 flex flex-col flex-shrink-0 z-40 border-r border-slate-800/80 transition-all duration-300 ease-in-out select-none ${
-          isSidebarCollapsed ? 'w-16' : 'w-64'
+          isSidebarCollapsed ? 'w-0 -translate-x-full overflow-hidden' : 'w-64 translate-x-0'
         } min-h-screen fixed lg:static top-0 bottom-0 left-0`}
       >
-        {/* Top Brand Header */}
+        {/* Navigation Bar Header: Logo + Title + Three Dots Toggle (Inside Nav Bar as requested) */}
         <div className="h-16 px-4 flex items-center justify-between border-b border-slate-800/60 flex-shrink-0">
-          {!isSidebarCollapsed ? (
-            <div className="flex items-center gap-2.5 overflow-hidden">
-              {/* Oil India emblem */}
-              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center p-1 border border-red-600/40 flex-shrink-0">
-                <img
-                  src="/logo.png"
-                  onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/assets/pumpjack-badge.png'; }}
-                  alt="Oil India Limited"
-                  className="w-full h-full object-contain"
-                />
-              </div>
-              <div className="flex flex-col text-left">
-                <span className="text-[10px] text-slate-300 font-semibold leading-tight font-hindi">
-                  ऑयल इंडिया लिमिटेड
-                </span>
-                <span className="text-[11px] font-black tracking-wider text-white uppercase leading-none mt-0.5">
-                  OIL INDIA LIMITED
-                </span>
-              </div>
-            </div>
-          ) : (
-            <div className="w-full flex justify-center">
+          <div className="flex items-center gap-2.5 overflow-hidden">
+            {/* Oil India emblem */}
+            <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center p-1 border border-red-600/40 flex-shrink-0">
               <img
                 src="/logo.png"
                 onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/assets/pumpjack-badge.png'; }}
                 alt="Oil India Limited"
-                className="w-8 h-8 object-contain rounded-full bg-white/10 p-1"
-                title="OIL INDIA LIMITED"
+                className="w-full h-full object-contain"
               />
             </div>
-          )}
+            <div className="flex flex-col text-left">
+              <span className="text-[10px] text-slate-300 font-semibold leading-tight font-hindi">
+                ऑयल इंडिया लिमिटेड
+              </span>
+              <span className="text-[11px] font-black tracking-wider text-white uppercase leading-none mt-0.5">
+                OIL INDIA LIMITED
+              </span>
+            </div>
+          </div>
+
+          {/* User requirement: The three dots are inside the navigation bar page when open */}
+          <button
+            onClick={() => setIsSidebarCollapsed(true)}
+            className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-all cursor-pointer flex-shrink-0"
+            title="Collapse Navigation Bar"
+            aria-label="Collapse Navigation Bar"
+          >
+            <MoreHorizontal className="w-5 h-5 text-slate-400 hover:text-white" />
+          </button>
         </div>
 
-        {/* Navigation items */}
+        {/* Navigation items list */}
         <nav className="flex-1 py-4 px-2.5 space-y-1 overflow-y-auto custom-scrollbar">
           {navItems.map((item, index) => {
             const Icon = item.icon;
@@ -171,40 +179,26 @@ export const PlannerLayout: React.FC = () => {
                   isSelected
                     ? 'bg-[#c5161d] text-white shadow-md shadow-red-950/40'
                     : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-                } ${isSidebarCollapsed ? 'justify-center px-2' : ''}`}
-                title={isSidebarCollapsed ? item.label : undefined}
+                }`}
               >
                 <Icon className={`w-4 h-4 flex-shrink-0 ${isSelected ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
+                <span className="truncate flex-1">{item.label}</span>
 
-                {!isSidebarCollapsed && (
-                  <>
-                    <span className="truncate flex-1">{item.label}</span>
-
-                    {/* Badge Count */}
-                    {item.badge && item.count !== undefined && item.count > 0 && (
-                      <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-red-600 border border-red-500 text-white font-bold leading-none ml-auto">
-                        {item.count}
-                      </span>
-                    )}
-
-                    {item.hseCount && item.count !== undefined && item.count > 0 && (
-                      <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-rose-600 text-white font-bold leading-none ml-auto">
-                        {item.count}
-                      </span>
-                    )}
-
-                    {item.hasDropdown && (
-                      <ChevronDown className="w-3.5 h-3.5 text-slate-500 ml-auto flex-shrink-0" />
-                    )}
-                  </>
+                {/* Badge Counters */}
+                {item.badge && item.count !== undefined && item.count > 0 && (
+                  <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-red-600 border border-red-500 text-white font-bold leading-none ml-auto">
+                    {item.count}
+                  </span>
                 )}
 
-                {/* Tooltip on collapsed */}
-                {isSidebarCollapsed && (
-                  <div className="absolute left-full ml-2 px-2.5 py-1 bg-slate-900 text-white text-[11px] rounded shadow-lg whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50 border border-slate-700">
-                    {item.label}
-                    {item.count !== undefined && item.count > 0 && ` (${item.count})`}
-                  </div>
+                {item.hseCount && item.count !== undefined && item.count > 0 && (
+                  <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-rose-600 text-white font-bold leading-none ml-auto">
+                    {item.count}
+                  </span>
+                )}
+
+                {item.hasDropdown && (
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-500 ml-auto flex-shrink-0" />
                 )}
               </div>
             );
@@ -222,7 +216,7 @@ export const PlannerLayout: React.FC = () => {
             }
 
             return (
-              <NavLink key={index} to={item.to} end={item.exact}>
+              <NavLink key={index} to={item.to} end={item.to === '/planner/review'}>
                 {content}
               </NavLink>
             );
@@ -232,43 +226,39 @@ export const PlannerLayout: React.FC = () => {
           <div className="pt-3 border-t border-slate-800/80 mt-2">
             <button
               onClick={handleLogout}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-red-400 hover:bg-red-950/20 transition-all cursor-pointer group ${
-                isSidebarCollapsed ? 'justify-center px-2' : ''
-              }`}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-red-400 hover:bg-red-950/20 transition-all cursor-pointer group"
               title="Sign Out"
             >
               <LogOut className="w-4 h-4 flex-shrink-0 group-hover:text-red-400 text-slate-400" />
-              {!isSidebarCollapsed && <span>Sign Out</span>}
+              <span>Sign Out</span>
             </button>
           </div>
         </nav>
 
         {/* Sidebar Footer: Energy For a Stronger Tomorrow */}
-        {!isSidebarCollapsed && (
-          <div className="p-4 border-t border-slate-800/60 bg-gradient-to-t from-black/80 to-transparent relative overflow-hidden flex-shrink-0">
-            <div className="flex items-end gap-2.5">
-              <div className="w-10 h-10 opacity-70 flex-shrink-0">
-                <img
-                  src="/assets/pumpjack-badge.png"
-                  alt="Oilfield"
-                  className="w-full h-full object-contain filter invert opacity-80"
-                />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-[9px] uppercase tracking-wider text-slate-400 font-bold leading-tight">
-                  ENERGY
-                </span>
-                <span className="text-[10px] uppercase tracking-wider text-white font-extrabold leading-tight">
-                  FOR A STRONGER
-                </span>
-                <span className="text-[10px] uppercase tracking-wider text-white font-extrabold leading-tight">
-                  TOMORROW
-                </span>
-                <div className="w-8 h-0.5 bg-[#c5161d] mt-1 rounded-full" />
-              </div>
+        <div className="p-4 border-t border-slate-800/60 bg-gradient-to-t from-black/80 to-transparent relative overflow-hidden flex-shrink-0">
+          <div className="flex items-end gap-2.5">
+            <div className="w-10 h-10 opacity-70 flex-shrink-0">
+              <img
+                src="/assets/pumpjack-badge.png"
+                alt="Oilfield"
+                className="w-full h-full object-contain filter invert opacity-80"
+              />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[9px] uppercase tracking-wider text-slate-400 font-bold leading-tight">
+                ENERGY
+              </span>
+              <span className="text-[10px] uppercase tracking-wider text-white font-extrabold leading-tight">
+                FOR A STRONGER
+              </span>
+              <span className="text-[10px] uppercase tracking-wider text-white font-extrabold leading-tight">
+                TOMORROW
+              </span>
+              <div className="w-8 h-0.5 bg-[#c5161d] mt-1 rounded-full" />
             </div>
           </div>
-        )}
+        </div>
       </aside>
 
       {/* ── Main Layout Column (Top Bar + Main Work Area with Background) ── */}
@@ -278,43 +268,55 @@ export const PlannerLayout: React.FC = () => {
         <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs flex-shrink-0">
           <div className="flex items-center h-16 px-4 md:px-6 justify-between gap-3 w-full">
 
-            {/* Left: Three Dots Toggle + ScheduleSync + Black "OIL INDIA LIMITED" */}
+            {/* Left Area:
+                When closed: Three dots button + Logo + "ScheduleSync" + Black "OIL INDIA LIMITED"
+                When open: Clean minimal left header with project switcher
+            */}
             <div className="flex items-center gap-3 md:gap-4 flex-shrink-0">
-              {/* Three dots navigation bar toggle button */}
-              <button
-                onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                className="p-2 rounded-lg hover:bg-slate-100 text-slate-700 hover:text-black border border-slate-200 transition-all cursor-pointer flex items-center justify-center shadow-2xs"
-                title={isSidebarCollapsed ? "Expand Navigation Bar" : "Collapse Navigation Bar"}
-                aria-label="Toggle Navigation Sidebar"
-              >
-                <MoreHorizontal className="w-5 h-5 text-slate-800" />
-              </button>
+              {isSidebarCollapsed && (
+                <>
+                  {/* Three dots toggle to open navigation bar */}
+                  <button
+                    onClick={() => setIsSidebarCollapsed(false)}
+                    className="p-2 rounded-lg hover:bg-slate-100 text-slate-700 hover:text-black border border-slate-200 transition-all cursor-pointer flex items-center justify-center shadow-2xs"
+                    title="Open Navigation Bar"
+                    aria-label="Open Navigation Bar"
+                  >
+                    <MoreHorizontal className="w-5 h-5 text-slate-800" />
+                  </button>
 
-              {/* ScheduleSync Brand & User-requested small "OIL INDIA LIMITED" in black */}
-              <div className="flex flex-col justify-center select-none">
-                <div className="flex items-center gap-1.5">
-                  <h1 className="text-lg md:text-xl font-black tracking-tight leading-none flex items-center">
-                    <span className="text-black" style={{ color: '#000000' }}>Schedule</span>
-                    <span className="text-[#c5161d]" style={{ color: '#c5161d' }}>Sync</span>
-                  </h1>
-                </div>
-                {/* STRICT USER REQUIREMENT: small "OIL INDIA LIMITED" in black color */}
-                <span
-                  className="text-[10px] md:text-[11px] font-black uppercase tracking-widest leading-none mt-1 text-black"
-                  style={{ color: '#000000', fontWeight: 900 }}
-                >
-                  OIL INDIA LIMITED
-                </span>
-              </div>
+                  {/* Logo + ScheduleSync + Black "OIL INDIA LIMITED" when collapsed */}
+                  <div className="flex items-center gap-2.5 select-none">
+                    <img
+                      src="/assets/pumpjack-badge.png"
+                      onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/logo.png'; }}
+                      alt="Oil India Limited"
+                      className="w-8 h-8 rounded-full object-contain border border-slate-200 bg-white p-0.5"
+                    />
+                    <div className="flex flex-col justify-center">
+                      <h1 className="text-base md:text-lg font-black tracking-tight leading-none flex items-center">
+                        <span className="text-black" style={{ color: '#000000' }}>Schedule</span>
+                        <span className="text-[#c5161d]" style={{ color: '#c5161d' }}>Sync</span>
+                      </h1>
+                      <span
+                        className="text-[10px] font-black uppercase tracking-widest leading-none mt-0.5 text-black"
+                        style={{ color: '#000000', fontWeight: 900 }}
+                      >
+                        OIL INDIA LIMITED
+                      </span>
+                    </div>
+                  </div>
+                </>
+              )}
 
               {/* Active Project Dropdown & Workflow Report PDF button */}
-              <div className="hidden md:flex items-center gap-2 pl-4 border-l border-slate-200">
+              <div className="flex items-center gap-2 pl-2">
                 <Building2 className="w-4 h-4 text-slate-400 flex-shrink-0" />
                 <select
                   aria-label="Active Project"
                   value={selectedProjectId}
                   onChange={handleProjectChange}
-                  className="bg-slate-50 text-slate-800 font-semibold text-xs rounded-md border border-slate-200 px-2.5 py-1.5 focus:outline-none cursor-pointer max-w-[240px] truncate"
+                  className="bg-slate-50 text-slate-800 font-semibold text-xs rounded-md border border-slate-200 px-2.5 py-1.5 focus:outline-none cursor-pointer max-w-[220px] truncate"
                 >
                   {projects.map((p) => (
                     <option key={p.id} value={p.id}>{p.name} ({p.activity_count ?? 0} acts)</option>
@@ -332,8 +334,18 @@ export const PlannerLayout: React.FC = () => {
               </div>
             </div>
 
-            {/* Right: Notifications & User Profile */}
+            {/* Right: Help & Support trigger, Notifications & User Profile */}
             <div className="flex items-center gap-3 flex-shrink-0">
+              {/* Quick Help & Support Button in Top Bar */}
+              <button
+                onClick={() => setIsHelpModalOpen(true)}
+                className="p-2 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-[#c5161d] border border-slate-200 transition-all cursor-pointer flex items-center gap-1 text-xs font-semibold"
+                title="Help & Support"
+              >
+                <HelpCircle className="w-4 h-4 text-[#c5161d]" />
+                <span className="hidden sm:inline">Help</span>
+              </button>
+
               {/* Notification Bell with red badge */}
               <div className="relative">
                 <button
@@ -419,6 +431,13 @@ export const PlannerLayout: React.FC = () => {
         onClose={() => setIsReportModalOpen(false)}
         projectId={selectedProjectId || 1}
         projectName={selectedProjectName || 'Numaligarh Refinery Expansion'}
+      />
+
+      {/* Help & Support Interactive Modal */}
+      <HelpSupportModal
+        isOpen={isHelpModalOpen}
+        onClose={() => setIsHelpModalOpen(false)}
+        role="planner"
       />
     </div>
   );

@@ -293,6 +293,75 @@ export const Analytics: React.FC = () => {
         </Card>
       </div>
 
+      {/* GRAPH 2 & 3: Discipline Productivity & Completion Health Donut */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Discipline Productivity Breakdown */}
+        <Card className="lg:col-span-2 border-slate-200 shadow-sm">
+          <CardHeader className="pb-2 border-b border-slate-100">
+            <CardTitle className="text-sm font-bold text-slate-800 flex items-center gap-2">
+              <BarChart3 className="w-4 h-4 text-oil-800" />
+              Discipline-Wise Completed vs In-Progress vs Delaying
+            </CardTitle>
+            <CardDescription>
+              Activity execution status distribution across engineering disciplines
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-4 h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={analytics.discipline_productivity}>
+                <XAxis dataKey="discipline" stroke="#64748b" fontSize={11} />
+                <YAxis stroke="#64748b" fontSize={11} />
+                <Tooltip />
+                <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
+                <Bar dataKey="completed" name="Completed (0d Delay)" fill="#10B981" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="in_progress" name="In Progress (Active)" fill="#3B82F6" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="delayed" name="Delaying Schedule (+Days)" fill="#EF4444" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Status Distribution Donut Chart */}
+        <Card className="border-slate-200 shadow-sm">
+          <CardHeader className="pb-2 border-b border-slate-100">
+            <CardTitle className="text-sm font-bold text-slate-800">
+              Activity Completion & Health Ratio
+            </CardTitle>
+            <CardDescription>
+              Across all {totalActs} baseline activities for {selectedProjectName}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-4 h-72 flex flex-col items-center justify-center">
+            <ResponsiveContainer width="100%" height="80%">
+              <PieChart>
+                <Pie
+                  data={statusPieData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={52}
+                  outerRadius={78}
+                  paddingAngle={4}
+                  dataKey="value"
+                >
+                  {statusPieData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="flex flex-wrap justify-center gap-3 text-[10px] font-semibold text-slate-600">
+              {statusPieData.map((d) => (
+                <span key={d.name} className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: d.color }} />
+                  {d.name}: {d.value}
+                </span>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* GRAPH 1: Activity Schedule Variance & Delay Days Assignment */}
       <Card className="border-slate-200 shadow-sm">
         <CardHeader className="pb-3 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -461,75 +530,6 @@ export const Analytics: React.FC = () => {
           </div>
         </CardContent>
       </Card>
-
-      {/* GRAPH 2 & 3: Discipline Productivity & Completion Health Donut */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Discipline Productivity Breakdown */}
-        <Card className="lg:col-span-2 border-slate-200 shadow-sm">
-          <CardHeader className="pb-2 border-b border-slate-100">
-            <CardTitle className="text-sm font-bold text-slate-800 flex items-center gap-2">
-              <BarChart3 className="w-4 h-4 text-oil-800" />
-              Discipline-Wise Completed vs In-Progress vs Delaying
-            </CardTitle>
-            <CardDescription>
-              Activity execution status distribution across engineering disciplines
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="p-4 h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={analytics.discipline_productivity}>
-                <XAxis dataKey="discipline" stroke="#64748b" fontSize={11} />
-                <YAxis stroke="#64748b" fontSize={11} />
-                <Tooltip />
-                <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
-                <Bar dataKey="completed" name="Completed (0d Delay)" fill="#10B981" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="in_progress" name="In Progress (Active)" fill="#3B82F6" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="delayed" name="Delaying Schedule (+Days)" fill="#EF4444" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        {/* Status Distribution Donut Chart */}
-        <Card className="border-slate-200 shadow-sm">
-          <CardHeader className="pb-2 border-b border-slate-100">
-            <CardTitle className="text-sm font-bold text-slate-800">
-              Activity Completion & Health Ratio
-            </CardTitle>
-            <CardDescription>
-              Across all {totalActs} baseline activities for {selectedProjectName}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="p-4 h-72 flex flex-col items-center justify-center">
-            <ResponsiveContainer width="100%" height="80%">
-              <PieChart>
-                <Pie
-                  data={statusPieData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={52}
-                  outerRadius={78}
-                  paddingAngle={4}
-                  dataKey="value"
-                >
-                  {statusPieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="flex flex-wrap justify-center gap-3 text-[10px] font-semibold text-slate-600">
-              {statusPieData.map((d) => (
-                <span key={d.name} className="flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: d.color }} />
-                  {d.name}: {d.value}
-                </span>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
 
       {/* FULL 36-ACTIVITY STATUS & DELAY ASSIGNMENT MATRIX / TABLE */}
       <Card className="border-slate-200 shadow-sm">
