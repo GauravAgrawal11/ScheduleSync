@@ -56,6 +56,11 @@ export const AdminLoginPage: React.FC = () => {
 
     try {
       const res = await api.login(username.trim(), password);
+      if (res.user.role === 'supervisor') {
+        setError('Supervisor accounts cannot access the Central Planner Cockpit. Please use the Field Supervisor portal at /supervisor/login.');
+        setLoading(false);
+        return;
+      }
       setAuth(res.user, res.access_token);
       navigate('/planner/review');
     } catch (err: any) {

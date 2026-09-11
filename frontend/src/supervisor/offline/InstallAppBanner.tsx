@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Download, X, Share2, Smartphone, Check, MoreVertical, PlusSquare, Apple, Laptop } from 'lucide-react';
 import { useLanguageStore } from '../languageStore';
 import brandLogoImg from '../../assets/logo.png';
@@ -11,6 +11,7 @@ interface BeforeInstallPromptEvent extends Event {
 export const InstallAppBanner: React.FC = () => {
   const { language, t } = useLanguageStore();
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const deferredPromptRef = useRef<BeforeInstallPromptEvent | null>(null);
   const [isStandalone, setIsStandalone] = useState(false);
   const [isAlreadyInstalled, setIsAlreadyInstalled] = useState(false);
   const [platform, setPlatform] = useState<'ios' | 'android' | 'desktop'>('android');
@@ -65,15 +66,25 @@ export const InstallAppBanner: React.FC = () => {
     }
 
     // 4. Listen for Android/Chrome/Edge beforeinstallprompt
+    if ((window as any).deferredPWAPrompt) {
+      setDeferredPrompt((window as any).deferredPWAPrompt);
+      deferredPromptRef.current = (window as any).deferredPWAPrompt;
+    }
+
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
+      const promptEvent = e as BeforeInstallPromptEvent;
+      (window as any).deferredPWAPrompt = promptEvent;
+      deferredPromptRef.current = promptEvent;
+      setDeferredPrompt(promptEvent);
     };
 
     // 5. When app finishes installing in this session
     const handleAppInstalled = () => {
       setInstalledSuccessfully(true);
       setDeferredPrompt(null);
+      deferredPromptRef.current = null;
+      (window as any).deferredPWAPrompt = null;
       setTimeout(() => {
         setIsAlreadyInstalled(true);
       }, 3000);
@@ -96,6 +107,13 @@ export const InstallAppBanner: React.FC = () => {
     };
   }, []);
 
+  // Keep deferredPromptRef synchronized
+  useEffect(() => {
+    if (deferredPrompt) {
+      deferredPromptRef.current = deferredPrompt;
+    }
+  }, [deferredPrompt]);
+
   // Strict check: Only supervisor panel
   if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/supervisor')) {
     return null;
@@ -114,10 +132,11 @@ export const InstallAppBanner: React.FC = () => {
   };
 
   const triggerInstallOrInstructions = async () => {
-    if (deferredPrompt) {
+    const promptToUse = deferredPromptRef.current || deferredPrompt || (window as any).deferredPWAPrompt;
+    if (promptToUse) {
       try {
-        await deferredPrompt.prompt();
-        const choiceResult = await deferredPrompt.userChoice;
+        await promptToUse.prompt();
+        const choiceResult = await promptToUse.userChoice;
         if (choiceResult.outcome === 'accepted') {
           setInstalledSuccessfully(true);
           setTimeout(() => {
@@ -129,6 +148,8 @@ export const InstallAppBanner: React.FC = () => {
         setShowInstructionModal(true);
       } finally {
         setDeferredPrompt(null);
+        deferredPromptRef.current = null;
+        (window as any).deferredPWAPrompt = null;
       }
     } else {
       // Show device-specific instruction modal

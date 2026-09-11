@@ -54,29 +54,34 @@ def login_form(
     uname = (form_data.username or "").strip().lower()
     user = db.query(User).filter(User.email.ilike(uname)).first()
     if not user:
-        if uname in ("admin", "planner", "admin@oilindia.in", "lead planner"):
-            user = db.query(User).filter(User.role == UserRoleEnum.PLANNER).first()
-        elif uname in ("supervisor", "supervisor1", "civil", "piping", "electrical"):
-            user = db.query(User).filter(User.role == UserRoleEnum.SUPERVISOR).first()
+        if uname in ("planner", "admin", "lead planner"):
+            user = db.query(User).filter(User.email == "planner@oilindia.in").first()
+        elif uname in ("supervisor", "supervisor1"):
+            user = db.query(User).filter(User.email == "supervisor@oilindia.in").first()
 
-    valid_demo_pws = {
-        "admin", "admin123", "planner", "planner123", "supervisor", "supervisor123",
-        "password", "password123", "123456", "SecurePlannerPassword123!", "SecureSupervisorPassword123!"
-    }
-    pw_ok = False
-    if user:
-        if verify_password(form_data.password, user.hashed_password) or form_data.password in valid_demo_pws:
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password. Account not found.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # Validate password strictly against hashed password or seeded defaults
+    pw_ok = verify_password(form_data.password, user.hashed_password)
+    if not pw_ok:
+        seeded_planner_pws = {"SecurePlannerPassword123!", "planner123"}
+        seeded_supervisor_pws = {"SecureSupervisorPassword123!", "supervisor123"}
+        if user.role in (UserRoleEnum.PLANNER, UserRoleEnum.ADMIN) and form_data.password in seeded_planner_pws:
+            pw_ok = True
+        elif user.role == UserRoleEnum.SUPERVISOR and form_data.password in seeded_supervisor_pws:
             pw_ok = True
 
-    if not user or not pw_ok:
-        # If user still not found, try fallback default admin
-        user = db.query(User).filter(User.role == UserRoleEnum.PLANNER).first()
-        if not user or not (form_data.password in valid_demo_pws or verify_password(form_data.password, user.hashed_password)):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect email or password.",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
+    if not pw_ok:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
     access_token = create_access_token(
         data={
@@ -102,12 +107,31 @@ def login_json(
     credentials: UserLogin,
     db: Session = Depends(get_db),
 ):
-    valid_demo_pws = {
-        "admin", "admin123", "planner", "planner123", "supervisor", "supervisor123",
-        "password", "password123", "123456", "SecurePlannerPassword123!", "SecureSupervisorPassword123!"
-    }
-    user = db.query(User).filter(User.email == credentials.email).first()
-    if not user or not (verify_password(credentials.password, user.hashed_password) or credentials.password in valid_demo_pws):
+    uname = (credentials.email or "").strip().lower()
+    user = db.query(User).filter(User.email.ilike(uname)).first()
+    if not user:
+        if uname in ("planner", "admin", "lead planner"):
+            user = db.query(User).filter(User.email == "planner@oilindia.in").first()
+        elif uname in ("supervisor", "supervisor1"):
+            user = db.query(User).filter(User.email == "supervisor@oilindia.in").first()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password. Account not found.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    pw_ok = verify_password(credentials.password, user.hashed_password)
+    if not pw_ok:
+        seeded_planner_pws = {"SecurePlannerPassword123!", "planner123"}
+        seeded_supervisor_pws = {"SecureSupervisorPassword123!", "supervisor123"}
+        if user.role in (UserRoleEnum.PLANNER, UserRoleEnum.ADMIN) and credentials.password in seeded_planner_pws:
+            pw_ok = True
+        elif user.role == UserRoleEnum.SUPERVISOR and credentials.password in seeded_supervisor_pws:
+            pw_ok = True
+
+    if not pw_ok:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password.",

@@ -747,7 +747,7 @@ export const api = {
 
     try {
       const formData = new URLSearchParams();
-      formData.append("username", username);
+      formData.append("username", username.trim());
       formData.append("password", password);
 
       const res = await fetch(`${API_BASE_URL}/auth/login`, {
@@ -766,29 +766,60 @@ export const api = {
           user: {
             id: isSupervisor ? supId : 1,
             name: isSupervisor ? supName : "Admin",
-            email: username,
+            email: username.trim(),
             role: role,
             discipline: isSupervisor ? disc : "Planning",
             created_at: new Date().toISOString(),
           },
         };
+      } else {
+        // Backend actively returned an authentication rejection (401 / 400)
+        const errJson = await res.json().catch(() => null);
+        const errMsg = errJson?.detail || "Incorrect email or password. Please verify your credentials.";
+        throw new Error(errMsg);
       }
-    } catch {
-      // Fallback for demo when backend is offline
-    }
+    } catch (networkOrAuthErr: any) {
+      // If it's a valid authentication rejection, ALWAYS surface it to the user!
+      if (
+        networkOrAuthErr.message &&
+        !networkOrAuthErr.message.includes("Failed to fetch") &&
+        !networkOrAuthErr.message.includes("NetworkError") &&
+        !networkOrAuthErr.message.includes("Load failed")
+      ) {
+        throw networkOrAuthErr;
+      }
 
-    return {
-      access_token: `mock-jwt-${role}-${Date.now()}`,
-      token_type: "bearer",
-      user: {
-        id: isSupervisor ? supId : 1,
-        name: isSupervisor ? supName : "Admin",
-        email: username,
-        role: role,
-        discipline: isSupervisor ? disc : "Planning",
-        created_at: new Date().toISOString(),
-      },
-    };
+      // Offline fallback: ONLY allow verified official demo accounts with matching passwords
+      const validDemoPws: Record<string, string[]> = {
+        "planner@oilindia.in": ["SecurePlannerPassword123!", "planner123"],
+        "supervisor@oilindia.in": ["SecureSupervisorPassword123!", "supervisor123"],
+        "piping.sup1@oilindia.in": ["SecureSupervisorPassword123!", "supervisor123"],
+        "piping.sup2@oilindia.in": ["SecureSupervisorPassword123!", "supervisor123"],
+        "civil.sup2@oilindia.in": ["SecureSupervisorPassword123!", "supervisor123"],
+        "electrical.sup1@oilindia.in": ["SecureSupervisorPassword123!", "supervisor123"],
+        "electrical.sup2@oilindia.in": ["SecureSupervisorPassword123!", "supervisor123"],
+      };
+
+      const normalizedEmail = username.trim().toLowerCase();
+      const allowedPws = validDemoPws[normalizedEmail];
+
+      if (!allowedPws || !allowedPws.includes(password)) {
+        throw new Error("Incorrect email or password. Access denied.");
+      }
+
+      return {
+        access_token: `mock-jwt-${role}-${Date.now()}`,
+        token_type: "bearer",
+        user: {
+          id: isSupervisor ? supId : 1,
+          name: isSupervisor ? supName : "Admin",
+          email: normalizedEmail,
+          role: role,
+          discipline: isSupervisor ? disc : "Planning",
+          created_at: new Date().toISOString(),
+        },
+      };
+    }
   },
 
   registerUser: async (data: {
