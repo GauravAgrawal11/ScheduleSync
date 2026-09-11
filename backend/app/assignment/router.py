@@ -198,6 +198,11 @@ def reassign_activity(
     summary="Get assigned activities for a supervisor",
     description="Retrieve a supervisor's assigned activities for a specific project week (or all weeks if omitted).",
 )
+@router.get(
+    "/supervisor/{supervisor_id}/tasks",
+    response_model=List[SupervisorTaskItem],
+    include_in_schema=False,
+)
 def get_supervisor_tasks(
     supervisor_id: int,
     week: Optional[int] = Query(None, description="Project week number (e.g. 1, 2)"),

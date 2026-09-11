@@ -86,13 +86,28 @@ def raise_complaint(
             )
         resolved_activity_id = target_act.id
 
-    # Parse category enum
-    norm_cat = body.category.lower().strip().replace("-", "_")
-    matched_cat = None
-    for member in ComplaintCategoryEnum:
-        if member.value == norm_cat or member.name.lower() == norm_cat:
-            matched_cat = member
-            break
+    # Parse category enum with fuzzy alias support
+    norm_cat = body.category.lower().strip().replace("-", "_").replace(" ", "_")
+    cat_aliases = {
+        "equipment": ComplaintCategoryEnum.EQUIPMENT_BREAKDOWN,
+        "equipment_breakdown": ComplaintCategoryEnum.EQUIPMENT_BREAKDOWN,
+        "material": ComplaintCategoryEnum.MATERIAL_DELAY,
+        "material_delay": ComplaintCategoryEnum.MATERIAL_DELAY,
+        "manpower": ComplaintCategoryEnum.MANPOWER_SHORTAGE,
+        "manpower_shortage": ComplaintCategoryEnum.MANPOWER_SHORTAGE,
+        "access": ComplaintCategoryEnum.ACCESS_BLOCKED,
+        "access_blocked": ComplaintCategoryEnum.ACCESS_BLOCKED,
+        "safety": ComplaintCategoryEnum.SAFETY_CONCERN,
+        "safety_concern": ComplaintCategoryEnum.SAFETY_CONCERN,
+        "weather": ComplaintCategoryEnum.WEATHER,
+        "other": ComplaintCategoryEnum.OTHER,
+    }
+    matched_cat = cat_aliases.get(norm_cat)
+    if not matched_cat:
+        for member in ComplaintCategoryEnum:
+            if member.value == norm_cat or member.name.lower() == norm_cat:
+                matched_cat = member
+                break
     if not matched_cat:
         valid_cats = [c.value for c in ComplaintCategoryEnum]
         raise HTTPException(
@@ -120,6 +135,11 @@ def raise_complaint(
     response_model=List[ComplaintResponse],
     summary="Get current supervisor's raised complaints",
     description="Returns all blockers and complaints raised by the logged-in supervisor.",
+)
+@router.get(
+    "/my",
+    response_model=List[ComplaintResponse],
+    include_in_schema=False,
 )
 def get_my_complaints(
     project_id: Optional[int] = Query(None, description="Optional project filter"),

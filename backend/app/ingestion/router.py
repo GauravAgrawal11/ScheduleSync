@@ -303,6 +303,7 @@ async def ingest_report(
 
 
 @router.get("/mine", response_model=List[ReportItemResponse])
+@router.get("/my-submissions", response_model=List[ReportItemResponse], include_in_schema=False)
 def get_my_reports(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
