@@ -22,6 +22,14 @@ import {
   AlertTriangle,
   ArrowRight,
   ShieldCheck,
+  Camera,
+  Image as ImageIcon,
+  Mic,
+  Download,
+  ExternalLink,
+  Volume2,
+  Paperclip,
+  ZoomIn,
 } from 'lucide-react';
 
 export const MatchReview: React.FC = () => {
@@ -32,6 +40,7 @@ export const MatchReview: React.FC = () => {
   const [isRelinkOpen, setIsRelinkOpen] = useState(false);
   const [searchActivity, setSearchActivity] = useState('');
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
+  const [isImageZoomed, setIsImageZoomed] = useState(false);
 
   // Fetch queue items
   const { data: queue = [], isLoading } = useQuery({
@@ -104,6 +113,19 @@ export const MatchReview: React.FC = () => {
       a.activity_name.toLowerCase().includes(searchActivity.toLowerCase()) ||
       (a.location && a.location.toLowerCase().includes(searchActivity.toLowerCase()))
   );
+
+  const fileUrl = matchItem?.file_url || (matchItem ? `/api/ingestion/report/${matchItem.report_id}/file` : '');
+  const downloadUrl = fileUrl ? `${fileUrl}?download=true` : '';
+  const isImageAttachment =
+    matchItem?.source_type === 'scan' ||
+    (matchItem?.file_name && /\.(jpg|jpeg|png|webp|gif)$/i.test(matchItem.file_name));
+  const isVoiceAttachment =
+    matchItem?.source_type === 'voice' ||
+    (matchItem?.file_name && /\.(wav|mp3|webm|ogg|m4a)$/i.test(matchItem.file_name));
+  const isPdfAttachment =
+    matchItem?.source_type === 'pdf' ||
+    (matchItem?.file_name && /\.pdf$/i.test(matchItem.file_name));
+  const hasAttachment = Boolean(matchItem?.file_name && !matchItem.file_name.endsWith('.txt')) || isImageAttachment || isVoiceAttachment || isPdfAttachment;
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
@@ -186,6 +208,114 @@ export const MatchReview: React.FC = () => {
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm font-medium text-slate-800 italic leading-relaxed">
               "{matchItem.report_snippet}"
             </div>
+          </div>
+
+          {/* Supervisor Uploaded Site Evidence (Photos, Audio, PDF) */}
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/80 pb-3">
+              <div className="flex items-center gap-2">
+                {isImageAttachment ? (
+                  <Camera className="w-4 h-4 text-emerald-600" />
+                ) : isVoiceAttachment ? (
+                  <Mic className="w-4 h-4 text-purple-600" />
+                ) : isPdfAttachment ? (
+                  <FileText className="w-4 h-4 text-rose-600" />
+                ) : (
+                  <Paperclip className="w-4 h-4 text-slate-500" />
+                )}
+                <span className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                  Supervisor Site Attachment Evidence
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                {matchItem.file_name && (
+                  <span className="font-mono text-[11px] font-bold text-slate-700 bg-white px-2 py-0.5 rounded border border-slate-200">
+                    {matchItem.file_name}
+                  </span>
+                )}
+                {hasAttachment && (
+                  <a
+                    href={downloadUrl}
+                    download
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-oil-900 hover:text-oil-950 bg-white hover:bg-slate-100 px-2.5 py-1 rounded border border-slate-300 shadow-2xs transition-all"
+                  >
+                    <Download className="w-3.5 h-3.5" /> Download File
+                  </a>
+                )}
+              </div>
+            </div>
+
+            {/* If Site Photo / Scan */}
+            {isImageAttachment && (
+              <div className="space-y-3">
+                <div className="relative group rounded-xl overflow-hidden border border-slate-200 bg-slate-900 max-w-xl">
+                  <img
+                    src={fileUrl}
+                    alt="Supervisor Site Evidence"
+                    className="w-full max-h-80 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                    onClick={() => setIsImageZoomed(true)}
+                  />
+                  <div
+                    onClick={() => setIsImageZoomed(true)}
+                    className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer gap-2 text-white font-bold text-xs"
+                  >
+                    <ZoomIn className="w-5 h-5" /> Click to View Full Size
+                  </div>
+                </div>
+                <p className="text-[11px] text-slate-500 flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  Site photographic evidence captured by supervisor {matchItem.supervisor} on {matchItem.report_date}.
+                </p>
+              </div>
+            )}
+
+            {/* If Voice Note */}
+            {isVoiceAttachment && (
+              <div className="space-y-2.5 max-w-xl bg-white p-4 rounded-xl border border-slate-200">
+                <div className="flex items-center gap-2 text-xs font-bold text-purple-900">
+                  <Volume2 className="w-4 h-4 text-purple-700" />
+                  <span>On-Site Voice Dictation Playback</span>
+                </div>
+                <audio controls src={fileUrl} className="w-full" />
+                <p className="text-[11px] text-slate-500">
+                  Field audio recording dictated by {matchItem.supervisor}. Transcribed using Whisper ASR and cross-verified by Google Gemini.
+                </p>
+              </div>
+            )}
+
+            {/* If PDF Document */}
+            {isPdfAttachment && (
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center font-bold text-xs border border-rose-200">
+                    PDF
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-slate-900 block truncate max-w-xs sm:max-w-md">
+                      {matchItem.file_name || 'Daily_Site_Inspection_Report.pdf'}
+                    </span>
+                    <span className="text-[10px] text-slate-400">Official Daily Progress Report / Inspection Scan</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <a
+                    href={fileUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 text-xs font-bold text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg border border-slate-200 transition-colors"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" /> Preview PDF
+                  </a>
+                </div>
+              </div>
+            )}
+
+            {/* If direct text only (no media) */}
+            {!hasAttachment && (
+              <div className="text-[11px] text-slate-500 italic py-1">
+                Direct Field Text Entry — No additional photo or audio media attached for this submission.
+              </div>
+            )}
           </div>
 
           {/* 2. Extracted Structured Fields */}
@@ -409,6 +539,51 @@ export const MatchReview: React.FC = () => {
               <Button variant="secondary" size="sm" onClick={() => setIsRelinkOpen(false)}>
                 Cancel
               </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Full-Screen Image Zoom Modal */}
+      {isImageZoomed && (
+        <div
+          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in"
+          onClick={() => setIsImageZoomed(false)}
+        >
+          <div
+            className="relative max-w-5xl max-h-[92vh] bg-slate-900 rounded-2xl overflow-hidden shadow-2xl border border-slate-700 flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-4 py-3 bg-slate-950 text-white border-b border-slate-800 flex-shrink-0">
+              <div className="flex items-center gap-2 truncate">
+                <Camera className="w-4 h-4 text-emerald-400" />
+                <span className="text-xs font-bold truncate">
+                  {matchItem.file_name || 'Site Photographic Evidence'} — Logged by {matchItem.supervisor} ({matchItem.report_date})
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <a
+                  href={downloadUrl}
+                  download
+                  className="text-xs font-semibold text-slate-300 hover:text-white flex items-center gap-1 bg-slate-800 px-2.5 py-1 rounded"
+                >
+                  <Download className="w-3.5 h-3.5" /> Download
+                </a>
+                <button
+                  onClick={() => setIsImageZoomed(false)}
+                  className="text-slate-400 hover:text-white p-1 rounded cursor-pointer"
+                  title="Close Preview"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+            <div className="p-2 overflow-auto flex items-center justify-center bg-black">
+              <img
+                src={fileUrl}
+                alt="Site Evidence Full Resolution"
+                className="max-w-full max-h-[80vh] object-contain rounded-lg"
+              />
             </div>
           </div>
         </div>

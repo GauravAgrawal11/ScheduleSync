@@ -167,6 +167,10 @@ export interface MatchReviewItem {
   verified_by?: string;
   verified_at?: string;
   activity_status?: string;
+  file_name?: string;
+  source_type?: string;
+  has_file?: boolean;
+  file_url?: string;
 }
 
 export interface ActivityBreakdownItem {
@@ -178,24 +182,39 @@ export interface ActivityBreakdownItem {
   delay_days: number;
   is_delaying: boolean;
   delay_reason?: string;
-  trend: 'recovering' | 'worsening' | 'on_schedule' | 'completed';
+  trend?: 'recovering' | 'worsening' | 'on_schedule' | 'completed';
+  supervisor?: {
+    supervisor_id: number;
+    supervisor_name: string;
+    supervisor_email: string;
+  };
 }
 
 export interface AnalyticsSummary {
   project_id?: number;
   project_name?: string;
   total_activities: number;
-  completed: number;
-  in_progress: number;
-  delayed: number;
-  needs_review: number;
-  discipline_productivity: {
+  completed?: number;
+  in_progress?: number;
+  delayed?: number;
+  needs_review?: number;
+  completed_activities?: number;
+  in_progress_activities?: number;
+  overall_progress_pct?: number;
+  schedule_variance_days?: number;
+  critical_path_delayed_count?: number;
+  sequence_violations_count?: number;
+  average_confidence?: number;
+  high_confidence_auto_linked_count?: number;
+  review_queue_pending_count?: number;
+  delayed_activities_count?: number;
+  discipline_productivity?: {
     discipline: string;
     completed: number;
     in_progress: number;
     delayed: number;
   }[];
-  delay_hotspots: {
+  delay_hotspots?: {
     activity_id: string;
     name: string;
     discipline: string;
@@ -214,6 +233,9 @@ export interface ActivityHistoryItem {
   logged_by: string;
   approved_by?: string;
   status: string;
+  file_name?: string;
+  source_type?: string;
+  file_url?: string;
 }
 
 export interface HistoricalDurationStat {

@@ -90,6 +90,9 @@ class ActivityHistoryEntry(BaseModel):
     logged_by: str
     approved_by: Optional[str] = None
     status: str
+    file_name: Optional[str] = None
+    source_type: Optional[str] = None
+    file_url: Optional[str] = None
 
 
 @router.get("/summary", response_model=AnalyticsSummaryResponse)
@@ -366,6 +369,8 @@ def get_activity_history(
         approver_name = ev.approver.name if ev.approver else "System Auto-Link (>90%)"
         uploader_name = ev.source_report.uploader.name if ev.source_report and ev.source_report.uploader else "Field Supervisor"
 
+        rep = ev.source_report
+        has_file = rep and (rep.source_type.value != "text" or (bool(rep.file_name) and not rep.file_name.endswith(".txt")))
         results.append(
             ActivityHistoryEntry(
                 id=ev.id,
@@ -376,6 +381,9 @@ def get_activity_history(
                 logged_by=uploader_name,
                 approved_by=approver_name,
                 status=ev.status,
+                file_name=rep.file_name if rep else None,
+                source_type=rep.source_type.value if rep and rep.source_type else None,
+                file_url=f"/api/ingestion/report/{rep.id}/file" if has_file else None,
             )
         )
 

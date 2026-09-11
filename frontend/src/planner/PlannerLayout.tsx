@@ -208,6 +208,25 @@ export const PlannerLayout: React.FC = () => {
             )}
           </NavLink>
 
+          {/* Project Ingestion (Right after Dashboard per user instruction) */}
+          <NavLink
+            to="/planner/ingestion"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all duration-150 group cursor-pointer ${
+                isActive
+                  ? 'bg-[#9e1218] text-white shadow-md shadow-red-950/50'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+              }`
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <FolderInput className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-slate-300 group-hover:text-white'}`} />
+                <span className="truncate flex-1">Project Ingestion</span>
+              </>
+            )}
+          </NavLink>
+
           {/* Gantt */}
           <NavLink
             to="/planner/schedule"
@@ -223,25 +242,6 @@ export const PlannerLayout: React.FC = () => {
               <>
                 <CalendarRange className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-slate-300 group-hover:text-white'}`} />
                 <span className="truncate flex-1">Gantt</span>
-              </>
-            )}
-          </NavLink>
-
-          {/* Activity Audit Trail */}
-          <NavLink
-            to="/planner/activities"
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all duration-150 group cursor-pointer ${
-                isActive
-                  ? 'bg-[#9e1218] text-white shadow-md shadow-red-950/50'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
-              }`
-            }
-          >
-            {({ isActive }) => (
-              <>
-                <History className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-slate-300 group-hover:text-white'}`} />
-                <span className="truncate flex-1">Activity Audit Trail</span>
               </>
             )}
           </NavLink>
@@ -327,6 +327,25 @@ export const PlannerLayout: React.FC = () => {
             )}
           </NavLink>
 
+          {/* Activity Audit Trail (Right after History per user instruction) */}
+          <NavLink
+            to="/planner/activities"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all duration-150 group cursor-pointer ${
+                isActive
+                  ? 'bg-[#9e1218] text-white shadow-md shadow-red-950/50'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+              }`
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <History className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-slate-300 group-hover:text-white'}`} />
+                <span className="truncate flex-1">Activity Audit Trail</span>
+              </>
+            )}
+          </NavLink>
+
           {/* Separator line matching image */}
           <div className="border-t border-slate-800/80 my-2 pt-1" />
 
@@ -394,16 +413,8 @@ export const PlannerLayout: React.FC = () => {
       {/* ── Main Layout Column: Only this area scrolls when scrolling down ── */}
       <div className="flex-1 flex flex-col h-screen overflow-y-auto min-w-0 bg-slate-50 relative">
 
-        {/* ── Top Header Bar with Custom Oilfield Header Artwork ── */}
-        <header
-          className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs flex-shrink-0 relative overflow-hidden"
-          style={{
-            backgroundImage: "url('/assets/header-bg.png')",
-            backgroundSize: 'cover',
-            backgroundPosition: 'right center',
-            backgroundRepeat: 'no-repeat',
-          }}
-        >
+        {/* ── Top Header Bar (Clean professional styling without background image) ── */}
+        <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs flex-shrink-0 relative">
           <div className="flex items-center h-16 px-4 md:px-6 justify-between gap-3 w-full relative z-10">
 
             {/* Left Header Area:
@@ -448,52 +459,36 @@ export const PlannerLayout: React.FC = () => {
                   <div className="h-6 w-px bg-slate-200 mx-1 hidden sm:block" />
 
                   {/* Project Switcher when sidebar is OFF */}
-                  <div className="hidden sm:flex items-center gap-2">
-                    <Building2 className="w-4 h-4 text-[#9e1218] flex-shrink-0" />
+                  <div className="flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-slate-400 hidden sm:block flex-shrink-0" />
                     <select
-                      aria-label="Active Project"
                       value={selectedProjectId}
                       onChange={handleProjectChange}
-                      className="bg-slate-50 hover:bg-slate-100 text-slate-900 font-bold text-xs rounded-lg border border-slate-300 px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-[#9e1218] cursor-pointer max-w-[280px] truncate shadow-2xs"
+                      className="text-xs font-semibold bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-800 focus:outline-none focus:ring-1 focus:ring-slate-400 cursor-pointer max-w-[200px] sm:max-w-[280px] md:max-w-[360px] truncate"
                     >
                       {projects.map((p) => (
-                        <option key={p.id} value={p.id}>{p.name} ({p.activity_count ?? 0} acts)</option>
+                        <option key={p.id} value={p.id}>
+                          {p.name}
+                        </option>
                       ))}
                     </select>
                   </div>
                 </>
               ) : (
-                /* When Navigation Bar is ON: Show Project Name & Switcher in the header */
-                <div className="flex items-center gap-2.5">
-                  <Building2 className="w-4 h-4 text-[#9e1218] flex-shrink-0" />
-                  <div className="flex flex-col">
-                    <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">
-                      Active Capital Project
-                    </span>
-                    <span className="text-xs sm:text-sm font-extrabold text-slate-900 truncate max-w-[260px] md:max-w-md lg:max-w-xl">
-                      {projects.find((p) => p.id === selectedProjectId)?.name || selectedProjectName || 'Numaligarh Refinery Expansion (Unit 3 & Offsites)'}
-                    </span>
-                  </div>
-
+                /* Project Switcher when sidebar is ON */
+                <div className="flex items-center gap-2">
+                  <Building2 className="w-4 h-4 text-slate-400 hidden sm:block flex-shrink-0" />
                   <select
-                    aria-label="Switch Project"
                     value={selectedProjectId}
                     onChange={handleProjectChange}
-                    className="ml-2 bg-slate-50 hover:bg-slate-100 text-slate-800 font-bold text-[11px] rounded-lg border border-slate-300 px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-[#9e1218] cursor-pointer shadow-2xs"
+                    className="text-xs font-semibold bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-800 focus:outline-none focus:ring-1 focus:ring-slate-400 cursor-pointer max-w-[220px] sm:max-w-[320px] md:max-w-[420px] truncate"
                   >
                     {projects.map((p) => (
-                      <option key={p.id} value={p.id}>{p.name} ({p.activity_count ?? 0} acts)</option>
+                      <option key={p.id} value={p.id}>
+                        {p.name}
+                      </option>
                     ))}
                   </select>
-
-                  <button
-                    onClick={() => setIsReportModalOpen(true)}
-                    className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#0a0b0e] hover:bg-[#1a1c22] text-white font-bold text-[11px] shadow-2xs transition-colors cursor-pointer flex-shrink-0 border border-slate-800 ml-2"
-                    title="View and download Workflow PDF Report for selected project"
-                  >
-                    <FileDown className="w-3.5 h-3.5 text-red-400" />
-                    <span>View Report PDF</span>
-                  </button>
                 </div>
               )}
             </div>
@@ -520,9 +515,17 @@ export const PlannerLayout: React.FC = () => {
                   )}
                 </button>
 
-                {/* Notifications Popup (Auto closes on click inside item or outside click) */}
+                {/* Invisible full-viewport backdrop so clicking anywhere outside closes the popup */}
                 {isNotificationsOpen && (
-                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl border border-slate-200 p-3 z-50 space-y-2.5 animate-in fade-in zoom-in-95 duration-150">
+                  <div
+                    className="fixed inset-0 z-40 bg-transparent"
+                    onClick={() => setIsNotificationsOpen(false)}
+                  />
+                )}
+
+                {/* Notifications Popup (Always on top of all pages with z-50 and no clipping) */}
+                {isNotificationsOpen && (
+                  <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-xl shadow-2xl border border-slate-200 p-3 z-50 space-y-2.5 animate-in fade-in zoom-in-95 duration-150">
                     <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                       <div className="flex items-center gap-1.5">
                         <Bell className="w-3.5 h-3.5 text-[#9e1218]" />
@@ -620,15 +623,15 @@ export const PlannerLayout: React.FC = () => {
           </div>
         </header>
 
-        {/* ── Main Scrollable Content Area with Refinery Wallpaper Background ── */}
-        <main className="flex-1 w-full p-4 md:p-6 lg:p-8 relative min-h-[calc(100vh-8rem)] bg-slate-50">
-          <div className="max-w-7xl mx-auto w-full">
+        {/* ── Main Scrollable Content Area ── */}
+        <main className="flex-1 flex flex-col w-full p-4 md:p-6 lg:p-8 relative bg-slate-50">
+          <div className="max-w-7xl mx-auto w-full flex-1">
             <Outlet />
           </div>
         </main>
 
         {/* Footer */}
-        <footer className="border-t border-slate-200 bg-white px-4 sm:px-6 py-3 text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2 flex-shrink-0 z-10 w-full text-center sm:text-left shadow-2xs">
+        <footer className="mt-auto border-t border-slate-200 bg-white px-4 sm:px-6 py-3 text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2 flex-shrink-0 z-10 w-full text-center sm:text-left shadow-2xs">
           <div className="leading-tight">
             &copy; 2026 Oil India Limited. All rights reserved. &nbsp;<span className="hidden sm:inline">|</span>&nbsp; ScheduleSync v1.0
           </div>

@@ -26,6 +26,10 @@ import {
   HelpCircle,
   ShieldCheck,
   Check,
+  Camera,
+  Mic,
+  Paperclip,
+  Image as ImageIcon,
 } from 'lucide-react';
 
 
@@ -391,6 +395,30 @@ export const ReviewQueue: React.FC = () => {
                         <span className="text-slate-500 text-[11px] font-medium">
                           By <strong>{item.supervisor}</strong>
                         </span>
+                        {item.has_file && (
+                          <>
+                            <span className="text-slate-400">·</span>
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs">
+                              {item.source_type === 'scan' ? (
+                                <>
+                                  <Camera className="w-3 h-3 text-emerald-600" /> Photo Attached
+                                </>
+                              ) : item.source_type === 'voice' ? (
+                                <>
+                                  <Mic className="w-3 h-3 text-purple-600" /> Voice Note
+                                </>
+                              ) : item.source_type === 'pdf' ? (
+                                <>
+                                  <FileText className="w-3 h-3 text-rose-600" /> PDF Document
+                                </>
+                              ) : (
+                                <>
+                                  <Paperclip className="w-3 h-3 text-slate-600" /> File Evidence
+                                </>
+                              )}
+                            </span>
+                          </>
+                        )}
                       </div>
 
                       {/* Report Snippet */}

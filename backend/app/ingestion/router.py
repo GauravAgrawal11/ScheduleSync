@@ -5,13 +5,20 @@ triggers document parsing, entity extraction, and coordinates with Member C's ma
 """
 
 import logging
+import os
+import re
+import glob
 from typing import Optional, List
 from datetime import datetime
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException, status
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
+
+UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "uploads", "reports")
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 from app.core.database import get_db
 from app.auth import get_current_user
@@ -250,6 +257,16 @@ async def ingest_report(
     db.commit()
     db.refresh(report)
 
+    # Save raw uploaded file bytes to disk for admin preview/download
+    if file and 'file_bytes' in locals() and file_bytes:
+        try:
+            safe_name = re.sub(r'[^a-zA-Z0-9_.-]', '_', file_name)
+            saved_path = os.path.join(UPLOAD_DIR, f"report_{report.id}_{safe_name}")
+            with open(saved_path, "wb") as f_out:
+                f_out.write(file_bytes)
+        except Exception as save_err:
+            logger.warning(f"Failed to persist report file: {save_err}")
+
     # 2. Extract structured activity events
     extracted_events = extract_events_from_text(raw_text)
 
@@ -381,4 +398,80 @@ def get_report_detail(
         verified_by=verified_by,
         verified_at=verified_at,
         activity_status=activity_status,
+    )
+
+
+@router.get("/report/{id}/file")
+@router.get("/{id}/file", include_in_schema=False)
+def get_report_file(
+    id: int,
+    download: bool = False,
+    db: Session = Depends(get_db),
+):
+    """
+    Serve uploaded site photo, voice recording, PDF, or document for the given report ID.
+    Supports inline rendering for <img>, <audio>, and <iframe>, or direct file download.
+    """
+    report = db.query(Report).filter(Report.id == id).first()
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not found")
+
+    # Look for files saved on disk
+    pattern = os.path.join(UPLOAD_DIR, f"report_{id}_*")
+    matches = glob.glob(pattern)
+    file_path = matches[0] if matches else None
+
+    # Fallback to direct filename match in UPLOAD_DIR
+    if not file_path and report.file_name:
+        direct = os.path.join(UPLOAD_DIR, report.file_name)
+        if os.path.exists(direct):
+            file_path = direct
+
+    # Fallbacks for sample/seeded reports
+    if not file_path or not os.path.exists(file_path):
+        # 1. If scan or image, fallback to default_site_photo.jpg
+        if report.source_type == SourceTypeEnum.SCAN or (report.file_name and any(report.file_name.lower().endswith(ext) for ext in [".jpg", ".jpeg", ".png", ".webp"])):
+            sample_img = os.path.join(UPLOAD_DIR, "default_site_photo.jpg")
+            if os.path.exists(sample_img):
+                file_path = sample_img
+        # 2. If voice or audio, fallback to sample wav
+        elif report.source_type == SourceTypeEnum.VOICE or (report.file_name and any(report.file_name.lower().endswith(ext) for ext in [".wav", ".mp3", ".webm", ".ogg"])):
+            sample_voice = os.path.join(UPLOAD_DIR, "report_9_field_voice_note.wav")
+            if os.path.exists(sample_voice):
+                file_path = sample_voice
+        # 3. If PDF, fallback to sample PDF
+        elif report.source_type == SourceTypeEnum.PDF or (report.file_name and report.file_name.lower().endswith(".pdf")):
+            sample_pdf = os.path.join(os.path.dirname(UPLOAD_DIR), "..", "sample_data", "Numaligarh_Refinery_Expansion_Workflow_Report.pdf")
+            if os.path.exists(sample_pdf):
+                file_path = sample_pdf
+
+    if not file_path or not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="Attached file not found for this report")
+
+    ext = os.path.splitext(file_path)[1].lower()
+    mime_types = {
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".png": "image/png",
+        ".webp": "image/webp",
+        ".pdf": "application/pdf",
+        ".wav": "audio/wav",
+        ".mp3": "audio/mpeg",
+        ".webm": "audio/webm",
+        ".ogg": "audio/ogg",
+        ".m4a": "audio/mp4",
+        ".csv": "text/csv",
+        ".txt": "text/plain",
+        ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        ".xls": "application/vnd.ms-excel",
+    }
+    media_type = mime_types.get(ext, "application/octet-stream")
+    disposition = "attachment" if download else "inline"
+    safe_name = report.file_name or os.path.basename(file_path)
+
+    return FileResponse(
+        path=file_path,
+        media_type=media_type,
+        filename=safe_name,
+        headers={"Content-Disposition": f'{disposition}; filename="{safe_name}"'},
     )

@@ -26,6 +26,10 @@ import {
   X,
   User,
   Sparkles,
+  Camera,
+  Mic,
+  Paperclip,
+  ExternalLink,
 } from 'lucide-react';
 
 export const ActivityDetail: React.FC = () => {
@@ -654,6 +658,32 @@ export const ActivityDetail: React.FC = () => {
                             <p className="text-xs text-slate-800 font-medium leading-relaxed bg-white p-3 rounded-lg border border-slate-200/60">
                               "{event.description}"
                             </p>
+
+                            {/* Attached Site Evidence Link/Badge if report has file */}
+                            {event.file_url && (
+                              <div className="flex items-center justify-between p-2.5 bg-emerald-50/60 rounded-lg border border-emerald-200/70 text-xs">
+                                <div className="flex items-center gap-2 truncate">
+                                  {event.source_type === 'scan' ? (
+                                    <Camera className="w-3.5 h-3.5 text-emerald-700 flex-shrink-0" />
+                                  ) : event.source_type === 'voice' ? (
+                                    <Mic className="w-3.5 h-3.5 text-purple-700 flex-shrink-0" />
+                                  ) : (
+                                    <Paperclip className="w-3.5 h-3.5 text-slate-600 flex-shrink-0" />
+                                  )}
+                                  <span className="font-semibold text-slate-800 truncate text-[11px]">
+                                    Evidence: <strong>{event.file_name || 'Site Submission Attachment'}</strong>
+                                  </span>
+                                </div>
+                                <a
+                                  href={event.file_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-900 hover:text-emerald-950 bg-white hover:bg-emerald-100 px-2.5 py-1 rounded border border-emerald-300 shadow-2xs transition-colors flex-shrink-0 ml-2"
+                                >
+                                  <ExternalLink className="w-3 h-3" /> View Evidence
+                                </a>
+                              </div>
+                            )}
 
                             <div className="pt-2 border-t border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] text-slate-500">
                               <div className="flex items-center gap-3">

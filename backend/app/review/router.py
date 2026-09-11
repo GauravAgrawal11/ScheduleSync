@@ -67,6 +67,10 @@ class MatchQueueItem(BaseModel):
     verified_by: Optional[str] = None
     verified_at: Optional[str] = None
     activity_status: Optional[str] = None
+    file_name: Optional[str] = None
+    source_type: Optional[str] = None
+    has_file: bool = False
+    file_url: Optional[str] = None
 
 
 class ApprovePayload(BaseModel):
@@ -203,6 +207,10 @@ def get_review_queue(
                 verified_by=verified_by_name,
                 verified_at=verified_at_str,
                 activity_status=act.status,
+                file_name=rep.file_name,
+                source_type=rep.source_type.value if rep.source_type else "text",
+                has_file=(rep.source_type.value != "text") or (bool(rep.file_name) and not rep.file_name.endswith(".txt")),
+                file_url=f"/api/ingestion/report/{rep.id}/file",
             )
         )
     return results
