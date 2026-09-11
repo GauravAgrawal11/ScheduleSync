@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api, ComplaintCategory, ComplaintCreatePayload, ActivityProgressItem } from '../api/client';
@@ -31,6 +31,8 @@ import {
   HelpCircle,
   Users,
   FolderOpen,
+  Filter,
+  Mic,
 } from 'lucide-react';
 import { useLanguageStore, translateActivityName, translateStatus, translateDiscipline, translateLocation, translateTimeline } from './languageStore';
 
@@ -184,6 +186,65 @@ export const HomePage: React.FC = () => {
   const countInProgress = progressSummary?.in_progress_count ?? inProgressCount;
   const countDelayed = progressSummary?.critical_delayed_activities?.length ?? delayedCount;
 
+  // Delayed activities list and auto-popup state
+  const [isDelayedModalOpen, setIsDelayedModalOpen] = useState<boolean>(false);
+  const [hasAutoOpenedDelayedModal, setHasAutoOpenedDelayedModal] = useState<boolean>(false);
+
+  const delayedActivitiesList = useMemo(() => {
+    const list: Array<{
+      activity_id: string;
+      activity_name: string;
+      status?: string;
+      progress_percent?: number;
+      discipline?: string;
+      wbs_code?: string;
+      days_overdue?: number;
+      planned_finish?: string;
+    }> = [];
+    const seen = new Set<string>();
+
+    if (progressSummary?.critical_delayed_activities) {
+      for (const act of progressSummary.critical_delayed_activities) {
+        if (!seen.has(act.activity_id)) {
+          seen.add(act.activity_id);
+          list.push({
+            activity_id: act.activity_id,
+            activity_name: act.activity_name,
+            status: 'DELAYED',
+            days_overdue: act.days_overdue,
+            planned_finish: act.planned_finish,
+          });
+        }
+      }
+    }
+
+    for (const act of allActivities || []) {
+      if ((act?.status || '').toUpperCase() === 'DELAYED' || act?.is_delayed) {
+        if (!seen.has(act.activity_id)) {
+          seen.add(act.activity_id);
+          list.push({
+            activity_id: act.activity_id,
+            activity_name: act.activity_name,
+            status: act.status || 'DELAYED',
+            progress_percent: act.completion_pct,
+            discipline: act.discipline,
+            days_overdue: act.days_overdue,
+            planned_finish: act.planned_finish,
+          });
+        }
+      }
+    }
+    return list;
+  }, [allActivities, progressSummary]);
+
+  // Auto-trigger the pop-up notification when supervisor loads the page and delayed activities exist
+  useEffect(() => {
+    if (delayedActivitiesList.length > 0 && !hasAutoOpenedDelayedModal && !loadingTasks && !loadingProgress) {
+      setIsDelayedModalOpen(true);
+      setHasAutoOpenedDelayedModal(true);
+    }
+  }, [delayedActivitiesList.length, hasAutoOpenedDelayedModal, loadingTasks, loadingProgress]);
+
   return (
     <div className="space-y-5">
       {/* Site Status Banner */}
@@ -212,7 +273,7 @@ export const HomePage: React.FC = () => {
           <div className="flex items-center gap-2">
             <button
               onClick={() => handleOpenBlockerModal()}
-              className="px-3 py-2 text-xs font-bold bg-rose-600/90 hover:bg-rose-600 text-white rounded-xl shadow-sm flex items-center gap-1.5 border border-rose-400/40 transition-all hover:shadow-rose-900/30 active:scale-95"
+              className="px-3 py-2 text-xs font-bold bg-rose-600/90 hover:bg-rose-600 text-white rounded-xl shadow-sm flex items-center gap-1.5 border border-rose-400/40 transition-all hover:shadow-rose-900/30 active:scale-95 cursor-pointer"
             >
               <AlertOctagon className="w-4 h-4" />
               {t('home_raise_blocker_btn')}
@@ -221,6 +282,37 @@ export const HomePage: React.FC = () => {
         </div>
         <div className="absolute -right-6 -bottom-6 w-28 h-28 bg-white/5 rounded-full pointer-events-none" />
       </div>
+
+      {/* Delayed Activities Alert Quick Interactive Banner */}
+      {delayedActivitiesList.length > 0 && (
+        <button
+          onClick={() => setIsDelayedModalOpen(true)}
+          className="w-full p-3 rounded-2xl bg-gradient-to-r from-rose-500/10 via-rose-50 to-amber-50 border border-rose-300 flex items-center justify-between text-left transition-all hover:shadow-sm group cursor-pointer animate-fadeIn"
+        >
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="relative flex h-3 w-3 shrink-0">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-600"></span>
+            </span>
+            <div className="min-w-0">
+              <div className="text-xs font-black text-rose-950 flex items-center gap-1.5 flex-wrap">
+                <span>{language === 'hi' ? 'विलंबित कार्य पॉप-अप सूचना' : 'Delayed Activities Pop-Up Notification'}</span>
+                <span className="px-1.5 py-0.2 rounded bg-rose-600 text-white text-[10px] font-extrabold shadow-2xs">
+                  {delayedActivitiesList.length} {language === 'hi' ? 'अतिदेय' : 'Overdue'}
+                </span>
+              </div>
+              <p className="text-[11px] text-rose-800 line-clamp-1 mt-0.5">
+                {language === 'hi'
+                  ? 'अतिदेय गतिविधियों की समीक्षा करने, प्रगति लॉग करने या साइट बाधा दर्ज करने के लिए क्लिक करें।'
+                  : 'Click to review overdue activities, log fast progress, or report operational site blockers.'}
+              </p>
+            </div>
+          </div>
+          <span className="text-xs font-bold text-rose-700 group-hover:translate-x-0.5 transition-transform flex items-center gap-1 shrink-0 ml-2">
+            {language === 'hi' ? 'खोलें' : 'View'} &rarr;
+          </span>
+        </button>
+      )}
 
       {/* FEATURE 1: Live Progress & Schedule Health Card (Guarded against null crashes) */}
       <Card className="border-slate-200 bg-white shadow-sm overflow-hidden">
@@ -907,6 +999,148 @@ export const HomePage: React.FC = () => {
                 </div>
               </form>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Delayed Activities Notification Pop-Up Modal */}
+      {isDelayedModalOpen && delayedActivitiesList.length > 0 && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/75 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border-2 border-rose-500 overflow-hidden flex flex-col max-h-[90vh] animate-scaleUp">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-rose-700 via-rose-600 to-[#9e1218] p-4 text-white flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center shadow-inner shrink-0">
+                  <AlertTriangle className="w-5 h-5 text-amber-300 animate-pulse" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black leading-tight flex items-center gap-1.5 flex-wrap">
+                    <span>{language === 'hi' ? 'विलंबित कार्य चेतावनी सूचना' : 'Delayed Activities Alert'}</span>
+                    <span className="bg-amber-400 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full uppercase shadow-2xs">
+                      {delayedActivitiesList.length} {language === 'hi' ? 'कार्य' : 'Tasks'}
+                    </span>
+                  </h3>
+                  <p className="text-xs text-rose-100 mt-0.5">
+                    {language === 'hi'
+                      ? 'आपकी अनुसूची में निम्नलिखित गतिविधियाँ समय से पीछे हैं।'
+                      : 'Activities flagged behind baseline schedule requiring immediate attention.'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsDelayedModalOpen(false)}
+                className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                aria-label="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Content List */}
+            <div className="p-4 overflow-y-auto space-y-3 flex-1 divide-y divide-slate-100">
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-950 flex items-start gap-2.5">
+                <AlertOctagon className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <strong className="font-bold text-amber-900">
+                    {language === 'hi' ? 'तत्काल पर्यवेक्षक कार्रवाई आवश्यक:' : 'Immediate Supervisor Action Required:'}
+                  </strong>
+                  <p className="text-[11px] text-amber-800 leading-relaxed">
+                    {language === 'hi'
+                      ? 'यदि कार्य आगे बढ़ गया है तो वास्तविक साइट प्रगति तुरंत लॉग करें, अथवा केंद्रीय योजनाकार को सामग्री, श्रमिक या परमिट बाधा दर्ज करें।'
+                      : 'Log progress update if site execution has resumed, or raise an operational blocker so central planners can resequence.'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-2.5 pt-2">
+                {delayedActivitiesList.map((act) => (
+                  <div
+                    key={act.activity_id}
+                    className="p-3 bg-rose-50/50 rounded-xl border border-rose-200/80 hover:border-rose-300 transition-all space-y-2"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="font-mono text-xs font-bold text-rose-950 bg-rose-200/70 px-1.5 py-0.5 rounded">
+                            {act.activity_id}
+                          </span>
+                          {act.discipline && (
+                            <span className="text-[10px] font-semibold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded">
+                              {act.discipline}
+                            </span>
+                          )}
+                          <span className="text-[10px] font-bold text-rose-700 bg-rose-100 px-1.5 py-0.5 rounded uppercase">
+                            {act.days_overdue ? `${act.days_overdue}d Overdue` : 'Delayed'}
+                          </span>
+                        </div>
+                        <h4 className="text-xs font-bold text-slate-900 mt-1 line-clamp-2">
+                          {translateActivityName(act.activity_id, act.activity_name, language)}
+                        </h4>
+                      </div>
+                    </div>
+
+                    {/* Meta & Quick Action Buttons */}
+                    <div className="flex items-center justify-between gap-2 pt-1 border-t border-rose-100/70 flex-wrap text-xs">
+                      <div className="text-[11px] text-slate-500">
+                        {act.progress_percent !== undefined && (
+                          <span>Progress: <strong className="text-slate-800">{act.progress_percent}%</strong></span>
+                        )}
+                        {act.planned_finish && (
+                          <span className="ml-2">Planned: <strong className="text-slate-800">{act.planned_finish}</strong></span>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-1.5 ml-auto">
+                        <button
+                          onClick={() => {
+                            setIsDelayedModalOpen(false);
+                            handleOpenBlockerModal(act.activity_id);
+                          }}
+                          className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-rose-100 hover:bg-rose-200 text-rose-800 border border-rose-300 transition-colors flex items-center gap-1 cursor-pointer"
+                        >
+                          <AlertOctagon className="w-3 h-3 text-rose-700" />
+                          {language === 'hi' ? 'बाधा दर्ज करें' : 'Raise Blocker'}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setIsDelayedModalOpen(false);
+                            navigate(`/supervisor/log?activity_id=${encodeURIComponent(act.activity_id)}`);
+                          }}
+                          className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-[#9e1218] hover:bg-[#830f14] text-white transition-colors flex items-center gap-1 cursor-pointer shadow-xs"
+                        >
+                          <Mic className="w-3 h-3 text-white" />
+                          {language === 'hi' ? 'प्रगति लॉग करें' : 'Log Progress'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Footer Buttons */}
+            <div className="p-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-2 shrink-0">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setIsDelayedModalOpen(false);
+                  setStatusFilter('DELAYED');
+                }}
+                className="text-xs text-rose-800 border-rose-300 hover:bg-rose-50 font-bold flex items-center gap-1"
+              >
+                <Filter className="w-3.5 h-3.5 mr-1" />
+                {language === 'hi' ? 'विलंबित कार्य फ़िल्टर करें' : 'Filter Delayed Tasks'}
+              </Button>
+
+              <Button
+                size="sm"
+                onClick={() => setIsDelayedModalOpen(false)}
+                className="text-xs bg-slate-800 hover:bg-slate-900 text-white font-bold"
+              >
+                {language === 'hi' ? 'स्वीकार करें और बंद करें' : 'Acknowledge & Close'}
+              </Button>
+            </div>
           </div>
         </div>
       )}
