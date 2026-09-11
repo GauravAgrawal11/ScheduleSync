@@ -104,16 +104,9 @@ export const PlannerLayout: React.FC = () => {
 
       {/* ── Left Stationary Navigation Bar (Fixed & Never Moves on Page Scroll) ── */}
       <aside
-        className={`text-slate-300 flex flex-col flex-shrink-0 z-40 border-r border-slate-800/90 transition-all duration-300 ease-in-out h-screen relative ${
+        className={`text-slate-300 flex flex-col flex-shrink-0 z-40 border-r border-slate-800/90 transition-all duration-300 ease-in-out h-screen relative bg-[#0a0b0e] ${
           isSidebarCollapsed ? 'w-0 -translate-x-full overflow-hidden' : 'w-64 translate-x-0'
         }`}
-        style={{
-          backgroundColor: '#0a0b0e',
-          backgroundImage: "linear-gradient(to bottom, rgba(10, 11, 14, 0.96) 0%, rgba(10, 11, 14, 0.90) 65%, rgba(10, 11, 14, 0.20) 100%), url('/assets/sidebar-bg.png')",
-          backgroundSize: 'cover',
-          backgroundPosition: 'bottom center',
-          backgroundRepeat: 'no-repeat',
-        }}
       >
         {/* Navigation Bar Header when ON:
             - Logo
@@ -406,43 +399,28 @@ export const PlannerLayout: React.FC = () => {
           </button>
         </nav>
 
-        {/* Sidebar Footer: Exact Oilfield Pumpjack photo artwork with ENERGY FOR A STRONGER TOMORROW */}
+        {/* Sidebar Footer: Pure Pumpjack photo artwork without any text */}
         <div
-          className="w-full h-44 bg-cover bg-bottom flex-shrink-0 relative overflow-hidden flex flex-col justify-end p-4 border-t border-slate-800/80"
+          className="w-full h-32 bg-cover bg-bottom flex-shrink-0 relative overflow-hidden border-t border-slate-800/80"
           style={{
             backgroundImage: "url('/assets/sidebar-bottom-energy.png')",
             backgroundSize: 'cover',
             backgroundPosition: 'bottom center',
             backgroundRepeat: 'no-repeat',
           }}
-        >
-          {/* Overlay to ensure ultra-clear typography */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
-          <div className="relative z-10 flex flex-col text-left pl-14">
-            <span className="text-[10px] uppercase tracking-wider text-slate-300 font-bold leading-tight">
-              ENERGY
-            </span>
-            <span className="text-[11px] uppercase tracking-wider text-white font-extrabold leading-tight">
-              FOR A STRONGER
-            </span>
-            <span className="text-[11px] uppercase tracking-wider text-white font-extrabold leading-tight">
-              TOMORROW
-            </span>
-            <div className="w-8 h-0.5 bg-[#9e1218] mt-1 rounded-full" />
-          </div>
-        </div>
+        />
       </aside>
 
       {/* ── Main Layout Column: Only this area scrolls when scrolling down ── */}
       <div className="flex-1 flex flex-col h-screen overflow-y-auto min-w-0 bg-slate-50 relative">
 
-        {/* ── Top Header Bar with header-bg background ── */}
+        {/* ── Top Header Bar with header-bg background (Graphic Artwork Only, No Text) ── */}
         <header
           className="border-b border-slate-200 sticky top-0 z-30 shadow-xs flex-shrink-0 relative overflow-hidden"
           style={{
             backgroundColor: '#ffffff',
-            backgroundImage: "linear-gradient(to right, rgba(255,255,255,1) 0%, rgba(255,255,255,0.96) 45%, rgba(255,255,255,0.45) 85%, rgba(255,255,255,0.92) 100%), url('/assets/header-bg.png')",
-            backgroundSize: 'cover',
+            backgroundImage: "url('/assets/header-bg.png')",
+            backgroundSize: 'contain',
             backgroundPosition: 'right center',
             backgroundRepeat: 'no-repeat',
           }}
