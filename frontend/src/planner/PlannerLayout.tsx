@@ -38,11 +38,9 @@ import {
   CheckCircle2,
   ExternalLink,
   X,
-  Download,
 } from 'lucide-react';
 import { WorkflowReportModal } from './WorkflowReportModal';
 import { HelpSupportModal } from '../components/HelpSupportModal';
-import { InstallAppBanner } from '../supervisor/offline/InstallAppBanner';
 
 export const PlannerLayout: React.FC = () => {
   const { user, logout } = useAuthStore();
@@ -832,16 +830,6 @@ export const PlannerLayout: React.FC = () => {
               {/* Vertical divider line */}
               <div className="h-6 w-px bg-slate-300/80 hidden sm:block" />
 
-              {/* Install App / Download PWA Button */}
-              <button
-                onClick={() => window.dispatchEvent(new CustomEvent('trigger-pwa-install'))}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-amber-500/40 bg-gradient-to-r from-amber-50 to-amber-100 hover:from-amber-100 hover:to-amber-200 text-amber-900 text-xs font-bold transition-all cursor-pointer shadow-2xs"
-                title="Install ScheduleSync Desktop/Mobile App (PWA)"
-              >
-                <Download className="w-3.5 h-3.5 text-amber-800" />
-                <span className="hidden sm:inline">Install App</span>
-              </button>
-
               {/* Red Outlined Sign Out Button matching image */}
               <button
                 onClick={handleLogout}
@@ -906,9 +894,6 @@ export const PlannerLayout: React.FC = () => {
         onClose={() => setIsHelpModalOpen(false)}
         role="planner"
       />
-
-      {/* Global PWA Install & Offline Guide Handler */}
-      <InstallAppBanner />
     </div>
   );
 };
