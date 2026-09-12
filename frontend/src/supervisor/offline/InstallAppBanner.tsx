@@ -150,11 +150,12 @@ export const InstallAppBanner: React.FC = () => {
     }
   };
 
-  const showInlineBanner =
-    !isStandalone &&
-    !isAlreadyInstalled &&
-    !dismissed &&
-    (typeof window === 'undefined' || window.location.pathname.startsWith('/supervisor'));
+  // STRICT: InstallAppBanner is dedicated exclusively to the Field Supervisor PWA portal
+  if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/supervisor')) {
+    return null;
+  }
+
+  const showInlineBanner = !isStandalone && !isAlreadyInstalled && !dismissed;
 
   return (
     <>
