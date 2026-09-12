@@ -9,6 +9,20 @@ if (typeof window !== 'undefined') {
     e.preventDefault();
     (window as any).deferredPWAPrompt = e;
   });
+
+  // Unregister any stale dev service workers and caches so browser never hangs on old UI chunks
+  if (import.meta.env.DEV && 'serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      for (const reg of registrations) {
+        reg.unregister();
+      }
+    });
+    if ('caches' in window) {
+      caches.keys().then((keys) => {
+        keys.forEach((k) => caches.delete(k));
+      });
+    }
+  }
 }
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
