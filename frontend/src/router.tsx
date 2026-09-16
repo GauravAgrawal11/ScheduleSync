@@ -21,6 +21,8 @@ import { MatchReview } from './planner/MatchReview';
 import { Schedule } from './planner/Schedule';
 import { Analytics } from './planner/Analytics';
 import { ActivityDetail } from './planner/ActivityDetail';
+import { LiveWorkflow } from './planner/LiveWorkflow';
+import { DependencyNetwork } from './planner/DependencyNetwork';
 
 import { HistoricalMemoryPanel } from './planner/HistoricalMemoryPanel';
 import { SupervisorWorkload } from './planner/SupervisorWorkload';
@@ -96,9 +98,24 @@ export const AppRoutes: React.FC = () => {
           <Route path="supervisors" element={<SupervisorWorkload />} />
           <Route path="complaints" element={<ComplaintsPanel />} />
           <Route path="analytics" element={<Analytics />} />
+          <Route path="workflow" element={<LiveWorkflow />} />
+          <Route path="network" element={<DependencyNetwork />} />
           <Route path="historical" element={<HistoricalMemoryPanel />} />
+
           <Route path="activities" element={<ActivityDetail />} />
         </Route>
+
+        {/* Top-level /network route */}
+        <Route
+          path="/network"
+          element={
+            <ProtectedRoute allowedRoles={['planner', 'admin']}>
+              <ErrorBoundary fallbackTitle="Dependency Network Render Issue">
+                <DependencyNetwork />
+              </ErrorBoundary>
+            </ProtectedRoute>
+          }
+        />
 
         {/* Catch-all redirect */}
         <Route path="*" element={<Navigate to="/login" replace />} />

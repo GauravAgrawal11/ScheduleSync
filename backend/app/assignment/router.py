@@ -159,6 +159,15 @@ def reassign_activity(
     db.add(history_entry)
     db.commit()
 
+    # Live Workflow WebSocket push hook
+    try:
+        from app.workflow.connection_manager import manager
+        st = (activity.status or "not_started").lower()
+        manager.broadcast_sync(activity.project_id, activity.activity_id, st)
+    except Exception:
+        pass
+
+
     # Recompute whether the new supervisor is now overloaded for that week
     week_total = (
         db.query(func.sum(ActivityAssignment.planned_duration_days))

@@ -495,6 +495,75 @@ export interface AssignmentHistoryItem {
   reason?: string;
 }
 
+export interface WorkflowNodeData {
+  activity_id: string;
+  id: string;
+  db_id: number;
+  wbs_code?: string;
+  name: string;
+  activity_name: string;
+  discipline?: string;
+  location?: string;
+  planned_start?: string;
+  planned_finish?: string;
+  actual_start?: string;
+  actual_finish?: string;
+  status: 'completed' | 'in_progress' | 'needs_review' | 'delayed' | 'not_started' | string;
+  supervisor_id?: number | null;
+  supervisor_name?: string | null;
+  has_sequence_violation: boolean;
+  predecessor_activity_id?: string | null;
+}
+
+export interface WorkflowEdgeData {
+  from: string;
+  to: string;
+  source: string;
+  target: string;
+}
+
+export interface WorkflowGraphResponse {
+  nodes: WorkflowNodeData[];
+  edges: WorkflowEdgeData[];
+}
+
+export interface WorkflowProgressEventItem {
+  id: number;
+  timestamp?: string;
+  created_at?: string;
+  status: string;
+  event_type?: string;
+  confidence: number;
+  source_report_id?: number;
+  source_report_name?: string;
+  source_report_snippet?: string;
+}
+
+export interface WorkflowConfidenceBreakdown {
+  match_id: number;
+  semantic_score: number;
+  entity_score: number;
+  metadata_score: number;
+  final_confidence: number;
+  decision: string;
+}
+
+export interface WorkflowSequenceViolationDetail {
+  id: number;
+  predecessor_activity_id: string;
+  predecessor_name?: string;
+  predecessor_status?: string;
+  detected_at?: string;
+  acknowledged: boolean;
+}
+
+export interface WorkflowActivityDetail extends WorkflowNodeData {
+  project_id: number;
+  progress_events: WorkflowProgressEventItem[];
+  confidence_breakdown?: WorkflowConfidenceBreakdown | null;
+  sequence_violation?: WorkflowSequenceViolationDetail | null;
+}
+
 // In-memory mock database for frontend simulation if backend endpoints are staging
 const MOCK_REPORTS: SubmissionSummary[] = [
   {
@@ -1671,7 +1740,59 @@ export const api = {
     } catch {}
     return null;
   },
+
+  // ==================== LIVE ACTIVITY WORKFLOW ====================
+  getWorkflowGraph: async (
+    projectId: number = 1,
+    discipline?: string,
+    start?: string,
+    end?: string
+  ): Promise<WorkflowGraphResponse> => {
+    const params = new URLSearchParams({ project_id: projectId.toString() });
+    if (discipline && discipline.toUpperCase() !== 'ALL') params.append('discipline', discipline);
+    if (start) params.append('start', start);
+    if (end) params.append('end', end);
+
+    const res = await fetch(`${API_BASE_URL}/workflow/live?${params.toString()}`, {
+      headers: getAuthHeaders(),
+    });
+    if (!res.ok) return { nodes: [], edges: [] };
+    return await res.json();
+  },
+
+  getWorkflowActivityDetail: async (activityId: string): Promise<WorkflowActivityDetail> => {
+    const res = await fetch(`${API_BASE_URL}/workflow/activity/${encodeURIComponent(activityId)}/live-detail`, {
+      headers: getAuthHeaders(),
+    });
+    if (!res.ok) {
+      throw new Error(`Failed to fetch live detail for activity: ${activityId}`);
+    }
+    return await res.json();
+  },
+
+  // ==================== DEPENDENCY NETWORK VIEW ====================
+  getDependencyNetwork: async (
+    projectId: number = 1,
+    dataDate?: string
+  ): Promise<any[]> => {
+    try {
+      const url = dataDate
+        ? `${API_BASE_URL}/workflow/network?project_id=${projectId}&dataDate=${encodeURIComponent(dataDate)}`
+        : `${API_BASE_URL}/workflow/network?project_id=${projectId}`;
+      const res = await fetch(url, { headers: getAuthHeaders() });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && Array.isArray(data.activities) && data.activities.length > 0) {
+          return data.activities;
+        }
+      }
+    } catch {}
+    const { MOCK_NETWORK_ACTIVITIES } = await import('../mock/network');
+    return MOCK_NETWORK_ACTIVITIES;
+  },
 };
+
+
 
 export interface AppNotification {
   id: number;

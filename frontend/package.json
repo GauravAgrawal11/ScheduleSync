@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@tanstack/react-query": "^5.28.0",
+    "@xyflow/react": "^12.11.6",
     "clsx": "^2.1.0",
     "frappe-gantt": "^0.6.1",
     "idb": "^8.0.3",

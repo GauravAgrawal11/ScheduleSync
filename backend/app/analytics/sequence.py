@@ -123,6 +123,16 @@ def check_sequence_violation(
         db.add(violation)
         db.commit()
         db.refresh(violation)
+
+        # Live Workflow WebSocket push hook
+        try:
+            from app.workflow.connection_manager import manager
+            st = (activity.status or "not_started").lower()
+            manager.broadcast_sync(activity.project_id, activity.activity_id, st)
+        except Exception:
+            pass
+
         return violation
 
     return None
+

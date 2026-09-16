@@ -303,6 +303,15 @@ def reject_match(
     db.add(audit_entry)
     db.commit()
 
+    # Live Workflow WebSocket push hook
+    if match.activity:
+        try:
+            from app.workflow.connection_manager import manager
+            st = (match.activity.status or "not_started").lower()
+            manager.broadcast_sync(match.activity.project_id, match.activity.activity_id, st)
+        except Exception:
+            pass
+
     # Trigger real-time notification to supervisor
     if match.report and match.report.uploaded_by:
         try:
@@ -319,6 +328,7 @@ def reject_match(
             pass
 
     return {"success": True, "message": f"Match #{match_id} marked as rejected / held."}
+
 
 
 

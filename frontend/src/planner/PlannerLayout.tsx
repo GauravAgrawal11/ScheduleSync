@@ -38,6 +38,7 @@ import {
   CheckCircle2,
   ExternalLink,
   X,
+  Network,
 } from 'lucide-react';
 import { WorkflowReportModal } from './WorkflowReportModal';
 import { HelpSupportModal } from '../components/HelpSupportModal';
@@ -275,6 +276,51 @@ export const PlannerLayout: React.FC = () => {
               </>
             )}
           </NavLink>
+
+          {/* Live Workflow */}
+          <NavLink
+            to="/planner/workflow"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all duration-150 group cursor-pointer ${
+                isActive
+                  ? 'bg-[#9e1218] text-white shadow-md shadow-red-950/50'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+              }`
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <Layers className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-slate-300 group-hover:text-white'}`} />
+                <span className="truncate flex-1">Live Workflow</span>
+                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 uppercase ml-auto">
+                  LIVE
+                </span>
+              </>
+            )}
+          </NavLink>
+
+          {/* Dependency Network */}
+          <NavLink
+            to="/planner/network"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all duration-150 group cursor-pointer ${
+                isActive
+                  ? 'bg-[#9e1218] text-white shadow-md shadow-red-950/50'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+              }`
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <Network className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-slate-300 group-hover:text-white'}`} />
+                <span className="truncate flex-1">Dependency Network</span>
+                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#E0242B]/20 text-[#E0242B] border border-[#E0242B]/30 uppercase ml-auto">
+                  L5/L6
+                </span>
+              </>
+            )}
+          </NavLink>
+
 
           {/* Analytics */}
           <NavLink

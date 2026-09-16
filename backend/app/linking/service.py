@@ -99,5 +99,14 @@ def apply_match_link(
     db.commit()
     db.refresh(progress_event)
 
+    # Live Workflow WebSocket push hook
+    try:
+        from app.workflow.connection_manager import manager
+        st = (activity.status or "completed").lower()
+        manager.broadcast_sync(activity.project_id, activity.activity_id, st)
+    except Exception:
+        pass
+
     return progress_event
+
 

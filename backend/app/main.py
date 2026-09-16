@@ -106,6 +106,13 @@ app.include_router(complaints_router, prefix="/complaints", tags=["Complaints & 
 # -----------------------------------------------------------------------------
 from app.notifications.router import router as notifications_router
 app.include_router(notifications_router)
+
+# -----------------------------------------------------------------------------
+# Live Activity Workflow Module (Live Graph & WebSocket Feed)
+# -----------------------------------------------------------------------------
+from app.workflow.router import router as workflow_router
+app.include_router(workflow_router, prefix="/workflow", tags=["Live Workflow"])
+
 def custom_openapi():
     """
     Publish complete Pydantic schema contracts in /docs for Member B and C,
