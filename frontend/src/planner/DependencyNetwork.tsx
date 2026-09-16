@@ -11,6 +11,7 @@ import {
 import { useNetworkStore } from './networkStore';
 import { api } from '../api/client';
 import { SupervisorLayerCard } from './components/SupervisorLayerCard';
+import { SupervisorDetailPanel } from './components/SupervisorDetailPanel';
 import {
   Search,
   ZoomIn,
@@ -340,6 +341,9 @@ export const DependencyNetwork: React.FC = () => {
       setSelectedActivityId(urlId);
     }
   }, [searchParams, setSelectedActivityId]);
+
+  // Drilldown state to view all info of a supervisor
+  const [drillSupervisor, setDrillSupervisor] = useState<{ name: string; discipline: string } | null>(null);
 
   // Audio Playback State for field voice notes
   const [isPlayingAudio, setIsPlayingAudio] = useState<boolean>(false);
@@ -1217,14 +1221,31 @@ export const DependencyNetwork: React.FC = () => {
         )}
         {selectedActivity && (
           <div
-            style={{ width: 296 }}
+            style={{ width: drillSupervisor ? 360 : 312 }}
             className={`${
               isBelow1100
                 ? 'fixed right-0 top-0 bottom-0 z-50 shadow-2xl animate-in slide-in-from-right duration-200'
                 : 'h-full z-40'
-            } bg-[#141417] border-l border-[#2A2A30] flex flex-col flex-shrink-0 shadow-2xl overflow-y-auto custom-scrollbar select-none`}
+            } bg-[#141417] border-l border-[#2A2A30] flex flex-col flex-shrink-0 shadow-2xl overflow-y-auto custom-scrollbar select-none transition-all duration-200`}
           >
-            {/* Panel Header */}
+            {drillSupervisor ? (
+              <SupervisorDetailPanel
+                supervisorName={drillSupervisor.name}
+                discipline={drillSupervisor.discipline}
+                allActivities={effectiveActivities}
+                onSelectActivity={(id) => {
+                  setSelectedActivityId(id);
+                  setDrillSupervisor(null);
+                }}
+                onBack={() => setDrillSupervisor(null)}
+                onClose={() => {
+                  setDrillSupervisor(null);
+                  setSelectedActivityId(null);
+                }}
+              />
+            ) : (
+              <>
+                {/* Panel Header */}
             <div className="p-4 border-b border-[#2A2A30]">
               <div className="flex items-start justify-between gap-2">
                 <div className="space-y-0.5">
@@ -1294,7 +1315,19 @@ export const DependencyNetwork: React.FC = () => {
 
               <div className="flex items-center justify-between">
                 <span className="text-[#8E8E96]">Supervisor</span>
-                <span className="text-[#F7F7F5] font-medium">{selectedActivity.supervisor}</span>
+                <button
+                  onClick={() =>
+                    setDrillSupervisor({
+                      name: selectedActivity.supervisor,
+                      discipline: selectedActivity.discipline,
+                    })
+                  }
+                  className="text-[#C9942A] hover:underline font-medium cursor-pointer flex items-center gap-1"
+                  title="Click to view complete supervisor info & dossier"
+                >
+                  <span>{selectedActivity.supervisor}</span>
+                  <span className="text-[10px]">↗</span>
+                </button>
               </div>
             </div>
 
@@ -1306,6 +1339,12 @@ export const DependencyNetwork: React.FC = () => {
                 currentActivityId={selectedActivity.id}
                 allActivities={effectiveActivities}
                 onSelectActivity={(id) => setSelectedActivityId(id)}
+                onClickSupervisor={() =>
+                  setDrillSupervisor({
+                    name: selectedActivity.supervisor,
+                    discipline: selectedActivity.discipline,
+                  })
+                }
               />
             </div>
 
@@ -1678,6 +1717,8 @@ export const DependencyNetwork: React.FC = () => {
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
+              </>
+            )}
           </div>
         )}
 

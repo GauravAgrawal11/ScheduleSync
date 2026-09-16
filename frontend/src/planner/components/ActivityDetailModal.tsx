@@ -129,6 +129,7 @@ export const ActivityDetailModal: React.FC<ActivityDetailModalProps> = ({
         <SupervisorDetailPanel
           supervisorId={drillSupervisorId}
           supervisorName={detail?.supervisor_name}
+          discipline={detail?.discipline}
           projectId={projectId}
           onBack={() => setDrillSupervisorId(null)}
           onClose={onClose}
@@ -242,6 +243,7 @@ export const ActivityDetailModal: React.FC<ActivityDetailModalProps> = ({
                     supervisorName={detail.supervisor_name}
                     discipline={detail.discipline || 'General'}
                     currentActivityId={detail.activity_id}
+                    onClickSupervisor={() => setDrillSupervisorId(detail.supervisor_id || 1)}
                   />
                 </div>
               )}

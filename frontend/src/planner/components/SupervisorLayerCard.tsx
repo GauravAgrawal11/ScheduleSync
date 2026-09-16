@@ -28,6 +28,7 @@ export interface SupervisorLayerCardProps {
     totalFloat?: number;
   }>;
   onSelectActivity?: (activityId: string) => void;
+  onClickSupervisor?: () => void;
 }
 
 export const SupervisorLayerCard: React.FC<SupervisorLayerCardProps> = ({
@@ -36,6 +37,7 @@ export const SupervisorLayerCard: React.FC<SupervisorLayerCardProps> = ({
   currentActivityId,
   allActivities = [],
   onSelectActivity,
+  onClickSupervisor,
 }) => {
   const [isTasksExpanded, setIsTasksExpanded] = useState<boolean>(false);
 
@@ -103,8 +105,16 @@ export const SupervisorLayerCard: React.FC<SupervisorLayerCardProps> = ({
       {/* LAYER 1: Identity & Credentials Layer                              */}
       {/* ================================================================== */}
       <div className="p-3 border-b border-[#1F1F24] space-y-2">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-full bg-[#1B1B1F] border border-[#2A2A30] flex items-center justify-center text-[#F7F7F5] font-bold text-xs flex-shrink-0">
+        <div
+          onClick={onClickSupervisor}
+          className={`flex items-center gap-2.5 ${
+            onClickSupervisor
+              ? 'cursor-pointer p-1 -m-1 rounded-md hover:bg-[#1B1B1F] transition-colors group'
+              : ''
+          }`}
+          title={onClickSupervisor ? 'Click to view complete supervisor dossier & all tasks' : undefined}
+        >
+          <div className="w-8 h-8 rounded-full bg-[#1B1B1F] border border-[#2A2A30] group-hover:border-[#C9942A] flex items-center justify-center text-[#F7F7F5] font-bold text-xs flex-shrink-0 transition-colors">
             {supervisorName
               .split(' ')
               .map((n) => n[0])
@@ -115,8 +125,9 @@ export const SupervisorLayerCard: React.FC<SupervisorLayerCardProps> = ({
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">
-              <h4 className="text-xs font-bold text-[#F7F7F5] truncate leading-tight">
-                {supervisorName}
+              <h4 className="text-xs font-bold text-[#F7F7F5] group-hover:text-[#C9942A] truncate leading-tight transition-colors flex items-center gap-1">
+                <span>{supervisorName}</span>
+                {onClickSupervisor && <span className="text-[10px] text-[#C9942A]">↗</span>}
               </h4>
               <span className="font-mono text-[9px] text-[#8E8E96] bg-[#141417] px-1.5 py-0.5 rounded border border-[#2A2A30]">
                 {supervisorCode}
@@ -127,6 +138,16 @@ export const SupervisorLayerCard: React.FC<SupervisorLayerCardProps> = ({
             </p>
           </div>
         </div>
+
+        {onClickSupervisor && (
+          <button
+            onClick={onClickSupervisor}
+            className="w-full py-1 px-2 rounded bg-[#1B1B1F] hover:bg-[#2A2A30] border border-[#2A2A30] text-[10px] font-semibold text-[#C9942A] flex items-center justify-center gap-1 transition-colors cursor-pointer"
+          >
+            <User className="w-3 h-3" />
+            <span>Click to View Full Supervisor Info & Dossier</span>
+          </button>
+        )}
 
         {/* Comms & Shift Badge */}
         <div className="grid grid-cols-2 gap-1.5 pt-1 text-[10px]">
