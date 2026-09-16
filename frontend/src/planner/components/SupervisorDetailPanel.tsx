@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api, SupervisorProgressSummary, SupervisorTaskItem } from '../../api/client';
+import { formatShortDate } from '../timelineUtils';
 import {
   ArrowLeft,
   User,
@@ -94,8 +95,8 @@ export const SupervisorDetailPanel: React.FC<SupervisorDetailPanelProps> = ({
       activity_id: a.id,
       activity_name: a.name,
       status: a.status.toLowerCase(),
-      planned_start: a.planned_start || a.scheduledWeek || 'W06',
-      planned_finish: a.planned_finish || 'W08',
+      planned_start: a.planned_start || (a as any).actualStart || '2026-02-01',
+      planned_finish: a.planned_finish || (a as any).forecastFinish || '2026-02-06',
       percentComplete: a.percentComplete ?? (a.status === 'complete' ? 100 : 40),
       totalFloat: a.totalFloat ?? 0,
     }));
@@ -350,7 +351,7 @@ export const SupervisorDetailPanel: React.FC<SupervisorDetailPanelProps> = ({
                     <p className="text-xs text-[#F7F7F5] truncate">{task.activity_name}</p>
 
                     <div className="flex items-center justify-between text-[10px] font-mono text-[#8E8E96] pt-0.5">
-                      <span>{task.planned_start} → {task.planned_finish}</span>
+                      <span>{formatShortDate(task.planned_start)} → {formatShortDate(task.planned_finish)}</span>
                       <span className={task.totalFloat < 0 ? 'text-[#E0242B] font-bold' : 'text-[#8E8E96]'}>
                         Float: {task.totalFloat > 0 ? `+${task.totalFloat}d` : `${task.totalFloat}d`}
                       </span>

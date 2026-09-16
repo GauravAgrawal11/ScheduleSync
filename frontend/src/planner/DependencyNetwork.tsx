@@ -13,6 +13,14 @@ import { api } from '../api/client';
 import { SupervisorLayerCard } from './components/SupervisorLayerCard';
 import { SupervisorDetailPanel } from './components/SupervisorDetailPanel';
 import {
+  buildTimelineColumns,
+  getActivityColumnIndex,
+  calculateDataDateX,
+  formatExactDate,
+  formatShortDate,
+  TimelineColumn,
+} from './timelineUtils';
+import {
   Search,
   ZoomIn,
   ZoomOut,
@@ -41,19 +49,10 @@ import {
 
 const COLUMN_WIDTH = 252;
 const CARD_WIDTH = 196;
-const CARD_HEIGHT = 82;
-const BASE_LANE_HEIGHT = 132;
+const CARD_HEIGHT = 88;
+const BASE_LANE_HEIGHT = 140;
 const GUTTER_WIDTH = 126;
 const RULER_HEIGHT = 34;
-
-const WEEKS = [
-  { id: 'W05', label: 'W05 · 26 Jan' },
-  { id: 'W06', label: 'W06 · 02 Feb' },
-  { id: 'W07', label: 'W07 · 09 Feb' },
-  { id: 'W08', label: 'W08 · 16 Feb' },
-  { id: 'W09', label: 'W09 · 23 Feb' },
-  { id: 'W10', label: 'W10 · 02 Mar' },
-];
 
 const ORDERED_DISCIPLINES: { id: Discipline; label: string }[] = [
   { id: 'civil', label: 'Civil' },
@@ -63,9 +62,6 @@ const ORDERED_DISCIPLINES: { id: Discipline; label: string }[] = [
   { id: 'instrumentation', label: 'Instrumentation & HSE' },
   { id: 'commissioning', label: 'Commissioning' },
 ];
-
-// Data Date is at start of W07 (9 Feb 2026)
-const DATA_DATE_X = 2 * COLUMN_WIDTH + 6;
 
 // ============================================================================
 // Layout Engine: Single Source of Truth
@@ -92,6 +88,7 @@ interface LaneLayout {
 
 function computeLayout(
   activities: Activity[],
+  columns: TimelineColumn[],
   collapsedLanes: Set<Discipline>,
   expandedParents: Set<string>
 ): {
@@ -108,11 +105,11 @@ function computeLayout(
     const laneActivities = activities.filter((a) => a.discipline === disc.id);
     const isCollapsed = collapsedLanes.has(disc.id);
 
-    // Compute slot distribution: colIndex -> list of activities
+    // Compute slot distribution: colIndex -> list of activities based on real dates
     const colSlots = new Map<number, Activity[]>();
     laneActivities.forEach((act) => {
-      let colIdx = WEEKS.findIndex((w) => w.id === act.scheduledWeek);
-      if (colIdx === -1) colIdx = 1;
+      const actDate = act.actualStart || (act as any).planned_start || act.forecastFinish;
+      let colIdx = getActivityColumnIndex(actDate, columns);
       if (!colSlots.has(colIdx)) colSlots.set(colIdx, []);
       colSlots.get(colIdx)!.push(act);
     });
@@ -159,7 +156,7 @@ function computeLayout(
     currentTop += laneHeight;
   });
 
-  const totalWidth = WEEKS.length * COLUMN_WIDTH + 60;
+  const totalWidth = Math.max(columns.length * COLUMN_WIDTH + 60, 1400);
   const totalHeight = currentTop;
 
   return { lanes, placedNodes, totalHeight, totalWidth };
@@ -546,10 +543,21 @@ export const DependencyNetwork: React.FC = () => {
     return result;
   }, [effectiveActivities, selectedDisciplines, criticalPathOnly, searchQuery]);
 
+  // Dynamic data-driven timeline derived strictly from actual project activity dates
+  const { timelineColumns, dataDateObj, dataDateX } = useMemo(() => {
+    const res = buildTimelineColumns(effectiveActivities, '2026-02-09');
+    const x = calculateDataDateX(res.columns, res.dataDate, COLUMN_WIDTH, 0);
+    return {
+      timelineColumns: res.columns,
+      dataDateObj: res.dataDate,
+      dataDateX: x,
+    };
+  }, [effectiveActivities]);
+
   // Compute Layout (single source of truth)
   const layout = useMemo(() => {
-    return computeLayout(filteredActivities, collapsedLanes, expandedParents);
-  }, [filteredActivities, collapsedLanes, expandedParents]);
+    return computeLayout(filteredActivities, timelineColumns, collapsedLanes, expandedParents);
+  }, [filteredActivities, timelineColumns, collapsedLanes, expandedParents]);
 
   // Active highlighted chain on hover
   const activeChain = useMemo(() => {
@@ -899,20 +907,24 @@ export const DependencyNetwork: React.FC = () => {
               style={{ height: RULER_HEIGHT, width: layout.totalWidth }}
               className="sticky top-0 z-20 bg-[#141417] border-b border-[#2A2A30] flex items-center font-mono text-[11px] text-[#8E8E96]"
             >
-              {WEEKS.map((w, i) => (
+              {timelineColumns.map((w, i) => (
                 <div
                   key={w.id}
                   style={{ width: COLUMN_WIDTH }}
-                  className="px-4 font-semibold text-[#8E8E96] border-r border-[#2A2A30]/50 truncate"
+                  className="px-4 font-semibold text-[#8E8E96] border-r border-[#2A2A30]/50 truncate flex items-center justify-between"
+                  title={w.dateRange}
                 >
-                  {w.label}
+                  <span className="truncate">{w.label}</span>
+                  <span className="text-[9px] font-mono text-[#5A5A64] hidden xl:inline flex-shrink-0 ml-1">
+                    {w.dateRange.split(' ')[0]}–{w.dateRange.split(' ')[2]}
+                  </span>
                 </div>
               ))}
             </div>
 
             {/* VERTICAL COLUMN GRIDLINES dropping through canvas */}
             <div className="absolute top-[34px] bottom-0 left-0 right-0 pointer-events-none z-0">
-              {WEEKS.map((w, i) => (
+              {timelineColumns.map((w, i) => (
                 <div
                   key={w.id}
                   style={{ left: (i + 1) * COLUMN_WIDTH }}
@@ -931,11 +943,11 @@ export const DependencyNetwork: React.FC = () => {
 
               {/* DATA DATE RED VERTICAL LINE */}
               <div
-                style={{ left: DATA_DATE_X }}
-                className="absolute top-0 bottom-0 w-px bg-[#E0242B] z-10 flex flex-col items-center"
+                style={{ left: dataDateX }}
+                className="absolute top-0 bottom-0 w-px bg-[#E0242B] z-10 flex flex-col items-center shadow-[0_0_8px_rgba(224,36,43,0.4)]"
               >
-                <div className="bg-[#141417] text-[#E0242B] border border-[#E0242B] text-[9px] font-mono font-bold px-1.5 py-0.5 rounded shadow-lg mt-1 whitespace-nowrap">
-                  DATA DATE
+                <div className="bg-[#141417] text-[#E0242B] border border-[#E0242B] text-[9px] font-mono font-bold px-2 py-0.5 rounded shadow-lg mt-1 whitespace-nowrap">
+                  DATA DATE · {formatExactDate(dataDateObj)}
                 </div>
               </div>
             </div>
@@ -1146,9 +1158,19 @@ export const DependencyNetwork: React.FC = () => {
 
                     {/* Activity Name (2 lines max clamped) */}
                     <div
-                      className="text-xs font-semibold leading-tight line-clamp-2 pl-1 mb-2 text-[#F7F7F5]"
+                      className="text-xs font-semibold leading-tight line-clamp-2 pl-1 mb-1 text-[#F7F7F5]"
                     >
                       {activity.name}
+                    </div>
+
+                    {/* Exact Real-Time Schedule Dates */}
+                    <div className="flex items-center justify-between text-[9px] font-mono text-[#8E8E96] pl-1 mb-1">
+                      <span className="truncate">
+                        {formatShortDate(activity.actualStart || (activity as any).planned_start)} → {formatShortDate(activity.forecastFinish)}
+                      </span>
+                      <span className={activity.totalFloat < 0 ? 'text-[#E0242B] font-bold' : 'text-[#8E8E96]'}>
+                        {activity.totalFloat > 0 ? `+${activity.totalFloat}d` : `${activity.totalFloat}d`}
+                      </span>
                     </div>
 
                     {/* 2px Progress Bar */}
@@ -1294,9 +1316,16 @@ export const DependencyNetwork: React.FC = () => {
               </div>
 
               <div className="flex items-center justify-between">
+                <span className="text-[#8E8E96]">Start</span>
+                <span className="font-mono text-[#F7F7F5]">
+                  {formatExactDate(selectedActivity.actualStart || (selectedActivity as any).planned_start)}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between">
                 <span className="text-[#8E8E96]">Finish</span>
                 <span className="font-mono text-[#F7F7F5]">
-                  {selectedActivity.forecastFinish}
+                  {formatExactDate(selectedActivity.forecastFinish)}
                 </span>
               </div>
 

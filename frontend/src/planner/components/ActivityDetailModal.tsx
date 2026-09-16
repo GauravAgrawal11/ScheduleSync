@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { api, WorkflowActivityDetail } from '../../api/client';
 import { SupervisorDetailPanel } from './SupervisorDetailPanel';
 import { SupervisorLayerCard } from './SupervisorLayerCard';
+import { formatExactDate } from '../timelineUtils';
 import {
   X,
   User,
@@ -204,8 +205,17 @@ export const ActivityDetailModal: React.FC<ActivityDetailModalProps> = ({
                 </div>
 
                 <div className="flex items-center justify-between py-1 border-b border-[#1b2028]">
+                  <span className="text-slate-400">Start</span>
+                  <span className="font-mono text-slate-200">
+                    {formatExactDate(detail.actual_start || detail.planned_start)}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between py-1 border-b border-[#1b2028]">
                   <span className="text-slate-400">Finish</span>
-                  <span className="font-mono text-slate-200">{detail.planned_finish || '—'}</span>
+                  <span className="font-mono text-slate-200">
+                    {formatExactDate(detail.actual_finish || detail.planned_finish)}
+                  </span>
                 </div>
 
                 <div className="flex items-center justify-between py-1 border-b border-[#1b2028]">

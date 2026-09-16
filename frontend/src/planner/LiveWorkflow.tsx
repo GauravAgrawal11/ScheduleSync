@@ -5,6 +5,14 @@ import { api, WorkflowNodeData, WorkflowEdgeData } from '../api/client';
 import { useProjectStore } from './projectStore';
 import { ActivityDetailModal } from './components/ActivityDetailModal';
 import {
+  buildTimelineColumns,
+  getActivityColumnIndex,
+  calculateDataDateX,
+  formatExactDate,
+  formatShortDate,
+  TimelineColumn,
+} from './timelineUtils';
+import {
   Search,
   ZoomIn,
   ZoomOut,
@@ -22,8 +30,8 @@ import {
 // ============================================================================
 const COL_WIDTH = 252;
 const CARD_WIDTH = 196;
-const CARD_HEIGHT = 86;
-const BASE_LANE_HEIGHT = 132;
+const CARD_HEIGHT = 88;
+const BASE_LANE_HEIGHT = 140;
 const GUTTER_WIDTH = 126;
 const RULER_HEIGHT = 34;
 
@@ -36,15 +44,6 @@ const ORDERED_DISCIPLINES = [
   { id: 'commissioning', label: 'Commissioning' },
 ];
 
-const WEEKS = [
-  { id: 'W05', label: 'W05 · 26 Jan', date: '2026-01-26' },
-  { id: 'W06', label: 'W06 · 02 Feb', date: '2026-02-02' },
-  { id: 'W07', label: 'W07 · 09 Feb', date: '2026-02-09', isDataDate: true },
-  { id: 'W08', label: 'W08 · 16 Feb', date: '2026-02-16' },
-  { id: 'W09', label: 'W09 · 23 Feb', date: '2026-02-23' },
-  { id: 'W10', label: 'W10 · 02 Mar', date: '2026-03-02' },
-];
-
 function getDisciplineLaneId(discipline?: string): string {
   const d = (discipline || '').toLowerCase();
   if (d.includes('civil')) return 'civil';
@@ -54,17 +53,6 @@ function getDisciplineLaneId(discipline?: string): string {
   if (d.includes('inst') || d.includes('hse')) return 'instrumentation';
   if (d.includes('comm')) return 'commissioning';
   return 'piping';
-}
-
-function getWeekColumnId(plannedStart?: string): string {
-  if (!plannedStart) return 'W06';
-  const dt = new Date(plannedStart).getTime();
-  if (dt < new Date('2026-02-01').getTime()) return 'W05';
-  if (dt < new Date('2026-02-08').getTime()) return 'W06';
-  if (dt < new Date('2026-02-15').getTime()) return 'W07';
-  if (dt < new Date('2026-02-22').getTime()) return 'W08';
-  if (dt < new Date('2026-03-01').getTime()) return 'W09';
-  return 'W10';
 }
 
 interface PlacedNode {
@@ -85,7 +73,10 @@ interface LaneLayout {
   nodes: WorkflowNodeData[];
 }
 
-function computeLiveLayout(nodes: WorkflowNodeData[]): {
+function computeLiveLayout(
+  nodes: WorkflowNodeData[],
+  columns: TimelineColumn[]
+): {
   lanes: LaneLayout[];
   placedNodes: Map<string, PlacedNode>;
   totalHeight: number;
@@ -98,12 +89,11 @@ function computeLiveLayout(nodes: WorkflowNodeData[]): {
   ORDERED_DISCIPLINES.forEach((disc) => {
     const laneNodes = nodes.filter((n) => getDisciplineLaneId(n.discipline) === disc.id);
 
-    // Group into week columns
+    // Group into dynamic date columns based on actual activity dates
     const colSlots = new Map<number, WorkflowNodeData[]>();
     laneNodes.forEach((node) => {
-      const weekId = getWeekColumnId(node.planned_start);
-      let colIdx = WEEKS.findIndex((w) => w.id === weekId);
-      if (colIdx === -1) colIdx = 1;
+      const actDate = node.actual_start || node.planned_start || node.planned_finish;
+      const colIdx = getActivityColumnIndex(actDate, columns);
       if (!colSlots.has(colIdx)) colSlots.set(colIdx, []);
       colSlots.get(colIdx)!.push(node);
     });
@@ -145,7 +135,7 @@ function computeLiveLayout(nodes: WorkflowNodeData[]): {
     currentTop += laneHeight;
   });
 
-  const totalWidth = GUTTER_WIDTH + WEEKS.length * COL_WIDTH;
+  const totalWidth = Math.max(GUTTER_WIDTH + columns.length * COL_WIDTH, 1400);
   const totalHeight = Math.max(currentTop, 600);
 
   return { lanes, placedNodes, totalHeight, totalWidth };
@@ -363,10 +353,27 @@ export const LiveWorkflow: React.FC = () => {
     return result;
   }, [liveNodes, selectedDiscipline, criticalPathOnly, searchQuery]);
 
+  // Dynamic data-driven timeline derived strictly from actual live workflow activity dates
+  const { timelineColumns, dataDateObj, dataDateX } = useMemo(() => {
+    const dateInputs = liveNodes.map((n) => ({
+      planned_start: n.planned_start,
+      planned_finish: n.planned_finish,
+      actual_start: n.actual_start,
+      actual_finish: n.actual_finish,
+    }));
+    const res = buildTimelineColumns(dateInputs, '2026-02-09');
+    const x = calculateDataDateX(res.columns, res.dataDate, COL_WIDTH, GUTTER_WIDTH);
+    return {
+      timelineColumns: res.columns,
+      dataDateObj: res.dataDate,
+      dataDateX: x,
+    };
+  }, [liveNodes]);
+
   // Compute Layout (single source of truth)
   const layout = useMemo(() => {
-    return computeLiveLayout(filteredNodes);
-  }, [filteredNodes]);
+    return computeLiveLayout(filteredNodes, timelineColumns);
+  }, [filteredNodes, timelineColumns]);
 
   // Sorted schedule nodes for accessible keyboard navigation
   const sortedScheduleNodes = useMemo(() => {
@@ -500,11 +507,6 @@ export const LiveWorkflow: React.FC = () => {
   const zoomIn = () => setZoom((z) => Math.min(1.4, Number((z + 0.1).toFixed(2))));
   const zoomOut = () => setZoom((z) => Math.max(0.45, Number((z - 0.1).toFixed(2))));
   const zoomFit = () => setZoom(1.0);
-
-  // Data date X calculation
-  const dataDateColIndex = WEEKS.findIndex((w) => w.isDataDate);
-  const dataDateX =
-    dataDateColIndex !== -1 ? GUTTER_WIDTH + dataDateColIndex * COL_WIDTH : -1;
 
   return (
     <div
@@ -705,18 +707,17 @@ export const LiveWorkflow: React.FC = () => {
               }}
               className="sticky top-0 z-20 bg-[#141417] border-b border-[#2A2A30] flex select-none pointer-events-none"
             >
-              {WEEKS.map((w, idx) => (
+              {timelineColumns.map((w) => (
                 <div
                   key={w.id}
                   style={{ width: COL_WIDTH }}
                   className="h-full border-r border-[#2A2A30] px-3 flex items-center justify-between text-xs font-mono text-[#8E8E96] relative"
+                  title={w.dateRange}
                 >
-                  <span className="font-semibold">{w.label}</span>
-                  {w.isDataDate && (
-                    <span className="text-[9px] font-mono uppercase tracking-wider text-[#E0242B] font-bold">
-                      DATA DATE
-                    </span>
-                  )}
+                  <span className="font-semibold truncate">{w.label}</span>
+                  <span className="text-[9px] text-[#5A5A64] flex-shrink-0 ml-1">
+                    {w.dateRange.split(' ')[0]}–{w.dateRange.split(' ')[2]}
+                  </span>
                 </div>
               ))}
             </div>
@@ -731,7 +732,7 @@ export const LiveWorkflow: React.FC = () => {
               }}
               className="absolute pointer-events-none"
             >
-              {WEEKS.map((w, idx) => (
+              {timelineColumns.map((w, idx) => (
                 <div
                   key={`grid-${w.id}`}
                   style={{
@@ -745,11 +746,11 @@ export const LiveWorkflow: React.FC = () => {
               {/* DATA DATE RED LINE (1px) */}
               {dataDateX !== -1 && (
                 <div
-                  style={{ left: dataDateColIndex * COL_WIDTH }}
-                  className="absolute top-0 bottom-0 w-[1px] bg-[#E0242B] z-10 shadow-[0_0_8px_rgba(224,36,43,0.5)]"
+                  style={{ left: Math.max(0, dataDateX - GUTTER_WIDTH) }}
+                  className="absolute top-0 bottom-0 w-[1px] bg-[#E0242B] z-10 shadow-[0_0_8px_rgba(224,36,43,0.5)] flex flex-col items-center"
                 >
-                  <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-[#E0242B] text-white text-[9px] font-mono font-bold px-1.5 py-0.5 rounded tracking-wider uppercase whitespace-nowrap">
-                    DATA DATE
+                  <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-[#E0242B] text-white text-[9px] font-mono font-bold px-2 py-0.5 rounded tracking-wider uppercase whitespace-nowrap">
+                    DATA DATE · {formatExactDate(dataDateObj)}
                   </div>
                 </div>
               )}
@@ -965,9 +966,27 @@ export const LiveWorkflow: React.FC = () => {
 
                     {/* Activity Name (2 lines max clamped) */}
                     <div
-                      className="text-xs font-semibold leading-tight line-clamp-2 pl-1 mb-2 text-[#F7F7F5]"
+                      className="text-xs font-semibold leading-tight line-clamp-2 pl-1 mb-1 text-[#F7F7F5]"
                     >
                       {node.name}
+                    </div>
+
+                    {/* Exact Real-Time Schedule Dates */}
+                    <div className="flex items-center justify-between text-[9px] font-mono text-[#8E8E96] pl-1 mb-1">
+                      <span className="truncate">
+                        {formatShortDate(node.actual_start || node.planned_start)} → {formatShortDate(node.actual_finish || node.planned_finish)}
+                      </span>
+                      <span
+                        className={`font-mono font-bold ${
+                          isNegativeFloat
+                            ? 'text-[#E0242B]'
+                            : isComplete
+                            ? 'text-[#10B981]'
+                            : 'text-[#8E8E96]'
+                        }`}
+                      >
+                        {floatVal}
+                      </span>
                     </div>
 
                     {/* 2px Progress Bar */}
