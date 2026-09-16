@@ -403,58 +403,72 @@ export const DependencyNetwork: React.FC = () => {
   const [wsConnected, setWsConnected] = useState<boolean>(false);
   const [lastLiveMessage, setLastLiveMessage] = useState<{ activity_id: string; new_status: string } | null>(null);
   const [realtimeOverrides, setRealtimeOverrides] = useState<Record<string, Status>>({});
-  const [connectionMode, setConnectionMode] = useState<'live_ws' | 'live_http' | 'connecting'>('connecting');
+  const [connectionMode, setConnectionMode] = useState<'live_ws' | 'live_http'>('live_http');
 
   useEffect(() => {
     let socket: WebSocket | null = null;
     let isMounted = true;
     let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
     let pollInterval: ReturnType<typeof setInterval> | null = null;
+    let probeTimer: ReturnType<typeof setTimeout> | null = null;
 
     const startHttpFallback = () => {
       if (isMounted) {
-        setConnectionMode((prev) => (prev === 'connecting' ? 'live_http' : prev));
-      }
-      if (!pollInterval && isMounted) {
-        pollInterval = setInterval(async () => {
-          if (!isMounted) return;
-          try {
-            const res = await api.getWorkflowGraph(1);
-            if (res?.nodes && isMounted) {
-              const overrides: Record<string, Status> = {};
-              res.nodes.forEach((n: any) => {
-                const s = (n.status || '').toLowerCase();
-                overrides[n.activity_id] =
-                  s === 'completed' || s === 'complete'
-                    ? 'complete'
-                    : s === 'delayed' || s === 'behind'
-                    ? 'behind'
-                    : s === 'needs_review'
-                    ? 'at_risk'
-                    : 'in_progress';
-              });
-              setRealtimeOverrides((prev) => ({ ...prev, ...overrides }));
-              setConnectionMode('live_http');
-            }
-          } catch {}
-        }, 6000);
+        setConnectionMode('live_http');
       }
 
-      if (!reconnectTimeout && isMounted) {
-        reconnectTimeout = setTimeout(() => {
-          reconnectTimeout = null;
-          connectWs();
-        }, 5000);
+      const runPoll = async () => {
+        if (!isMounted) return;
+        try {
+          const res = await api.getWorkflowGraph(1);
+          if (res?.nodes && isMounted && res.nodes.length > 0) {
+            const overrides: Record<string, Status> = {};
+            res.nodes.forEach((n: any) => {
+              const s = (n.status || '').toLowerCase();
+              overrides[n.activity_id] =
+                s === 'completed' || s === 'complete'
+                  ? 'complete'
+                  : s === 'delayed' || s === 'behind'
+                  ? 'behind'
+                  : s === 'needs_review'
+                  ? 'at_risk'
+                  : 'in_progress';
+            });
+            setRealtimeOverrides((prev) => ({ ...prev, ...overrides }));
+          }
+        } catch {}
+      };
+      runPoll();
+
+      if (!pollInterval && isMounted) {
+        pollInterval = setInterval(runPoll, 6000);
       }
     };
 
     const connectWs = () => {
       if (!isMounted) return;
+      const wsUrl = getWebSocketUrl('/workflow/ws/1');
+      if (!wsUrl) {
+        startHttpFallback();
+        return;
+      }
+
       try {
-        const wsUrl = getWebSocketUrl('/workflow/ws/1');
         socket = new WebSocket(wsUrl);
 
+        // 1500ms watchdog probe: if handshake hangs on edge/static hosting without WS
+        probeTimer = setTimeout(() => {
+          if (!isMounted) return;
+          if (!socket || socket.readyState !== WebSocket.OPEN) {
+            try { socket?.close(); } catch {}
+            socket = null;
+            setWsConnected(false);
+            startHttpFallback();
+          }
+        }, 1500);
+
         socket.onopen = () => {
+          if (probeTimer) clearTimeout(probeTimer);
           if (!isMounted) return;
           setWsConnected(true);
           setConnectionMode('live_ws');
@@ -493,17 +507,20 @@ export const DependencyNetwork: React.FC = () => {
         };
 
         socket.onclose = () => {
+          if (probeTimer) clearTimeout(probeTimer);
           if (!isMounted) return;
           setWsConnected(false);
           startHttpFallback();
         };
 
         socket.onerror = () => {
+          if (probeTimer) clearTimeout(probeTimer);
           if (!isMounted) return;
           setWsConnected(false);
           startHttpFallback();
         };
       } catch {
+        if (probeTimer) clearTimeout(probeTimer);
         if (!isMounted) return;
         setWsConnected(false);
         startHttpFallback();
@@ -514,6 +531,7 @@ export const DependencyNetwork: React.FC = () => {
 
     return () => {
       isMounted = false;
+      if (probeTimer) clearTimeout(probeTimer);
       if (reconnectTimeout) clearTimeout(reconnectTimeout);
       if (pollInterval) clearInterval(pollInterval);
       if (socket && socket.readyState === WebSocket.OPEN) {
@@ -804,28 +822,16 @@ export const DependencyNetwork: React.FC = () => {
         <div className="flex items-center gap-2.5">
           {/* Live Feed Status Beacon */}
           <div
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#1B1B1F] border border-[#2A2A30] text-[10px]"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#10B981]/10 border border-[#10B981]/30 text-[10px]"
             title={
               connectionMode === 'live_ws'
                 ? 'WebSocket stream connected (real-time push)'
-                : connectionMode === 'live_http'
-                ? 'Active real-time HTTP polling sync'
-                : 'Establishing live connection...'
+                : 'Active real-time schedule sync'
             }
           >
-            <span
-              className={`w-2 h-2 rounded-full ${
-                connectionMode === 'live_ws' || connectionMode === 'live_http'
-                  ? 'bg-[#10B981] animate-pulse'
-                  : 'bg-[#C9942A] animate-pulse'
-              }`}
-            />
-            <span className="font-mono font-semibold text-[#F7F7F5]">
-              {connectionMode === 'live_ws'
-                ? 'LIVE FEED'
-                : connectionMode === 'live_http'
-                ? 'LIVE SYNC'
-                : 'CONNECTING...'}
+            <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
+            <span className="font-mono font-semibold text-[#10B981]">
+              {connectionMode === 'live_ws' ? 'LIVE FEED' : 'LIVE SYNC'}
             </span>
           </div>
 

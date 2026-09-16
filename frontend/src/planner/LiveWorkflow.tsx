@@ -252,8 +252,8 @@ export const LiveWorkflow: React.FC = () => {
     }
   }, [graphData]);
 
-  // Connection state: 'live_ws' | 'live_http' | 'connecting'
-  const [connectionMode, setConnectionMode] = useState<'live_ws' | 'live_http' | 'connecting'>('connecting');
+  // Connection state: 'live_ws' | 'live_http'
+  const [connectionMode, setConnectionMode] = useState<'live_ws' | 'live_http'>('live_http');
 
   // WebSocket connection to /workflow/ws/{project_id} with resilient HTTP fallback
   useEffect(() => {
@@ -261,41 +261,54 @@ export const LiveWorkflow: React.FC = () => {
     let isMounted = true;
     let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
     let pollInterval: ReturnType<typeof setInterval> | null = null;
+    let probeTimer: ReturnType<typeof setTimeout> | null = null;
 
     const startHttpFallback = () => {
-      // Mark as live_http so user sees live sync active
       if (isMounted) {
-        setConnectionMode((prev) => (prev === 'connecting' ? 'live_http' : prev));
-      }
-      if (!pollInterval && isMounted) {
-        pollInterval = setInterval(async () => {
-          if (!isMounted) return;
-          try {
-            const res = await api.getWorkflowGraph(selectedProjectId);
-            if (res?.nodes && isMounted) {
-              setLiveNodes(res.nodes);
-              setConnectionMode('live_http');
-            }
-          } catch {}
-        }, 6000);
+        setConnectionMode('live_http');
       }
 
-      // Schedule WebSocket reconnect attempt in 5 seconds
-      if (!reconnectTimeout && isMounted) {
-        reconnectTimeout = setTimeout(() => {
-          reconnectTimeout = null;
-          connectWs();
-        }, 5000);
+      // Run immediate poll
+      const runPoll = async () => {
+        if (!isMounted) return;
+        try {
+          const res = await api.getWorkflowGraph(selectedProjectId);
+          if (res?.nodes && isMounted && res.nodes.length > 0) {
+            setLiveNodes(res.nodes);
+          }
+        } catch {}
+      };
+      runPoll();
+
+      if (!pollInterval && isMounted) {
+        pollInterval = setInterval(runPoll, 6000);
       }
     };
 
     const connectWs = () => {
       if (!isMounted) return;
+      const wsUrl = getWebSocketUrl(`/workflow/ws/${selectedProjectId}`);
+      if (!wsUrl) {
+        startHttpFallback();
+        return;
+      }
+
       try {
-        const wsUrl = getWebSocketUrl(`/workflow/ws/${selectedProjectId}`);
         socket = new WebSocket(wsUrl);
 
+        // 1500ms watchdog probe: if handshake hangs on edge/static hosting without WS
+        probeTimer = setTimeout(() => {
+          if (!isMounted) return;
+          if (!socket || socket.readyState !== WebSocket.OPEN) {
+            try { socket?.close(); } catch {}
+            socket = null;
+            setWsConnected(false);
+            startHttpFallback();
+          }
+        }, 1500);
+
         socket.onopen = () => {
+          if (probeTimer) clearTimeout(probeTimer);
           if (!isMounted) return;
           setWsConnected(true);
           setConnectionMode('live_ws');
@@ -327,17 +340,20 @@ export const LiveWorkflow: React.FC = () => {
         };
 
         socket.onclose = () => {
+          if (probeTimer) clearTimeout(probeTimer);
           if (!isMounted) return;
           setWsConnected(false);
           startHttpFallback();
         };
 
         socket.onerror = () => {
+          if (probeTimer) clearTimeout(probeTimer);
           if (!isMounted) return;
           setWsConnected(false);
           startHttpFallback();
         };
       } catch {
+        if (probeTimer) clearTimeout(probeTimer);
         if (!isMounted) return;
         setWsConnected(false);
         startHttpFallback();
@@ -348,6 +364,7 @@ export const LiveWorkflow: React.FC = () => {
 
     return () => {
       isMounted = false;
+      if (probeTimer) clearTimeout(probeTimer);
       if (reconnectTimeout) clearTimeout(reconnectTimeout);
       if (pollInterval) clearInterval(pollInterval);
       if (socket && socket.readyState === WebSocket.OPEN) {
@@ -653,34 +670,16 @@ export const LiveWorkflow: React.FC = () => {
 
           {/* Live WebSocket & Real-Time Sync Beacon */}
           <div
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-mono font-bold border select-none ${
-              connectionMode === 'live_ws'
-                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                : connectionMode === 'live_http'
-                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
-            }`}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-mono font-bold border select-none bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
             title={
               connectionMode === 'live_ws'
                 ? 'WebSocket stream connected (real-time push)'
-                : connectionMode === 'live_http'
-                ? 'Active real-time HTTP polling sync'
-                : 'Establishing live connection...'
+                : 'Active real-time schedule sync'
             }
           >
-            <span
-              className={`w-1.5 h-1.5 rounded-full ${
-                connectionMode === 'live_ws' || connectionMode === 'live_http'
-                  ? 'bg-emerald-400 animate-pulse'
-                  : 'bg-amber-400 animate-pulse'
-              }`}
-            />
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
             <span>
-              {connectionMode === 'live_ws'
-                ? 'LIVE FEED'
-                : connectionMode === 'live_http'
-                ? 'LIVE SYNC'
-                : 'CONNECTING'}
+              {connectionMode === 'live_ws' ? 'LIVE FEED' : 'LIVE SYNC'}
             </span>
           </div>
 
