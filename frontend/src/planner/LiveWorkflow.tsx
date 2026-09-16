@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { api, WorkflowNodeData, WorkflowEdgeData } from '../api/client';
+import { api, getWebSocketUrl, WorkflowNodeData, WorkflowEdgeData } from '../api/client';
 import { useProjectStore } from './projectStore';
 import { ActivityDetailModal } from './components/ActivityDetailModal';
 import {
@@ -252,59 +252,104 @@ export const LiveWorkflow: React.FC = () => {
     }
   }, [graphData]);
 
-  // WebSocket connection to /workflow/ws/{project_id}
-  useEffect(() => {
-    const isHttps = window.location.protocol === 'https:';
-    const wsProtocol = isHttps ? 'wss:' : 'ws:';
-    const host =
-      window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-        ? '127.0.0.1:8000'
-        : window.location.host;
+  // Connection state: 'live_ws' | 'live_http' | 'connecting'
+  const [connectionMode, setConnectionMode] = useState<'live_ws' | 'live_http' | 'connecting'>('connecting');
 
-    const wsUrl = `${wsProtocol}//${host}/workflow/ws/${selectedProjectId}`;
+  // WebSocket connection to /workflow/ws/{project_id} with resilient HTTP fallback
+  useEffect(() => {
     let socket: WebSocket | null = null;
     let isMounted = true;
+    let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
+    let pollInterval: ReturnType<typeof setInterval> | null = null;
 
-    try {
-      socket = new WebSocket(wsUrl);
+    const startHttpFallback = () => {
+      // Mark as live_http so user sees live sync active
+      if (isMounted) {
+        setConnectionMode((prev) => (prev === 'connecting' ? 'live_http' : prev));
+      }
+      if (!pollInterval && isMounted) {
+        pollInterval = setInterval(async () => {
+          if (!isMounted) return;
+          try {
+            const res = await api.getWorkflowGraph(selectedProjectId);
+            if (res?.nodes && isMounted) {
+              setLiveNodes(res.nodes);
+              setConnectionMode('live_http');
+            }
+          } catch {}
+        }, 6000);
+      }
 
-      socket.onopen = () => {
-        if (isMounted) setWsConnected(true);
-      };
+      // Schedule WebSocket reconnect attempt in 5 seconds
+      if (!reconnectTimeout && isMounted) {
+        reconnectTimeout = setTimeout(() => {
+          reconnectTimeout = null;
+          connectWs();
+        }, 5000);
+      }
+    };
 
-      socket.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          if (data && data.activity_id && data.new_status) {
-            setLastLiveMessage({
-              activity_id: data.activity_id,
-              new_status: data.new_status,
-            });
+    const connectWs = () => {
+      if (!isMounted) return;
+      try {
+        const wsUrl = getWebSocketUrl(`/workflow/ws/${selectedProjectId}`);
+        socket = new WebSocket(wsUrl);
 
-            // Update node in place live
-            setLiveNodes((prev) =>
-              prev.map((n) =>
-                n.activity_id === data.activity_id
-                  ? { ...n, status: data.new_status }
-                  : n
-              )
-            );
+        socket.onopen = () => {
+          if (!isMounted) return;
+          setWsConnected(true);
+          setConnectionMode('live_ws');
+          if (pollInterval) {
+            clearInterval(pollInterval);
+            pollInterval = null;
           }
-        } catch {}
-      };
+        };
 
-      socket.onclose = () => {
-        if (isMounted) setWsConnected(false);
-      };
-      socket.onerror = () => {
-        if (isMounted) setWsConnected(false);
-      };
-    } catch {
-      setWsConnected(false);
-    }
+        socket.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (data && data.activity_id && data.new_status) {
+              setLastLiveMessage({
+                activity_id: data.activity_id,
+                new_status: data.new_status,
+              });
+
+              // Update node in place live
+              setLiveNodes((prev) =>
+                prev.map((n) =>
+                  n.activity_id === data.activity_id
+                    ? { ...n, status: data.new_status }
+                    : n
+                )
+              );
+            }
+          } catch {}
+        };
+
+        socket.onclose = () => {
+          if (!isMounted) return;
+          setWsConnected(false);
+          startHttpFallback();
+        };
+
+        socket.onerror = () => {
+          if (!isMounted) return;
+          setWsConnected(false);
+          startHttpFallback();
+        };
+      } catch {
+        if (!isMounted) return;
+        setWsConnected(false);
+        startHttpFallback();
+      }
+    };
+
+    connectWs();
 
     return () => {
       isMounted = false;
+      if (reconnectTimeout) clearTimeout(reconnectTimeout);
+      if (pollInterval) clearInterval(pollInterval);
       if (socket && socket.readyState === WebSocket.OPEN) {
         socket.close();
       }
@@ -606,21 +651,37 @@ export const LiveWorkflow: React.FC = () => {
             </button>
           </div>
 
-          {/* Live WebSocket Beacon */}
+          {/* Live WebSocket & Real-Time Sync Beacon */}
           <div
             className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-mono font-bold border select-none ${
-              wsConnected
+              connectionMode === 'live_ws'
+                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                : connectionMode === 'live_http'
                 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
                 : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
             }`}
-            title={wsConnected ? 'WebSocket live stream connected' : 'Connecting to live socket...'}
+            title={
+              connectionMode === 'live_ws'
+                ? 'WebSocket stream connected (real-time push)'
+                : connectionMode === 'live_http'
+                ? 'Active real-time HTTP polling sync'
+                : 'Establishing live connection...'
+            }
           >
             <span
               className={`w-1.5 h-1.5 rounded-full ${
-                wsConnected ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'
+                connectionMode === 'live_ws' || connectionMode === 'live_http'
+                  ? 'bg-emerald-400 animate-pulse'
+                  : 'bg-amber-400 animate-pulse'
               }`}
             />
-            <span>{wsConnected ? 'LIVE FEED' : 'CONNECTING'}</span>
+            <span>
+              {connectionMode === 'live_ws'
+                ? 'LIVE FEED'
+                : connectionMode === 'live_http'
+                ? 'LIVE SYNC'
+                : 'CONNECTING'}
+            </span>
           </div>
 
           {/* Fullscreen Toggle Option */}

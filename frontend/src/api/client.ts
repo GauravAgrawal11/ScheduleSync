@@ -6,7 +6,48 @@
 
 import { useAuthStore } from '../auth/authStore';
 
-const API_BASE_URL = (import.meta.env?.VITE_API_BASE_URL || "http://localhost:8000").replace(/\/+$/, '');
+export const API_BASE_URL = (
+  import.meta.env?.VITE_API_BASE_URL ||
+  import.meta.env?.VITE_API_URL ||
+  (typeof window !== 'undefined' &&
+  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://127.0.0.1:8000'
+    : '')
+).replace(/\/+$/, '');
+
+/**
+ * Robust WebSocket URL resolver for local, Vercel, and Render cloud deployments
+ */
+export function getWebSocketUrl(path: string): string {
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+
+  // 1. Explicit VITE_WS_URL environment variable (if specified in Vercel/Render)
+  if (import.meta.env?.VITE_WS_URL) {
+    const base = import.meta.env.VITE_WS_URL.replace(/\/+$/, '');
+    return `${base}${cleanPath}`;
+  }
+
+  // 2. Derive from API_BASE_URL if it is an absolute HTTP/HTTPS URL
+  if (API_BASE_URL && (API_BASE_URL.startsWith('http://') || API_BASE_URL.startsWith('https://'))) {
+    const wsBase = API_BASE_URL.replace(/^http:/i, 'ws:').replace(/^https:/i, 'wss:');
+    return `${wsBase}${cleanPath}`;
+  }
+
+  // 3. Localhost development fallback
+  const isLocal =
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+  if (isLocal) {
+    return `ws://127.0.0.1:8000${cleanPath}`;
+  }
+
+  // 4. Default to current window origin with secure protocol detection
+  const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+  const wsProtocol = isHttps ? 'wss:' : 'ws:';
+  const host = typeof window !== 'undefined' ? window.location.host : '127.0.0.1:8000';
+  return `${wsProtocol}//${host}${cleanPath}`;
+}
 
 // Helper to add auth header
 function getAuthHeaders(extraHeaders: Record<string, string> = {}): Record<string, string> {

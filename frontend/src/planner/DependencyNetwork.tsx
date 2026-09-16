@@ -9,7 +9,7 @@ import {
   MOCK_NETWORK_ACTIVITIES,
 } from '../mock/network';
 import { useNetworkStore } from './networkStore';
-import { api } from '../api/client';
+import { api, getWebSocketUrl } from '../api/client';
 import { SupervisorLayerCard } from './components/SupervisorLayerCard';
 import { SupervisorDetailPanel } from './components/SupervisorDetailPanel';
 import {
@@ -403,63 +403,119 @@ export const DependencyNetwork: React.FC = () => {
   const [wsConnected, setWsConnected] = useState<boolean>(false);
   const [lastLiveMessage, setLastLiveMessage] = useState<{ activity_id: string; new_status: string } | null>(null);
   const [realtimeOverrides, setRealtimeOverrides] = useState<Record<string, Status>>({});
+  const [connectionMode, setConnectionMode] = useState<'live_ws' | 'live_http' | 'connecting'>('connecting');
 
   useEffect(() => {
-    const isHttps = window.location.protocol === 'https:';
-    const wsProtocol = isHttps ? 'wss:' : 'ws:';
-    const host =
-      window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-        ? '127.0.0.1:8000'
-        : window.location.host;
-
-    const wsUrl = `${wsProtocol}//${host}/workflow/ws/1`;
     let socket: WebSocket | null = null;
     let isMounted = true;
+    let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
+    let pollInterval: ReturnType<typeof setInterval> | null = null;
 
-    try {
-      socket = new WebSocket(wsUrl);
-      socket.onopen = () => {
-        if (isMounted) setWsConnected(true);
-      };
-      socket.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          if (data && data.activity_id && data.new_status) {
-            setLastLiveMessage({
-              activity_id: data.activity_id,
-              new_status: data.new_status,
-            });
+    const startHttpFallback = () => {
+      if (isMounted) {
+        setConnectionMode((prev) => (prev === 'connecting' ? 'live_http' : prev));
+      }
+      if (!pollInterval && isMounted) {
+        pollInterval = setInterval(async () => {
+          if (!isMounted) return;
+          try {
+            const res = await api.getWorkflowGraph(1);
+            if (res?.nodes && isMounted) {
+              const overrides: Record<string, Status> = {};
+              res.nodes.forEach((n: any) => {
+                const s = (n.status || '').toLowerCase();
+                overrides[n.activity_id] =
+                  s === 'completed' || s === 'complete'
+                    ? 'complete'
+                    : s === 'delayed' || s === 'behind'
+                    ? 'behind'
+                    : s === 'needs_review'
+                    ? 'at_risk'
+                    : 'in_progress';
+              });
+              setRealtimeOverrides((prev) => ({ ...prev, ...overrides }));
+              setConnectionMode('live_http');
+            }
+          } catch {}
+        }, 6000);
+      }
 
-            // Map backend status to Status union
-            const s = (data.new_status || '').toLowerCase();
-            const mappedStatus: Status =
-              s === 'completed' || s === 'complete'
-                ? 'complete'
-                : s === 'delayed' || s === 'behind'
-                ? 'behind'
-                : s === 'needs_review'
-                ? 'at_risk'
-                : 'in_progress';
+      if (!reconnectTimeout && isMounted) {
+        reconnectTimeout = setTimeout(() => {
+          reconnectTimeout = null;
+          connectWs();
+        }, 5000);
+      }
+    };
 
-            setRealtimeOverrides((prev) => ({
-              ...prev,
-              [data.activity_id]: mappedStatus,
-            }));
+    const connectWs = () => {
+      if (!isMounted) return;
+      try {
+        const wsUrl = getWebSocketUrl('/workflow/ws/1');
+        socket = new WebSocket(wsUrl);
+
+        socket.onopen = () => {
+          if (!isMounted) return;
+          setWsConnected(true);
+          setConnectionMode('live_ws');
+          if (pollInterval) {
+            clearInterval(pollInterval);
+            pollInterval = null;
           }
-        } catch {}
-      };
-      socket.onclose = () => {
-        if (isMounted) setWsConnected(false);
-      };
-      socket.onerror = () => {
-        if (isMounted) setWsConnected(false);
-      };
-    } catch {
-      setWsConnected(false);
-    }
+        };
+
+        socket.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (data && data.activity_id && data.new_status) {
+              setLastLiveMessage({
+                activity_id: data.activity_id,
+                new_status: data.new_status,
+              });
+
+              // Map backend status to Status union
+              const s = (data.new_status || '').toLowerCase();
+              const mappedStatus: Status =
+                s === 'completed' || s === 'complete'
+                  ? 'complete'
+                  : s === 'delayed' || s === 'behind'
+                  ? 'behind'
+                  : s === 'needs_review'
+                  ? 'at_risk'
+                  : 'in_progress';
+
+              setRealtimeOverrides((prev) => ({
+                ...prev,
+                [data.activity_id]: mappedStatus,
+              }));
+            }
+          } catch {}
+        };
+
+        socket.onclose = () => {
+          if (!isMounted) return;
+          setWsConnected(false);
+          startHttpFallback();
+        };
+
+        socket.onerror = () => {
+          if (!isMounted) return;
+          setWsConnected(false);
+          startHttpFallback();
+        };
+      } catch {
+        if (!isMounted) return;
+        setWsConnected(false);
+        startHttpFallback();
+      }
+    };
+
+    connectWs();
 
     return () => {
       isMounted = false;
+      if (reconnectTimeout) clearTimeout(reconnectTimeout);
+      if (pollInterval) clearInterval(pollInterval);
       if (socket && socket.readyState === WebSocket.OPEN) {
         socket.close();
       }
@@ -747,14 +803,29 @@ export const DependencyNetwork: React.FC = () => {
         {/* Right: Live Beacon, Search Box & Zoom Controls */}
         <div className="flex items-center gap-2.5">
           {/* Live Feed Status Beacon */}
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#1B1B1F] border border-[#2A2A30] text-[10px]">
+          <div
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#1B1B1F] border border-[#2A2A30] text-[10px]"
+            title={
+              connectionMode === 'live_ws'
+                ? 'WebSocket stream connected (real-time push)'
+                : connectionMode === 'live_http'
+                ? 'Active real-time HTTP polling sync'
+                : 'Establishing live connection...'
+            }
+          >
             <span
               className={`w-2 h-2 rounded-full ${
-                wsConnected ? 'bg-[#10B981] animate-pulse' : 'bg-[#C9942A]'
+                connectionMode === 'live_ws' || connectionMode === 'live_http'
+                  ? 'bg-[#10B981] animate-pulse'
+                  : 'bg-[#C9942A] animate-pulse'
               }`}
             />
             <span className="font-mono font-semibold text-[#F7F7F5]">
-              {wsConnected ? 'LIVE FEED' : 'CONNECTING...'}
+              {connectionMode === 'live_ws'
+                ? 'LIVE FEED'
+                : connectionMode === 'live_http'
+                ? 'LIVE SYNC'
+                : 'CONNECTING...'}
             </span>
           </div>
 
