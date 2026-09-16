@@ -742,7 +742,7 @@ export const DependencyNetwork: React.FC = () => {
       {/* ================================================================== */}
       {/* TOP CONTROL BAR: Filters & Zoom                                    */}
       {/* ================================================================== */}
-      <div className="flex items-center justify-between gap-3 px-4 py-2 bg-[#141417] border-b border-[#2A2A30] z-30 flex-shrink-0">
+      <div className="flex items-center justify-between gap-3 px-4 py-2 bg-[#141417] border-b border-[#2A2A30] z-10 flex-shrink-0">
         {/* Left: Critical Path toggle & Discipline Chips */}
         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
           {/* Critical Path Toggle */}
@@ -1830,7 +1830,7 @@ export const DependencyNetwork: React.FC = () => {
 
         {/* Live Update Notification Beacon */}
         {lastLiveMessage && (
-          <div className="absolute bottom-12 right-6 z-30 px-3 py-2 rounded-lg bg-[#141417] border border-[#E0242B]/50 shadow-2xl flex items-center gap-2 select-none animate-in slide-in-from-bottom-2 duration-150">
+          <div className="absolute bottom-12 right-6 z-10 px-3 py-2 rounded-lg bg-[#141417] border border-[#E0242B]/50 shadow-2xl flex items-center gap-2 select-none animate-in slide-in-from-bottom-2 duration-150">
             <div className="w-2 h-2 rounded-full bg-[#E0242B] animate-ping" />
             <span className="text-xs text-[#8E8E96]">
               Live update: <span className="font-mono font-bold text-[#F7F7F5]">{lastLiveMessage.activity_id}</span> is{' '}

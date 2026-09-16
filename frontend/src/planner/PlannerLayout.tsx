@@ -497,7 +497,7 @@ export const PlannerLayout: React.FC = () => {
       <div className="flex-1 flex flex-col h-screen overflow-y-auto min-w-0 bg-slate-50 relative">
 
         {/* ── Top Header Bar with Custom Oilfield Rig Artwork Banner ── */}
-        <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs flex-shrink-0 relative">
+        <header className="bg-white border-b border-slate-200 sticky top-0 z-[100] shadow-xs flex-shrink-0 relative">
           {/* Custom Oilfield Rig Artwork Panoramic Header Banner */}
           <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden flex items-center">
             <img
@@ -615,14 +615,14 @@ export const PlannerLayout: React.FC = () => {
                 {/* Invisible full-viewport backdrop so clicking anywhere outside closes the popup */}
                 {isNotificationsOpen && (
                   <div
-                    className="fixed inset-0 z-40 bg-transparent"
+                    className="fixed inset-0 z-[9998] bg-transparent"
                     onClick={() => setIsNotificationsOpen(false)}
                   />
                 )}
 
-                {/* Comprehensive Notifications Popup (Always on top of all pages with z-50 and no clipping) */}
+                {/* Comprehensive Notifications Popup (Always on top of all pages with z-[9999] and no clipping) */}
                 {isNotificationsOpen && (
-                  <div className="absolute right-0 mt-2 w-88 sm:w-[420px] md:w-[460px] bg-white rounded-2xl shadow-2xl border border-slate-200/90 p-3.5 z-50 space-y-3 animate-in fade-in zoom-in-95 duration-150 text-slate-800">
+                  <div className="absolute right-0 mt-2 w-88 sm:w-[420px] md:w-[460px] bg-white rounded-2xl shadow-2xl border border-slate-200/90 p-3.5 z-[9999] space-y-3 animate-in fade-in zoom-in-95 duration-150 text-slate-800">
                     {/* Header */}
                     <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
                       <div className="flex items-center gap-2">
@@ -920,14 +920,14 @@ export const PlannerLayout: React.FC = () => {
                 {/* Invisible full-viewport backdrop to close on outside click */}
                 {isProfileOpen && (
                   <div
-                    className="fixed inset-0 z-40 bg-transparent"
+                    className="fixed inset-0 z-[9998] bg-transparent"
                     onClick={() => setIsProfileOpen(false)}
                   />
                 )}
 
                 {/* Profile Dropdown Card */}
                 {isProfileOpen && (
-                  <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-slate-200/90 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+                  <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-slate-200/90 z-[9999] overflow-hidden animate-in fade-in zoom-in-95 duration-150">
                     {/* Header banner */}
                     <div className="bg-gradient-to-br from-[#0a0b0e] to-[#1a0507] px-5 pt-5 pb-10 relative overflow-hidden">
                       <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "url('/assets/sidebar-nav-bg.png')", backgroundSize: 'cover' }} />
