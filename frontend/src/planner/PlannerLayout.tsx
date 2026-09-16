@@ -184,12 +184,18 @@ export const PlannerLayout: React.FC = () => {
             - Menu toggle to collapse
         */}
         <div className="h-16 px-4 flex items-center justify-between border-b border-slate-800/80 flex-shrink-0 bg-[#0a0b0e]/90 backdrop-blur-xs">
-          <div className="flex items-center gap-2.5 overflow-hidden">
+          {/* Logo - clickable to navigate to Dashboard */}
+          <button
+            onClick={() => navigate('/planner/review')}
+            className="flex items-center gap-2.5 overflow-hidden cursor-pointer group rounded-lg px-1 py-1 hover:bg-slate-800/60 transition-all duration-150 focus:outline-none"
+            title="Go to Dashboard"
+            aria-label="Go to Dashboard"
+          >
             <img
               src={brandLogoImg}
               onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/logo.png'; }}
               alt="ScheduleSync Logo"
-              className="w-9 h-9 rounded-full object-contain flex-shrink-0 bg-white p-0.5 shadow-2xs"
+              className="w-9 h-9 rounded-full object-contain flex-shrink-0 bg-white p-0.5 shadow-2xs group-hover:ring-2 group-hover:ring-[#9e1218]/40 transition-all"
             />
             <div className="flex flex-col justify-between text-left py-0.5 h-9">
               <span className="text-[15px] font-black tracking-tight leading-none flex items-center">
@@ -200,7 +206,7 @@ export const PlannerLayout: React.FC = () => {
                 OIL INDIA LIMITED
               </span>
             </div>
-          </div>
+          </button>
 
           <button
             onClick={() => setIsSidebarCollapsed(true)}
@@ -499,13 +505,18 @@ export const PlannerLayout: React.FC = () => {
                     <Menu className="w-5 h-5 text-slate-800" />
                   </button>
 
-                  {/* Logo + Name + BLACK "OIL INDIA LIMITED" when OFF */}
-                  <div className="flex items-center gap-2.5 select-none">
+                  {/* Logo + Name + BLACK "OIL INDIA LIMITED" when OFF — clickable to Dashboard */}
+                  <button
+                    onClick={() => navigate('/planner/review')}
+                    className="flex items-center gap-2.5 select-none cursor-pointer group rounded-lg px-1 py-0.5 hover:bg-slate-100 transition-all duration-150 focus:outline-none"
+                    title="Go to Dashboard"
+                    aria-label="Go to Dashboard"
+                  >
                     <img
                       src={brandLogoImg}
                       onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/logo.png'; }}
                       alt="Oil India Limited"
-                      className="w-9 h-9 rounded-full object-contain flex-shrink-0 bg-white p-0.5 shadow-2xs"
+                      className="w-9 h-9 rounded-full object-contain flex-shrink-0 bg-white p-0.5 shadow-2xs group-hover:ring-2 group-hover:ring-[#9e1218]/30 transition-all"
                     />
                     <div className="flex flex-col justify-between text-left py-0.5 h-9">
                       <h1 className="text-[15px] font-black tracking-tight leading-none flex items-center">
@@ -519,7 +530,7 @@ export const PlannerLayout: React.FC = () => {
                         OIL INDIA LIMITED
                       </span>
                     </div>
-                  </div>
+                  </button>
 
                   <div className="h-6 w-px bg-slate-200 mx-1 hidden sm:block" />
 

@@ -115,7 +115,7 @@ export const SupervisorLayout: React.FC = () => {
       <div className="max-w-md w-full min-h-[100dvh] bg-slate-50/85 backdrop-blur-xs flex flex-col border-x border-slate-200 shadow-2xl relative pb-[max(5.5rem,env(safe-area-inset-bottom))] overflow-x-hidden">
         {/* Top Site Bar: High Contrast White for Outdoor Sunlight & Responsive Layout */}
         <header className="bg-white/95 backdrop-blur-xs text-slate-900 border-b border-slate-200 px-2 sm:px-3 py-2 sm:py-2.5 sticky top-0 z-30 shadow-2xs flex items-center justify-between gap-1">
-          <BrandLogo roleTag="SUPERVISOR" tagColor="slate" size="sm" className="shrink min-w-0" />
+          <BrandLogo roleTag="SUPERVISOR" tagColor="slate" size="sm" className="shrink min-w-0" linkTo="/supervisor" />
 
           <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
             {/* Help & Support Button */}

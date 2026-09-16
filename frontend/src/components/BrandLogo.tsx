@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import brandLogoImg from '../assets/logo.png';
 
 interface BrandLogoProps {
@@ -8,6 +9,8 @@ interface BrandLogoProps {
   className?: string;
   inCard?: boolean;
   theme?: 'light' | 'dark';
+  /** If set, clicking the logo navigates to this path */
+  linkTo?: string;
 }
 
 export const BrandLogo: React.FC<BrandLogoProps> = ({
@@ -17,7 +20,9 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
   className = '',
   inCard = false,
   theme = 'light',
+  linkTo,
 }) => {
+  const navigate = useNavigate();
   const iconSize = size === 'sm' ? 'w-7 h-7 sm:w-8 sm:h-8' : size === 'lg' ? 'w-10 h-10' : 'w-8 h-8 sm:w-9 sm:h-9';
   const textHeight = size === 'sm' ? 'h-7 sm:h-8' : size === 'lg' ? 'h-10' : 'h-8 sm:h-9';
   const titleSize = size === 'sm' ? 'text-xs sm:text-sm' : size === 'lg' ? 'text-base' : 'text-xs sm:text-[15px]';
@@ -32,14 +37,14 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
 
   const isDark = theme === 'dark';
 
-  const content = (
-    <div className={`flex items-center gap-1.5 sm:gap-2.5 select-none min-w-0 ${className}`}>
+  const inner = (
+    <>
       {/* Brand Logo with official Oil India insignia */}
       <img
         src={brandLogoImg}
         onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/logo.png'; }}
         alt="Oil India Limited ScheduleSync Logo"
-        className={`${iconSize} rounded-full object-contain flex-shrink-0 bg-white p-0.5 shadow-2xs`}
+        className={`${iconSize} rounded-full object-contain flex-shrink-0 bg-white p-0.5 shadow-2xs ${linkTo ? 'group-hover:ring-2 group-hover:ring-[#9e1218]/30 transition-all' : ''}`}
       />
       <div className={`flex flex-col justify-between text-left py-0.5 ${textHeight} min-w-0`}>
         <div className="flex items-center gap-1 sm:gap-1.5 leading-none">
@@ -63,6 +68,21 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
           OIL INDIA LIMITED
         </span>
       </div>
+    </>
+  );
+
+  const content = linkTo ? (
+    <button
+      onClick={() => navigate(linkTo)}
+      className={`flex items-center gap-1.5 sm:gap-2.5 select-none min-w-0 cursor-pointer group rounded-lg px-1 py-0.5 hover:bg-slate-100/70 transition-all duration-150 focus:outline-none ${className}`}
+      title="Go to Home"
+      aria-label="Go to Home"
+    >
+      {inner}
+    </button>
+  ) : (
+    <div className={`flex items-center gap-1.5 sm:gap-2.5 select-none min-w-0 ${className}`}>
+      {inner}
     </div>
   );
 
