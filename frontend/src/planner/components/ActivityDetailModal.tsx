@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api, WorkflowActivityDetail } from '../../api/client';
 import { SupervisorDetailPanel } from './SupervisorDetailPanel';
+import { SupervisorLayerCard } from './SupervisorLayerCard';
 import {
   X,
   User,
@@ -233,6 +234,17 @@ export const ActivityDetailModal: React.FC<ActivityDetailModalProps> = ({
                   <span className="text-slate-200 font-mono">{detail.location || 'Unit 3 & Offsites'}</span>
                 </div>
               </div>
+
+              {/* Layer-Wise Supervisor Intelligence Card */}
+              {detail.supervisor_name && (
+                <div className="pt-1">
+                  <SupervisorLayerCard
+                    supervisorName={detail.supervisor_name}
+                    discipline={detail.discipline || 'General'}
+                    currentActivityId={detail.activity_id}
+                  />
+                </div>
+              )}
 
               {/* Captured From Section */}
               <div className="space-y-3 pt-2">

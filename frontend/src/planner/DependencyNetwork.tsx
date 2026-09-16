@@ -10,6 +10,7 @@ import {
 } from '../mock/network';
 import { useNetworkStore } from './networkStore';
 import { api } from '../api/client';
+import { SupervisorLayerCard } from './components/SupervisorLayerCard';
 import {
   Search,
   ZoomIn,
@@ -397,6 +398,73 @@ export const DependencyNetwork: React.FC = () => {
   const [selectedLinkType, setSelectedLinkType] = useState<'FS' | 'SS' | 'FF'>('FS');
   const [selectedLinkLag, setSelectedLinkLag] = useState<number>(0);
 
+  // Real-time WebSocket connection for live field updates
+  const [wsConnected, setWsConnected] = useState<boolean>(false);
+  const [lastLiveMessage, setLastLiveMessage] = useState<{ activity_id: string; new_status: string } | null>(null);
+  const [realtimeOverrides, setRealtimeOverrides] = useState<Record<string, Status>>({});
+
+  useEffect(() => {
+    const isHttps = window.location.protocol === 'https:';
+    const wsProtocol = isHttps ? 'wss:' : 'ws:';
+    const host =
+      window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? '127.0.0.1:8000'
+        : window.location.host;
+
+    const wsUrl = `${wsProtocol}//${host}/workflow/ws/1`;
+    let socket: WebSocket | null = null;
+    let isMounted = true;
+
+    try {
+      socket = new WebSocket(wsUrl);
+      socket.onopen = () => {
+        if (isMounted) setWsConnected(true);
+      };
+      socket.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data && data.activity_id && data.new_status) {
+            setLastLiveMessage({
+              activity_id: data.activity_id,
+              new_status: data.new_status,
+            });
+
+            // Map backend status to Status union
+            const s = (data.new_status || '').toLowerCase();
+            const mappedStatus: Status =
+              s === 'completed' || s === 'complete'
+                ? 'complete'
+                : s === 'delayed' || s === 'behind'
+                ? 'behind'
+                : s === 'needs_review'
+                ? 'at_risk'
+                : 'in_progress';
+
+            setRealtimeOverrides((prev) => ({
+              ...prev,
+              [data.activity_id]: mappedStatus,
+            }));
+          }
+        } catch {}
+      };
+      socket.onclose = () => {
+        if (isMounted) setWsConnected(false);
+      };
+      socket.onerror = () => {
+        if (isMounted) setWsConnected(false);
+      };
+    } catch {
+      setWsConnected(false);
+    }
+
+    return () => {
+      isMounted = false;
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.close();
+      }
+    };
+  }, []);
+
   // Sync gutter vertical scroll with main canvas
   const handleScroll = () => {
     if (canvasScrollRef.current && gutterRef.current) {
@@ -432,8 +500,9 @@ export const DependencyNetwork: React.FC = () => {
         ? act.isDriving || simulatedFloat <= 0
         : act.isDriving;
 
+      const wsStatus = realtimeOverrides[act.id];
       const effectiveStatus: Status =
-        simulatedFloat < 0 ? 'behind' : act.status;
+        simulatedFloat < 0 ? 'behind' : wsStatus || act.status;
 
       return {
         ...act,
@@ -443,7 +512,7 @@ export const DependencyNetwork: React.FC = () => {
         status: effectiveStatus,
       };
     });
-  }, [rawActivities, customPredecessors, isSimulationActive, simulationDays]);
+  }, [rawActivities, customPredecessors, isSimulationActive, simulationDays, realtimeOverrides]);
 
   // Filter activities
   const filteredActivities = useMemo(() => {
@@ -663,8 +732,20 @@ export const DependencyNetwork: React.FC = () => {
           </button>
         </div>
 
-        {/* Right: Search Box & Zoom Controls */}
+        {/* Right: Live Beacon, Search Box & Zoom Controls */}
         <div className="flex items-center gap-2.5">
+          {/* Live Feed Status Beacon */}
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#1B1B1F] border border-[#2A2A30] text-[10px]">
+            <span
+              className={`w-2 h-2 rounded-full ${
+                wsConnected ? 'bg-[#10B981] animate-pulse' : 'bg-[#C9942A]'
+              }`}
+            />
+            <span className="font-mono font-semibold text-[#F7F7F5]">
+              {wsConnected ? 'LIVE FEED' : 'CONNECTING...'}
+            </span>
+          </div>
+
           {/* Search Box */}
           <div className="relative w-56">
             <Search className="w-3.5 h-3.5 text-[#8E8E96] absolute left-2.5 top-1/2 -translate-y-1/2" />
@@ -1217,6 +1298,17 @@ export const DependencyNetwork: React.FC = () => {
               </div>
             </div>
 
+            {/* Layer-Wise Supervisor Intelligence Card */}
+            <div className="p-4 border-b border-[#2A2A30]">
+              <SupervisorLayerCard
+                supervisorName={selectedActivity.supervisor}
+                discipline={selectedActivity.discipline}
+                currentActivityId={selectedActivity.id}
+                allActivities={effectiveActivities}
+                onSelectActivity={(id) => setSelectedActivityId(id)}
+              />
+            </div>
+
             {/* "Captured from" Section with Audio Note Player */}
             <div className="p-4 space-y-2.5 border-b border-[#2A2A30]">
               <div className="flex items-center justify-between">
@@ -1586,6 +1678,17 @@ export const DependencyNetwork: React.FC = () => {
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
+          </div>
+        )}
+
+        {/* Live Update Notification Beacon */}
+        {lastLiveMessage && (
+          <div className="absolute bottom-12 right-6 z-30 px-3 py-2 rounded-lg bg-[#141417] border border-[#E0242B]/50 shadow-2xl flex items-center gap-2 select-none animate-in slide-in-from-bottom-2 duration-150">
+            <div className="w-2 h-2 rounded-full bg-[#E0242B] animate-ping" />
+            <span className="text-xs text-[#8E8E96]">
+              Live update: <span className="font-mono font-bold text-[#F7F7F5]">{lastLiveMessage.activity_id}</span> is{' '}
+              <span className="font-bold text-[#E0242B] uppercase">{lastLiveMessage.new_status}</span>
+            </span>
           </div>
         )}
 
