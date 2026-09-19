@@ -788,12 +788,12 @@ export const DependencyNetwork: React.FC = () => {
       {/* TOP CONTROL BAR: Filters & Zoom                                    */}
       {/* ================================================================== */}
       <div
-        className={`flex flex-wrap sm:flex-nowrap items-center justify-between gap-2.5 px-3 py-1.5 ${
+        className={`flex items-center justify-between gap-3 px-3 py-1.5 ${
           isDarkTheme ? 'bg-[#141417] border-[#2A2A30]' : 'bg-white border-[#E2E8F0] shadow-xs'
-        } border-b z-10 flex-shrink-0 transition-colors duration-200`}
+        } border-b z-30 flex-shrink-0 flex-nowrap transition-colors duration-200`}
       >
         {/* Left: Project Selector, Critical Path toggle & Discipline Chips */}
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5 min-w-0 flex-1">
           {/* Prominent Project Selector */}
           <div
             className={`flex items-center gap-1.5 ${
@@ -943,27 +943,27 @@ export const DependencyNetwork: React.FC = () => {
         </div>
 
         {/* Right: Theme Toggle, Live Beacon, Search Box & Zoom Controls */}
-        <div className="flex items-center gap-2">
-          {/* Light / Dark Mode Toggle Button (Default White) */}
+        <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
+          {/* Theme Mode Toggle (Default: Light / White) */}
           <button
             onClick={toggleTheme}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
-              !isDarkTheme
-                ? 'bg-amber-500/10 text-amber-700 border-amber-500/30 hover:bg-amber-500/20'
-                : 'bg-[#1B1B1F] text-[#F7F7F5] border-[#2A2A30] hover:border-[#8E8E96]'
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border transition-colors cursor-pointer flex-shrink-0 ${
+              isDarkTheme
+                ? 'bg-[#1B1B1F] border-[#2A2A30] text-[#F7F7F5] hover:border-[#8E8E96]'
+                : 'bg-white border-[#CBD5E1] text-[#0F172A] hover:border-slate-400 shadow-xs'
             }`}
-            title={isDarkTheme ? 'Switch to Light Mode (Default White)' : 'Switch to Dark Mode'}
+            title={`Switch to ${isDarkTheme ? 'Light (White)' : 'Dark'} Mode`}
             aria-label="Toggle Light and Dark Mode"
           >
-            {!isDarkTheme ? (
+            {isDarkTheme ? (
               <>
-                <Sun className="w-3.5 h-3.5 text-amber-500" />
-                <span className="text-[11px] font-bold">Light (White)</span>
+                <Sun className="w-3.5 h-3.5 text-amber-400" />
+                <span className="hidden lg:inline text-[11px]">Dark</span>
               </>
             ) : (
               <>
-                <Moon className="w-3.5 h-3.5 text-indigo-400" />
-                <span className="text-[11px] font-bold">Dark</span>
+                <Moon className="w-3.5 h-3.5 text-indigo-600" />
+                <span className="hidden lg:inline text-[11px]">Light (White)</span>
               </>
             )}
           </button>

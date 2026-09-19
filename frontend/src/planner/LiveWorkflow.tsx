@@ -627,10 +627,10 @@ export const LiveWorkflow: React.FC = () => {
       <div
         className={`min-h-12 px-3 py-1.5 ${
           isDarkTheme ? 'bg-[#141417] border-[#2A2A30]' : 'bg-white border-[#E2E8F0] shadow-xs'
-        } border-b flex flex-wrap items-center justify-between gap-2.5 z-10 flex-shrink-0`}
+        } border-b flex items-center justify-between gap-3 z-30 flex-shrink-0 flex-nowrap`}
       >
         {/* Left: Project Selector, Critical Path toggle & Discipline Chips */}
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5 min-w-0 flex-1">
           {/* Prominent Project Selector */}
           <div
             className={`flex items-center gap-1.5 ${
@@ -742,7 +742,7 @@ export const LiveWorkflow: React.FC = () => {
         </div>
 
         {/* Right: Theme Toggle, Search, Zoom Controls & WebSocket Live Beacon */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
           {/* Theme Mode Toggle (Default: Light / White) */}
           <button
             onClick={toggleTheme}
