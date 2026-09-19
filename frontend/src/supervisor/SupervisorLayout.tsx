@@ -130,6 +130,20 @@ export const SupervisorLayout: React.FC = () => {
               <HelpCircle className="w-4 h-4 text-[#9e1218]" />
             </button>
 
+            {/* Admin Cockpit Launcher (Opens separately in browser) */}
+            <a
+              href="/planner/review"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] sm:text-[11px] font-bold bg-slate-900 hover:bg-slate-800 text-white transition-all shadow-2xs group shrink-0"
+              title="Open Central Admin / Planner Cockpit in a separate browser window"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+              <span className="hidden sm:inline">Admin Cockpit</span>
+              <span className="sm:hidden">Admin</span>
+              <ExternalLink className="w-3 h-3 text-slate-300 group-hover:translate-x-0.5 transition-transform shrink-0" />
+            </a>
+
             {/* Language Switcher Pill EN | हिन्दी */}
             <button
               onClick={toggleLanguage}

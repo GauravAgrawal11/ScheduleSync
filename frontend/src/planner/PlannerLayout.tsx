@@ -616,6 +616,22 @@ export const PlannerLayout: React.FC = () => {
                 - Red outlined "Sign Out" button
             */}
             <div className="flex items-center gap-3 sm:gap-3.5 flex-shrink-0">
+              {/* Field Supervisor Portal Launcher (Opens separately in browser) */}
+              <a
+                href="/supervisor"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-50 hover:bg-amber-100 text-amber-950 border border-amber-300 transition-all shadow-2xs group shrink-0"
+                title="Open Field Supervisor PWA Portal in a separate browser window"
+              >
+                <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                <span className="hidden md:inline">Supervisor Portal</span>
+                <span className="md:hidden">Field</span>
+                <ExternalLink className="w-3.5 h-3.5 text-amber-700 group-hover:translate-x-0.5 transition-transform" />
+              </a>
+
+              <div className="h-6 w-px bg-slate-300/80 hidden sm:block" />
+
               {/* Unified Notification Bell with red badge & Auto-closing Popup */}
               <div className="relative" ref={notifRef}>
                 <button

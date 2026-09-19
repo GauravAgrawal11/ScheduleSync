@@ -16,6 +16,7 @@ import {
   CheckCircle2,
   Briefcase,
   Layers,
+  ExternalLink,
 } from 'lucide-react';
 
 import { BrandLogo } from '../components/BrandLogo';
@@ -127,19 +128,74 @@ export const AdminLoginPage: React.FC = () => {
       className="min-h-screen flex flex-col justify-between text-slate-800 font-sans antialiased bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200"
     >
       {/* Top Enterprise Corporate Header */}
-      <header className="bg-white/95 backdrop-blur-xs border-b border-slate-200 px-4 sm:px-6 py-3.5 sticky top-0 z-20 shadow-2xs">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
+      <header className="bg-white/95 backdrop-blur-xs border-b border-slate-200 px-4 sm:px-6 py-3 sticky top-0 z-20 shadow-2xs">
+        <div className="max-w-5xl mx-auto flex items-center justify-between gap-3">
           <BrandLogo roleTag="ADMIN COCKPIT" tagColor="slate" size="md" />
 
-          <div className="hidden sm:flex items-center gap-2 text-xs font-mono text-slate-600 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200">
-            <span className="w-2 h-2 rounded-full bg-[#9e1218] animate-pulse" />
-            <span>Secure Central Planner Gateway</span>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <a
+              href="/supervisor/login"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-50 hover:bg-amber-100 text-amber-950 border border-amber-300 transition-all shadow-2xs group"
+              title="Open Field Supervisor Portal in a separate browser window"
+            >
+              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+              <span className="hidden sm:inline">Field Supervisor Portal</span>
+              <span className="sm:hidden">Supervisor</span>
+              <ExternalLink className="w-3.5 h-3.5 text-amber-700 group-hover:translate-x-0.5 transition-transform" />
+            </a>
+
+            <div className="hidden md:flex items-center gap-2 text-xs font-mono text-slate-600 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200">
+              <span className="w-2 h-2 rounded-full bg-[#9e1218] animate-pulse" />
+              <span>Central Planner Gateway</span>
+            </div>
           </div>
         </div>
       </header>
 
       {/* Main Container */}
-      <main className="flex-1 flex items-center justify-center p-4 sm:p-6 my-auto">
+      <main className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 my-auto space-y-4">
+        {/* Dual Independent Portals Launcher */}
+        <div className="max-w-md w-full bg-white/95 border border-slate-200 rounded-2xl p-4 shadow-sm space-y-2">
+          <div className="flex items-center justify-between text-xs font-bold text-slate-700">
+            <span className="flex items-center gap-1.5 text-slate-900 font-extrabold">
+              <ExternalLink className="w-4 h-4 text-[#9e1218]" />
+              Independent Portals (Open in New Tab)
+            </span>
+            <span className="text-[10px] uppercase font-bold text-[#9e1218] bg-red-50 border border-red-200 px-2 py-0.5 rounded-full font-mono">
+              Separate Windows
+            </span>
+          </div>
+          <p className="text-[11px] text-slate-500">
+            Open both portals side-by-side in independent browser tabs to test supervisor field capture and central planner triage simultaneously.
+          </p>
+          <div className="grid grid-cols-2 gap-2.5 pt-1">
+            <a
+              href="/supervisor/login"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-950 transition-all shadow-xs group cursor-pointer text-center"
+              title="Open Field Supervisor PWA Portal in a separate browser window"
+            >
+              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse flex-shrink-0" />
+              <span>👷 Supervisor Portal</span>
+              <ExternalLink className="w-3 h-3 text-amber-700 group-hover:translate-x-0.5 transition-transform flex-shrink-0" />
+            </a>
+            <a
+              href="/admin/login"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-slate-900 hover:bg-slate-800 border border-slate-800 text-white transition-all shadow-xs group cursor-pointer text-center"
+              title="Open Central Admin / Planner Cockpit in a separate browser window"
+            >
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
+              <span>👔 Admin Cockpit</span>
+              <ExternalLink className="w-3 h-3 text-slate-300 group-hover:translate-x-0.5 transition-transform flex-shrink-0" />
+            </a>
+          </div>
+        </div>
+
         <div className="max-w-md w-full bg-white border border-slate-200 rounded-2xl shadow-xl p-6 sm:p-8 space-y-5">
 
           {/* Mode Switcher Tabs */}
