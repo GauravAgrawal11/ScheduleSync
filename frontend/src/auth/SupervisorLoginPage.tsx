@@ -26,14 +26,10 @@ export const SupervisorLoginPage: React.FC = () => {
   const navigate = useNavigate();
 
   // If already authenticated as a supervisor, redirect straight to supervisor portal.
-  // If authenticated as non-supervisor (admin/planner), clear session so supervisor can log in cleanly.
+  // Never redirect to /planner or admin routes from the field supervisor login page!
   React.useEffect(() => {
-    if (isAuthenticated && user) {
-      if (user.role === 'supervisor') {
-        navigate('/supervisor', { replace: true });
-      } else {
-        useAuthStore.getState().logout();
-      }
+    if (isAuthenticated && user && user.role === 'supervisor') {
+      navigate('/supervisor', { replace: true });
     }
   }, [isAuthenticated, user, navigate]);
 

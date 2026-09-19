@@ -44,14 +44,10 @@ export const AdminLoginPage: React.FC = () => {
   const { isAuthenticated, user, setAuth } = useAuthStore();
   const navigate = useNavigate();
 
-  // If already authenticated, redirect straight to their workspace without re-login
+  // If already authenticated as planner/admin, redirect straight to planner cockpit without re-login
   React.useEffect(() => {
-    if (isAuthenticated && user) {
-      if (user.role === 'supervisor') {
-        navigate('/supervisor', { replace: true });
-      } else {
-        navigate('/planner/review', { replace: true });
-      }
+    if (isAuthenticated && user && user.role !== 'supervisor') {
+      navigate('/planner/review', { replace: true });
     }
   }, [isAuthenticated, user, navigate]);
 
@@ -330,6 +326,36 @@ export const AdminLoginPage: React.FC = () => {
                 <span>Sign In to Central Planner Cockpit</span>
                 <ArrowRight className="w-4 h-4" />
               </Button>
+
+              {/* Quick 1-Click Planner Demo Fill */}
+              <div className="pt-2 space-y-1.5">
+                <div className="flex items-center justify-between text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                  <span>1-Click Quick Demo Login</span>
+                  <span className="text-red-700 font-semibold font-mono">Planner IDs</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUsername('planner@oilindia.in');
+                      setPassword('SecurePlannerPassword123!');
+                    }}
+                    className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-red-50 hover:border-red-300 text-slate-800 text-[11px] font-bold transition text-center shadow-2xs cursor-pointer"
+                  >
+                    👔 Lead Planner
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUsername('planner.arun@oilindia.in');
+                      setPassword('SecurePlannerPassword123!');
+                    }}
+                    className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-red-50 hover:border-red-300 text-slate-800 text-[11px] font-bold transition text-center shadow-2xs cursor-pointer"
+                  >
+                    📊 EPC Admin
+                  </button>
+                </div>
+              </div>
             </form>
           ) : (
             /* REGISTER NEW USER FORM */

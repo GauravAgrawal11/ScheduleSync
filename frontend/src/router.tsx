@@ -33,7 +33,7 @@ import { useAuthStore } from './auth/authStore';
 const RootRedirect: React.FC = () => {
   const { isAuthenticated, user } = useAuthStore();
   if (!isAuthenticated || !user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/admin/login" replace />;
   }
   if (user.role === 'supervisor') {
     return <Navigate to="/supervisor" replace />;
@@ -58,11 +58,11 @@ export const AppRoutes: React.FC = () => {
         <Route path="/login/supervisor" element={<Navigate to="/supervisor/login" replace />} />
         <Route path="/site" element={<Navigate to="/supervisor/login" replace />} />
 
-        {/* Supervisor Panel (Delegated access for Planner/Admin, locked for Supervisor) */}
+        {/* Supervisor Panel (Field Workspace) */}
         <Route
           path="/supervisor"
           element={
-            <ProtectedRoute allowedRoles={['supervisor', 'admin', 'planner']}>
+            <ProtectedRoute allowedRoles={['supervisor']}>
               <ErrorBoundary fallbackTitle="Field Supervisor Workspace Render Issue">
                 <SupervisorLayout />
               </ErrorBoundary>

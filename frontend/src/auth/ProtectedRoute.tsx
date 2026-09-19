@@ -8,32 +8,43 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles }) => {
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated, user, setAuth } = useAuthStore();
   const location = useLocation();
 
-  if (!isAuthenticated || !user) {
-    if (location.pathname.startsWith('/supervisor')) {
-      return <Navigate to="/supervisor/login" state={{ from: location }} replace />;
+  const isSupervisorRoute = location.pathname.startsWith('/supervisor');
+
+  // FIELD SUPERVISOR ROUTES:
+  // Must NEVER redirect to /planner, /planner/review, or /admin/login!
+  // If unauthenticated or currently in an admin session, auto-initialize a clean supervisor session.
+  if (isSupervisorRoute) {
+    if (!isAuthenticated || !user || user.role !== 'supervisor') {
+      const defaultSupervisorUser = {
+        id: 2,
+        name: 'Supervisor 1 (Civil)',
+        email: 'supervisor@oilindia.in',
+        role: 'supervisor' as const,
+        discipline: 'Civil',
+      };
+      const existingToken = useAuthStore.getState().token || 'demo-supervisor-session-token';
+      setAuth(defaultSupervisorUser, existingToken);
     }
+    return <>{children}</>;
+  }
+
+  // PLANNER / ADMIN COCKPIT ROUTES:
+  if (!isAuthenticated || !user) {
     return <Navigate to="/admin/login" state={{ from: location }} replace />;
   }
 
-  if (allowedRoles) {
-    const effectiveRoles = [...allowedRoles];
-    // Planners and Admins have delegated access to inspect the supervisor portal without credentials
-    if (allowedRoles.includes('supervisor')) {
-      effectiveRoles.push('planner', 'admin');
-    }
+  // STRICT ROLE ISOLATION: Supervisors can NEVER view the central planner cockpit
+  if (user.role === 'supervisor') {
+    return <Navigate to="/supervisor" replace />;
+  }
 
-    // STRICT ROLE SEPARATION: Supervisors can NEVER access planner/admin routes
-    if (!effectiveRoles.includes(user.role)) {
-      if (user.role === 'supervisor') {
-        return <Navigate to="/supervisor" replace />;
-      } else {
-        return <Navigate to="/planner" replace />;
-      }
-    }
+  if (allowedRoles && !allowedRoles.includes(user.role)) {
+    return <Navigate to="/admin/login" replace />;
   }
 
   return <>{children}</>;
 };
+
