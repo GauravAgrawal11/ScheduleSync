@@ -206,15 +206,104 @@ def seed():
                 act.predecessor_activity_id = predecessors_map[act.activity_id]
         db.commit()
 
+        # =========================================================
+        # Project 2: Duliajan Central Gas Gathering Station (CGGS-2)
+        # =========================================================
+        p2_acts_data = [
+            # Completed (8)
+            ("CGGS-CIV-101", "2.1.1.1", "Excavate slug catcher foundation pit", DisciplineEnum.CIVIL, "Inlet Station", date(2026, 1, 16), date(2026, 1, 20), "COMPLETED", None),
+            ("CGGS-CIV-102", "2.1.1.2", "Pour RCC foundation for gas slug catcher", DisciplineEnum.CIVIL, "Inlet Station", date(2026, 1, 21), date(2026, 1, 25), "COMPLETED", "CGGS-CIV-101"),
+            ("CGGS-CIV-103", "2.1.1.3", "Construct compressor shed blast-proof wall", DisciplineEnum.CIVIL, "Compressor Bay", date(2026, 1, 22), date(2026, 1, 28), "COMPLETED", None),
+            ("CGGS-CIV-104", "2.1.1.4", "Excavate flare knock-out drum pit", DisciplineEnum.CIVIL, "Flare Area", date(2026, 1, 26), date(2026, 1, 30), "COMPLETED", None),
+            ("CGGS-STA-201", "2.2.1.1", "Erect finger-type gas slug catcher vessel", DisciplineEnum.STATIC, "Inlet Station", date(2026, 1, 26), date(2026, 2, 2), "COMPLETED", "CGGS-CIV-102"),
+            ("CGGS-PIP-301", "2.3.1.1", "Fabricate high-pressure gas inlet manifold 16in", DisciplineEnum.PIPING, "Inlet Station", date(2026, 1, 24), date(2026, 1, 30), "COMPLETED", None),
+            ("CGGS-PIP-302", "2.3.1.2", "Erect inlet manifold tie-in to slug catcher", DisciplineEnum.PIPING, "Inlet Station", date(2026, 1, 31), date(2026, 2, 5), "COMPLETED", "CGGS-PIP-301"),
+            ("CGGS-ELE-401", "2.4.1.1", "Lay high-voltage feeder cable to compressor substation", DisciplineEnum.ELECTRICAL, "Substation", date(2026, 1, 28), date(2026, 2, 3), "COMPLETED", None),
+
+            # In Progress (7)
+            ("CGGS-STA-202", "2.2.1.2", "Install 3-phase test separator vessel V-101", DisciplineEnum.STATIC, "Process Train", date(2026, 2, 2), date(2026, 2, 10), "IN_PROGRESS", "CGGS-STA-201"),
+            ("CGGS-STA-203", "2.2.1.3", "Position gas dehydration contactor tower", DisciplineEnum.STATIC, "Process Train", date(2026, 2, 3), date(2026, 2, 12), "IN_PROGRESS", "CGGS-CIV-103"),
+            ("CGGS-PIP-303", "2.3.1.3", "Weld discharge line from compressor K-101A", DisciplineEnum.PIPING, "Compressor Bay", date(2026, 2, 4), date(2026, 2, 13), "IN_PROGRESS", "CGGS-CIV-103"),
+            ("CGGS-PIP-304", "2.3.1.4", "Hydrotest gas separator V-101 interconnect piping", DisciplineEnum.PIPING, "Process Train", date(2026, 2, 8), date(2026, 2, 14), "IN_PROGRESS", "CGGS-STA-202"),
+            ("CGGS-ELE-402", "2.4.1.2", "Install 6.6kV switchgear panels for gas compressors", DisciplineEnum.ELECTRICAL, "Substation", date(2026, 2, 3), date(2026, 2, 11), "IN_PROGRESS", "CGGS-ELE-401"),
+            ("CGGS-INS-501", "2.5.1.1", "Install ultrasonic gas flow meters on inlet manifold", DisciplineEnum.INSTRUMENTATION, "Inlet Station", date(2026, 2, 6), date(2026, 2, 13), "IN_PROGRESS", "CGGS-PIP-302"),
+            ("CGGS-INS-502", "2.5.1.2", "Mount optical flame & gas detectors at slug catcher area", DisciplineEnum.INSTRUMENTATION, "Inlet Station", date(2026, 2, 7), date(2026, 2, 14), "IN_PROGRESS", "CGGS-STA-201"),
+
+            # Delayed (3)
+            ("CGGS-STA-204", "2.2.1.4", "Mount centrifugal gas compressor K-101A skid", DisciplineEnum.STATIC, "Compressor Bay", date(2026, 1, 28), date(2026, 2, 5), "DELAYED", "CGGS-CIV-103"),
+            ("CGGS-PIP-305", "2.3.1.5", "Fit-up fuel gas scrubber bypass line", DisciplineEnum.PIPING, "Process Train", date(2026, 2, 2), date(2026, 2, 6), "DELAYED", "CGGS-PIP-302"),
+            ("CGGS-ELE-403", "2.4.1.3", "Terminate motor connections for compressor K-101A", DisciplineEnum.ELECTRICAL, "Compressor Bay", date(2026, 2, 4), date(2026, 2, 8), "DELAYED", "CGGS-ELE-402"),
+
+            # Planned (4)
+            ("CGGS-STA-205", "2.2.1.5", "Mount flare knock-out drum vessel", DisciplineEnum.STATIC, "Flare Area", date(2026, 2, 14), date(2026, 2, 20), "PLANNED", "CGGS-CIV-104"),
+            ("CGGS-PIP-306", "2.3.1.6", "Erect flare header line 20in to stack", DisciplineEnum.PIPING, "Flare Area", date(2026, 2, 16), date(2026, 2, 24), "PLANNED", "CGGS-STA-205"),
+            ("CGGS-INS-503", "2.5.1.3", "Connect emergency shutdown valves (ESDV) to DCS system", DisciplineEnum.INSTRUMENTATION, "Control Room", date(2026, 2, 18), date(2026, 2, 25), "PLANNED", "CGGS-INS-501"),
+            ("CGGS-COM-601", "2.6.1.1", "Integrated loop check & pre-commissioning inlet manifold", DisciplineEnum.COMMISSIONING, "Inlet Station", date(2026, 2, 22), date(2026, 2, 28), "PLANNED", "CGGS-INS-503"),
+        ]
+
+        p2_acts = []
+        for aid, wbs, name, disc, loc, p_start, p_finish, st, pred in p2_acts_data:
+            p2_acts.append(Activity(
+                project_id=2, activity_id=aid, wbs_code=wbs, activity_name=name,
+                discipline=disc, location=loc, planned_start=p_start, planned_finish=p_finish,
+                status=st, predecessor_activity_id=pred
+            ))
+        db.add_all(p2_acts)
+        db.commit()
+
+        # =========================================================
+        # Project 3: Guwahati-Siliguri Pipeline Modernization (Phase II)
+        # =========================================================
+        p3_acts_data = [
+            # Completed (4)
+            ("GSP-SUR-101", "4.1.1.1", "Right-of-Way (ROW) cadastral survey Section 4B", DisciplineEnum.CIVIL, "Pipeline ROW", date(2026, 2, 1), date(2026, 2, 4), "COMPLETED", None),
+            ("GSP-CIV-102", "4.1.1.2", "Clear & grade 30m pipeline right-of-way Section 4B", DisciplineEnum.CIVIL, "Pipeline ROW", date(2026, 2, 3), date(2026, 2, 7), "COMPLETED", "GSP-SUR-101"),
+            ("GSP-PIP-201", "4.2.1.1", "String 24-inch API 5L X70 pipes along Section 4B", DisciplineEnum.PIPING, "Pipeline ROW", date(2026, 2, 4), date(2026, 2, 8), "COMPLETED", "GSP-CIV-102"),
+            ("GSP-PIP-202", "4.2.1.2", "Internal line-up clamp fit-up Section 4B joints 01-20", DisciplineEnum.PIPING, "Pipeline ROW", date(2026, 2, 6), date(2026, 2, 9), "COMPLETED", "GSP-PIP-201"),
+
+            # In Progress (7)
+            ("GSP-CIV-103", "4.1.1.3", "Excavate pipeline trench Section 4B (1.8m depth)", DisciplineEnum.CIVIL, "Pipeline ROW", date(2026, 2, 6), date(2026, 2, 13), "IN_PROGRESS", "GSP-CIV-102"),
+            ("GSP-CIV-104", "4.1.1.4", "Civil foundation pour for Block Valve Station BVS-07", DisciplineEnum.CIVIL, "Station BVS-07", date(2026, 2, 7), date(2026, 2, 14), "IN_PROGRESS", "GSP-CIV-102"),
+            ("GSP-PIP-203", "4.2.1.3", "Mechanized orbital welding of 24in pipe joints 01-20", DisciplineEnum.PIPING, "Pipeline ROW", date(2026, 2, 8), date(2026, 2, 14), "IN_PROGRESS", "GSP-PIP-202"),
+            ("GSP-PIP-204", "4.2.1.4", "Radiographic (RT) & PAUT ultrasonic weld inspection", DisciplineEnum.PIPING, "Pipeline ROW", date(2026, 2, 9), date(2026, 2, 15), "IN_PROGRESS", "GSP-PIP-203"),
+            ("GSP-PIP-207", "4.2.1.7", "Horizontal Directional Drilling (HDD) river crossing entry", DisciplineEnum.PIPING, "River Crossing", date(2026, 2, 7), date(2026, 2, 16), "IN_PROGRESS", "GSP-CIV-103"),
+            ("GSP-ELE-301", "4.3.1.1", "Install solar power generator skid at BVS-07 station", DisciplineEnum.ELECTRICAL, "Station BVS-07", date(2026, 2, 8), date(2026, 2, 14), "IN_PROGRESS", "GSP-CIV-104"),
+            ("GSP-INS-401", "4.4.1.1", "Install cathodic protection test stations (CPTS) along ROW", DisciplineEnum.INSTRUMENTATION, "Pipeline ROW", date(2026, 2, 8), date(2026, 2, 15), "IN_PROGRESS", "GSP-CIV-104"),
+
+            # Delayed (3)
+            ("GSP-PIP-205", "4.2.1.5", "Heat-shrinkable sleeve field joint coating application", DisciplineEnum.PIPING, "Pipeline ROW", date(2026, 2, 5), date(2026, 2, 8), "DELAYED", "GSP-PIP-204"),
+            ("GSP-PIP-206", "4.2.1.6", "Lower-in welded pipe string into Section 4B trench", DisciplineEnum.PIPING, "Pipeline ROW", date(2026, 2, 6), date(2026, 2, 9), "DELAYED", "GSP-PIP-205"),
+            ("GSP-ELE-302", "4.3.1.2", "Install deep well anode bed for impressed current CP", DisciplineEnum.ELECTRICAL, "Station BVS-07", date(2026, 2, 5), date(2026, 2, 8), "DELAYED", "GSP-CIV-104"),
+
+            # Planned (4)
+            ("GSP-PIP-208", "4.2.1.8", "Pull 24in pipe string through HDD river crossing bore", DisciplineEnum.PIPING, "River Crossing", date(2026, 2, 16), date(2026, 2, 22), "PLANNED", "GSP-PIP-207"),
+            ("GSP-PIP-209", "4.2.1.9", "Padding & trench backfilling Section 4B", DisciplineEnum.PIPING, "Pipeline ROW", date(2026, 2, 14), date(2026, 2, 20), "PLANNED", "GSP-PIP-206"),
+            ("GSP-INS-402", "4.4.1.2", "Mount SCADA pressure transmitters and RTU panel BVS-07", DisciplineEnum.INSTRUMENTATION, "Station BVS-07", date(2026, 2, 17), date(2026, 2, 24), "PLANNED", "GSP-ELE-301"),
+            ("GSP-COM-501", "4.5.1.1", "Sectional 4-hour hydrostatic pressure test 108 bar", DisciplineEnum.COMMISSIONING, "Pipeline ROW", date(2026, 2, 22), date(2026, 2, 28), "PLANNED", "GSP-PIP-208"),
+        ]
+
+        p3_acts = []
+        for aid, wbs, name, disc, loc, p_start, p_finish, st, pred in p3_acts_data:
+            p3_acts.append(Activity(
+                project_id=3, activity_id=aid, wbs_code=wbs, activity_name=name,
+                discipline=disc, location=loc, planned_start=p_start, planned_finish=p_finish,
+                status=st, predecessor_activity_id=pred
+            ))
+        db.add_all(p3_acts)
+        db.commit()
+
+        # Combine all seeded activities across projects for embedding and assignments
+        all_seeded_acts = db_acts + p2_acts + p3_acts
+
         try:
             from fastembed import TextEmbedding
             embed_model = TextEmbedding(model_name="sentence-transformers/all-MiniLM-L6-v2")
-            act_names = [a.activity_name for a in db_acts]
+            act_names = [a.activity_name for a in all_seeded_acts]
             vecs = list(embed_model.embed(act_names))
-            for a, v in zip(db_acts, vecs):
+            for a, v in zip(all_seeded_acts, vecs):
                 a.embedding = v.tolist()
             db.commit()
-            print("Populated all-MiniLM-L6-v2 pgvector embeddings for baseline activities.")
+            print("Populated all-MiniLM-L6-v2 pgvector embeddings for baseline activities across all 3 projects.")
         except Exception as e:
             print(f"Embedding auto-population note: {e}")
 
@@ -242,13 +331,55 @@ def seed():
                 status="IN_PROGRESS",
                 confidence=0.92
             ))
-        # 5. Initialize Auto-Assignment across the 6 discipline supervisors
+
+        # Progress events for Project 2
+        rep_p2 = Report(
+            project_id=2,
+            file_name="cggs2_inlet_daily_progress.txt",
+            source_type=SourceTypeEnum.TEXT,
+            raw_text="Positioned 3-phase test separator vessel V-101 on foundation pads. Flange connection fit-up initiated."
+        )
+        db.add(rep_p2)
+        db.flush()
+        cggs_sta_202 = db.query(Activity).filter(Activity.activity_id == "CGGS-STA-202").first()
+        if cggs_sta_202:
+            db.add(ProgressEvent(
+                activity_id=cggs_sta_202.id,
+                source_report_id=rep_p2.id,
+                event_type=EventTypeEnum.START,
+                actual_start=date(2026, 2, 2),
+                status="IN_PROGRESS",
+                confidence=0.94
+            ))
+
+        # Progress events for Project 3
+        rep_p3 = Report(
+            project_id=3,
+            file_name="pipeline_row_log_sec4b.txt",
+            source_type=SourceTypeEnum.TEXT,
+            raw_text="Mechanized orbital welding completed 14 of 20 joints on 24in pipe string Section 4B. Radiography team deployed."
+        )
+        db.add(rep_p3)
+        db.flush()
+        gsp_pip_203 = db.query(Activity).filter(Activity.activity_id == "GSP-PIP-203").first()
+        if gsp_pip_203:
+            db.add(ProgressEvent(
+                activity_id=gsp_pip_203.id,
+                source_report_id=rep_p3.id,
+                event_type=EventTypeEnum.START,
+                actual_start=date(2026, 2, 8),
+                status="IN_PROGRESS",
+                confidence=0.91
+            ))
+
+        # 5. Initialize Auto-Assignment across the 6 discipline supervisors for all 3 projects
         from app.assignment.engine import assign_activities_for_project
         from app.models.activity_assignment import ActivityAssignment
         db.query(ActivityAssignment).delete()
         db.commit()
-        assign_summary = assign_activities_for_project(1, db)
-        print(f"Auto-Assignment initialized: {assign_summary['total_assigned']} assigned, {assign_summary['unassigned_no_supervisor']} unassigned.")
+        for p_id in [1, 2, 3]:
+            assign_summary = assign_activities_for_project(p_id, db)
+            print(f"Auto-Assignment project {p_id}: {assign_summary['total_assigned']} assigned, {assign_summary['unassigned_no_supervisor']} unassigned.")
 
         # 6. Seed Realistic Complaints / Blockers
         from app.complaints.models import Complaint, ComplaintCategoryEnum, ComplaintStatusEnum

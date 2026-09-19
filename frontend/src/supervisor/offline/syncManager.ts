@@ -58,7 +58,8 @@ export async function flushQueue(): Promise<{ synced: number; remaining: number 
           item.text,
           fileToUpload,
           item.discipline,
-          item.location
+          item.location,
+          item.projectId
         );
 
         if (res && res.report_id) {

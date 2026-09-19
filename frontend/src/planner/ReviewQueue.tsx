@@ -25,6 +25,7 @@ import {
   Layers,
   HelpCircle,
   ShieldCheck,
+  ShieldAlert,
   Check,
   Camera,
   Mic,
@@ -45,6 +46,13 @@ export const ReviewQueue: React.FC = () => {
   const { data: queue = [], isLoading } = useQuery({
     queryKey: ['review-queue'],
     queryFn: () => api.getReviewQueue(),
+    refetchInterval: 15000,
+  });
+
+  // Daily activity checker query (Feature 2)
+  const { data: dailySummary } = useQuery({
+    queryKey: ['daily-summary', selectedProjectId],
+    queryFn: () => api.getDailySummary(selectedProjectId),
     refetchInterval: 15000,
   });
 
@@ -192,8 +200,31 @@ export const ReviewQueue: React.FC = () => {
         </Card>
       )}
 
-      {/* KPI Stats Cards matching Image 1 */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      {/* KPI Stats Cards including Today's Activity Checker */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Today's Daily Activity Checker Card */}
+        <Card className="p-5 bg-white border-slate-200 border-l-4 border-l-emerald-600 shadow-sm relative overflow-hidden">
+          <Calendar className="w-5 h-5 text-slate-300 absolute top-4 right-4 stroke-[1.5]" />
+          <div className="text-xs font-bold text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            TODAY'S ACTIVITY
+          </div>
+          <div className="flex items-baseline gap-2 mt-2">
+            <span className="text-3xl font-black text-emerald-600 font-mono">
+              {dailySummary?.completed_today_count ?? 0}
+            </span>
+            <span className="text-xs font-semibold text-slate-600">completed</span>
+            <span className="text-slate-300">/</span>
+            <span className="text-xl font-bold text-slate-700 font-mono">
+              {dailySummary?.remaining_count ?? 0}
+            </span>
+            <span className="text-xs font-medium text-slate-400">remaining</span>
+          </div>
+          <div className="text-[11px] text-slate-500 mt-1 font-medium">
+            Total project scope: {dailySummary?.total_activities ?? 0} activities
+          </div>
+        </Card>
+
         {/* Card 1: Total in Queue */}
         <Card className="p-5 bg-white border-slate-200 border-l-4 border-l-[#9e1218] shadow-sm relative overflow-hidden">
           <FileText className="w-5 h-5 text-slate-300 absolute top-4 right-4 stroke-[1.5]" />
@@ -206,20 +237,20 @@ export const ReviewQueue: React.FC = () => {
         <Card className="p-5 bg-white border-slate-200 border-l-4 border-l-amber-500 shadow-sm relative overflow-hidden">
           <FileText className="w-5 h-5 text-slate-300 absolute top-4 right-4 stroke-[1.5]" />
           <div className="text-xs font-bold text-amber-800 uppercase tracking-wider flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5 text-amber-600" /> NEEDS REVIEW (70-90%)
+            <Clock className="w-3.5 h-3.5 text-amber-600" /> HELD — LOW CONFIDENCE
           </div>
           <div className="text-3xl font-black text-amber-600 mt-2 font-mono">{reviewCount}</div>
-          <div className="text-[11px] text-slate-500 mt-1 font-medium">High probability candidate matches</div>
+          <div className="text-[11px] text-slate-500 mt-1 font-medium">Candidate matches (70–90%)</div>
         </Card>
 
         {/* Card 3: Unmatched Scope */}
         <Card className="p-5 bg-white border-slate-200 border-l-4 border-l-red-600 shadow-sm relative overflow-hidden">
           <FileText className="w-5 h-5 text-slate-300 absolute top-4 right-4 stroke-[1.5]" />
           <div className="text-xs font-bold text-red-800 uppercase tracking-wider flex items-center gap-1.5">
-            <AlertTriangle className="w-3.5 h-3.5 text-red-600" /> UNMATCHED / NOVEL SCOPE (&lt;70%)
+            <AlertTriangle className="w-3.5 h-3.5 text-red-600" /> UNMATCHED / HELD (&lt;70%)
           </div>
           <div className="text-3xl font-black text-red-600 mt-2 font-mono">{unmatchedCount}</div>
-          <div className="text-[11px] text-slate-500 mt-1 font-medium">Discrepancy, new scope, or held reports</div>
+          <div className="text-[11px] text-slate-500 mt-1 font-medium">Discrepancy or held reports</div>
         </Card>
       </div>
 
@@ -372,15 +403,20 @@ export const ReviewQueue: React.FC = () => {
                               Planner Verified
                             </span>
                           )
+                        ) : item.hold_reason === 'sequence_violation' ? (
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-400 flex items-center gap-1 shadow-xs">
+                            <ShieldAlert className="w-3 h-3 text-amber-700" />
+                            Held — sequence violation
+                          </span>
                         ) : isUnmatched ? (
                           <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-100 text-rose-800 border border-rose-300 flex items-center gap-1">
                             <AlertTriangle className="w-3 h-3 text-rose-600" />
                             Unmatched / Novel Scope (&lt;70%)
                           </span>
                         ) : (
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-300 flex items-center gap-1">
-                            <Clock className="w-3 h-3 text-amber-600" />
-                            Needs Review (70-90%)
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-orange-100 text-orange-800 border border-orange-300 flex items-center gap-1">
+                            <Clock className="w-3 h-3 text-orange-600" />
+                            Held — low confidence (70-90%)
                           </span>
                         )}
 

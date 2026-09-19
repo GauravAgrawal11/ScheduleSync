@@ -74,14 +74,14 @@ app.include_router(ingestion_router, prefix="/reports", tags=["Reports"])
 app.include_router(voice_router, prefix="/voice", tags=["Voice"])
 
 # -----------------------------------------------------------------------------
-# Member C Routers: Matching, Confidence, Review & Analytics Modules
-# -----------------------------------------------------------------------------
 from app.review.router import router as review_router
 from app.analytics.router import router as analytics_router
+from app.linking.router import router as linking_router
 
 app.include_router(review_router, prefix="/review", tags=["Review Queue"])
 app.include_router(analytics_router, prefix="/analytics", tags=["Analytics & Gantt"])
-app.include_router(analytics_router, tags=["Activities History"])
+app.include_router(analytics_router)
+app.include_router(linking_router)
 
 # -----------------------------------------------------------------------------
 # Supervisor Assignment Module (Auto-Assign & Manual Overrides)

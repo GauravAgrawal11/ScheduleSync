@@ -17,6 +17,7 @@ export interface QueuedReportPayload {
   discipline: string;
   location: string;
   fileAttachment?: QueuedFileAttachment | null;
+  projectId?: number;
   status: 'pending_sync';
   queued_at: string;
 }
@@ -57,6 +58,7 @@ export async function queueReport(params: {
   discipline?: string;
   location?: string;
   file?: File | null;
+  projectId?: number;
 }): Promise<QueuedReportPayload> {
   const db = await getDb();
   const id = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `offline_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -77,6 +79,7 @@ export async function queueReport(params: {
     discipline: params.discipline || 'Piping',
     location: params.location || 'Unit 3',
     fileAttachment,
+    projectId: params.projectId,
     status: 'pending_sync',
     queued_at: new Date().toISOString(),
   };

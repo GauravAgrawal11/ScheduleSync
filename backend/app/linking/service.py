@@ -45,6 +45,48 @@ def apply_match_link(
     if actual_finish is None and (is_complete_signal or action_note.startswith("MANUAL_APPROVE")):
         actual_finish = event_date
 
+    # =========================================================================
+    # FEATURE 1: Constraint-Aware Completion Gate
+    # If this is an auto-apply path (>90% confidence) and the activity is
+    # being completed, verify if an unacknowledged sequence violation exists.
+    # =========================================================================
+    if approved_by_user_id is None and (actual_finish is not None or is_complete_signal):
+        from app.analytics.sequence import SequenceViolation, check_sequence_violation
+
+        # Check existing unacknowledged violation or run check against predecessor
+        violation = (
+            db.query(SequenceViolation)
+            .filter(
+                SequenceViolation.activity_id == activity.activity_id,
+                SequenceViolation.acknowledged == False,
+            )
+            .first()
+        )
+        if not violation:
+            violation = check_sequence_violation(activity.id, db)
+
+        if violation and not violation.acknowledged:
+            # Force decision to REVIEW regardless of confidence score
+            match.decision = DecisionEnum.REVIEW
+
+            # Clearly record the hold in audit log for the planner
+            audit_entry = AuditLog(
+                progress_event_id=None,
+                actor=None,
+                action="HELD_FOR_SEQUENCE_VIOLATION",
+                old_value={"status": activity.status, "confidence": match.final_confidence, "decision": "AUTO"},
+                new_value={
+                    "activity_id": activity.activity_id,
+                    "decision": "REVIEW",
+                    "reason": "held for sequence violation",
+                    "predecessor_activity_id": violation.predecessor_activity_id,
+                    "predecessor_status": violation.predecessor_status,
+                },
+            )
+            db.add(audit_entry)
+            db.commit()
+            return None  # Held in review — baseline activity is protected
+
     # 1. Update activity status and actual dates
     old_status = activity.status
     activity.status = "COMPLETED" if actual_finish else "IN_PROGRESS"

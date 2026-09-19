@@ -26,10 +26,12 @@ import {
   Radio,
   Clock,
   Languages,
+  Building2,
 } from 'lucide-react';
 import { queueReport } from './offline/queue';
 import { requestBackgroundSync } from './offline/syncManager';
 import { useLanguageStore, translateActivityName, translateDiscipline, translateLocation, translateStatus } from './languageStore';
+import { useProjectStore, KNOWN_PROJECTS } from '../store/projectStore';
 
 export const LogProgress: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -55,10 +57,16 @@ export const LogProgress: React.FC = () => {
   const [autoTranslatedNotice, setAutoTranslatedNotice] = useState<string | null>(null);
   const [adminEnglishPreview, setAdminEnglishPreview] = useState<string | null>(null);
 
+  const {
+    selectedProjectId,
+    selectedProjectName,
+    setProject,
+  } = useProjectStore();
+
   // Fetch supervisor's assigned activities to enforce activity completion locking
   const { data: progressData } = useQuery({
-    queryKey: ['supervisor-assigned-activities', user?.id],
-    queryFn: () => api.getSupervisorProgress(user?.id || 1),
+    queryKey: ['supervisor-assigned-activities', user?.id, selectedProjectId],
+    queryFn: () => api.getSupervisorProgress(user?.id || 1, selectedProjectId),
     enabled: !!user?.id,
   });
 
@@ -146,7 +154,7 @@ export const LogProgress: React.FC = () => {
         }
       }
 
-      return await api.submitReport(reportTextForAdmin, finalAttachment, discipline, location);
+      return await api.submitReport(reportTextForAdmin, finalAttachment, discipline, location, selectedProjectId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-submissions'] });
@@ -438,6 +446,7 @@ export const LogProgress: React.FC = () => {
           discipline,
           location,
           file: finalAttachment,
+          projectId: selectedProjectId,
         });
         await requestBackgroundSync();
         setOfflineQueued(true);
@@ -465,6 +474,7 @@ export const LogProgress: React.FC = () => {
             discipline,
             location,
             file: finalAttachment,
+            projectId: selectedProjectId,
           });
           await requestBackgroundSync();
           setOfflineQueued(true);
@@ -492,6 +502,36 @@ export const LogProgress: React.FC = () => {
           <h2 className="text-base font-bold text-slate-800">{t('page_title')}</h2>
           <p className="text-[11px] text-slate-500">{t('page_subtitle')}</p>
         </div>
+      </div>
+
+      {/* Active Project Selector for Report Logging */}
+      <div className="bg-slate-900 text-white rounded-xl p-3 shadow-sm flex items-center justify-between gap-2 border border-slate-800">
+        <div className="flex items-center gap-2 min-w-0">
+          <Building2 className="w-4 h-4 text-amber-400 shrink-0" />
+          <div className="min-w-0">
+            <span className="text-[9px] font-black uppercase tracking-wider text-amber-300 block">
+              LOGGING PROGRESS FOR PROJECT:
+            </span>
+            <select
+              value={selectedProjectId}
+              onChange={(e) => {
+                const pid = Number(e.target.value);
+                const match = KNOWN_PROJECTS.find((p) => p.id === pid);
+                if (match) setProject(match);
+              }}
+              className="bg-transparent text-xs font-bold text-white outline-none cursor-pointer truncate max-w-[220px] sm:max-w-[300px]"
+            >
+              {KNOWN_PROJECTS.map((p) => (
+                <option key={p.id} value={p.id} className="bg-slate-900 text-white">
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <span className="text-[9px] font-black bg-slate-800 text-slate-300 px-2 py-1 rounded border border-slate-700 shrink-0">
+          OIL INDIA
+        </span>
       </div>
 
       {/* Voice Dictation & Audio Capture Card */}

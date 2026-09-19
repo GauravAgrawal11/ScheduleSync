@@ -29,6 +29,12 @@ export const PlannerDashboard: React.FC = () => {
     },
   });
 
+  const { data: dailySummary } = useQuery({
+    queryKey: ["daily-summary-dashboard"],
+    queryFn: () => api.getDailySummary(1),
+    refetchInterval: 30000,
+  });
+
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900">
       {/* Header */}
@@ -56,6 +62,46 @@ export const PlannerDashboard: React.FC = () => {
 
       {/* Main Content */}
       <main className="max-w-6xl mx-auto p-8 space-y-6">
+        {/* Today's Activity Summary Banner */}
+        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700">
+              <Calendar className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-bold text-slate-900">Today's Activity Tracker</h3>
+                <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-mono font-medium">
+                  {dailySummary?.date || new Date().toISOString().split("T")[0]}
+                </span>
+              </div>
+              <p className="text-xs text-slate-500">Field progress vs remaining baseline tasks</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-6">
+            <div className="text-center">
+              <div className="text-xl font-black text-emerald-600 font-mono">
+                {dailySummary?.completed_today_count ?? 0}
+              </div>
+              <div className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Completed Today</div>
+            </div>
+            <div className="h-8 w-px bg-slate-200" />
+            <div className="text-center">
+              <div className="text-xl font-black text-slate-800 font-mono">
+                {dailySummary?.remaining_count ?? 0}
+              </div>
+              <div className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Remaining Tasks</div>
+            </div>
+            <div className="h-8 w-px bg-slate-200" />
+            <div className="text-center">
+              <div className="text-xl font-black text-blue-600 font-mono">
+                {dailySummary?.total_activities ?? 0}
+              </div>
+              <div className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Total Activities</div>
+            </div>
+          </div>
+        </div>
+
         {/* Sequence Violations Alert List */}
         {sequenceViolations.length > 0 && (
           <div className="bg-rose-50 border border-rose-300 rounded-xl p-5 shadow-xs space-y-3">

@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../auth/authStore';
-import { Home, PlusCircle, ListOrdered, LogOut, ShieldCheck, Bell, CheckCheck, ExternalLink, FolderOpen, WifiOff, Languages, HelpCircle, Download } from 'lucide-react';
+import { Home, PlusCircle, ListOrdered, LogOut, ShieldCheck, Bell, CheckCheck, ExternalLink, FolderOpen, WifiOff, Languages, HelpCircle, Download, Building2 } from 'lucide-react';
 import { notificationsApi, AppNotification } from '../api/client';
 import { initSyncManager } from './offline/syncManager';
 import { useOnlineStatus } from './offline/useOnlineStatus';
 import { useLanguageStore } from './languageStore';
+import { useProjectStore, KNOWN_PROJECTS } from '../store/projectStore';
 
 import { InstallAppBanner } from './offline/InstallAppBanner';
 import { BrandLogo } from '../components/BrandLogo';
@@ -14,6 +15,7 @@ import { HelpSupportModal } from '../components/HelpSupportModal';
 export const SupervisorLayout: React.FC = () => {
   const { user, logout } = useAuthStore();
   const { language, toggleLanguage, t } = useLanguageStore();
+  const { selectedProjectId, selectedProjectName, setProject } = useProjectStore();
   const isOnline = useOnlineStatus();
   const navigate = useNavigate();
 
@@ -243,6 +245,36 @@ export const SupervisorLayout: React.FC = () => {
           </div>
         </header>
         
+        {/* Project Header Bar for Field Supervisors & Mobile PWA */}
+        <div className="bg-slate-900 text-white px-3 py-1.5 flex items-center justify-between gap-2 border-b border-slate-800 text-[11px] shadow-xs sticky top-[48px] sm:top-[52px] z-[90]">
+          <div className="flex items-center gap-1.5 min-w-0 flex-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
+            <span className="text-[9px] font-black uppercase text-amber-400 tracking-wider flex-shrink-0">
+              PROJECT:
+            </span>
+            <Building2 className="w-3 h-3 text-amber-400 flex-shrink-0" />
+            <select
+              value={selectedProjectId}
+              onChange={(e) => {
+                const pid = Number(e.target.value);
+                const match = KNOWN_PROJECTS.find((p) => p.id === pid);
+                if (match) setProject(match);
+              }}
+              className="bg-transparent font-bold text-white outline-none cursor-pointer truncate max-w-[210px] text-xs hover:text-amber-200 transition-colors"
+              title="Switch Active Project for Field Activities"
+            >
+              {KNOWN_PROJECTS.map((p) => (
+                <option key={p.id} value={p.id} className="bg-slate-900 text-white">
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <span className="text-[9px] font-black text-slate-300 flex-shrink-0 bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">
+            OIL INDIA
+          </span>
+        </div>
+
         {/* PWA Mobile App Install Banner */}
         <InstallAppBanner />
 

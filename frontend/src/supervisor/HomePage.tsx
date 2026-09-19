@@ -33,8 +33,10 @@ import {
   FolderOpen,
   Filter,
   Mic,
+  Building2,
 } from 'lucide-react';
 import { useLanguageStore, translateActivityName, translateStatus, translateDiscipline, translateLocation, translateTimeline } from './languageStore';
+import { useProjectStore, KNOWN_PROJECTS } from '../store/projectStore';
 
 export const HomePage: React.FC = () => {
   const { user } = useAuthStore();
@@ -54,12 +56,30 @@ export const HomePage: React.FC = () => {
   const [blockerDescription, setBlockerDescription] = useState<string>('');
   const [blockerSuccessMsg, setBlockerSuccessMsg] = useState<string | null>(null);
 
+  // Shared Project State: Controls active project across planner and supervisor
+  const {
+    selectedProjectId,
+    selectedProjectName,
+    setProject,
+  } = useProjectStore();
+
+  // Supervisor 1 & 2 definitions for all disciplines
+  const DEMO_SUPERVISORS = [
+    { id: 2, label: 'Supervisor 1', discipline: 'Piping', full: 'Supervisor 1 - Piping' },
+    { id: 3, label: 'Supervisor 2', discipline: 'Piping', full: 'Supervisor 2 - Piping' },
+    { id: 4, label: 'Supervisor 1', discipline: 'Civil', full: 'Supervisor 1 - Civil' },
+    { id: 5, label: 'Supervisor 2', discipline: 'Civil', full: 'Supervisor 2 - Civil' },
+    { id: 6, label: 'Supervisor 1', discipline: 'Electrical', full: 'Supervisor 1 - Electrical' },
+    { id: 7, label: 'Supervisor 2', discipline: 'Electrical', full: 'Supervisor 2 - Electrical' },
+  ];
+
   // STRICT DISCIPLINE & CREDENTIAL ISOLATION:
-  // When a site supervisor logs in, they are locked to user.id.
-  // If a planner clicks "Supervisor Access" from the workload page (?sup_id=X), it views that supervisor's terminal.
   const querySupId = searchParams.get('sup_id') ? Number(searchParams.get('sup_id')) : null;
   const isSupervisorRole = user?.role === 'supervisor';
-  const effectiveSupervisorId = isSupervisorRole ? (user?.id || 2) : (querySupId || user?.id || 2);
+  const initialSupId = querySupId || (isSupervisorRole ? user?.id : 2) || 2;
+  const [selectedSupId, setSelectedSupId] = useState<number>(initialSupId);
+  const effectiveSupervisorId = selectedSupId;
+
   const userDiscipline = user?.discipline
     ? (user.discipline.charAt(0).toUpperCase() + user.discipline.slice(1).toLowerCase())
     : 'Field';
@@ -70,31 +90,32 @@ export const HomePage: React.FC = () => {
     queryFn: () => api.getMySubmissions(),
   });
 
-  // Supervisor Weekly Workload Tasks
+  // Supervisor Weekly Workload Tasks (Project-scoped)
   const { data: supervisorTasks = [], isLoading: loadingTasks } = useQuery({
-    queryKey: ['supervisor-tasks', effectiveSupervisorId],
-    queryFn: () => (effectiveSupervisorId ? api.getSupervisorTasks(effectiveSupervisorId) : Promise.resolve([])),
+    queryKey: ['supervisor-tasks', effectiveSupervisorId, selectedProjectId],
+    queryFn: () => (effectiveSupervisorId ? api.getSupervisorTasks(effectiveSupervisorId, undefined, selectedProjectId) : Promise.resolve([])),
     enabled: Boolean(effectiveSupervisorId),
   });
 
-  // Live Supervisor Progress & Overdue Summary
+  // Live Supervisor Progress & Overdue Summary (Project-scoped)
   const { data: progressSummary, isLoading: loadingProgress } = useQuery({
-    queryKey: ['supervisor-progress', effectiveSupervisorId],
-    queryFn: () => (effectiveSupervisorId ? api.getSupervisorProgress(effectiveSupervisorId, 1) : Promise.resolve(null)),
+    queryKey: ['supervisor-progress', effectiveSupervisorId, selectedProjectId],
+    queryFn: () => (effectiveSupervisorId ? api.getSupervisorProgress(effectiveSupervisorId, selectedProjectId) : Promise.resolve(null)),
     enabled: Boolean(effectiveSupervisorId),
   });
 
+  const activeSupervisorObj = DEMO_SUPERVISORS.find((s) => s.id === effectiveSupervisorId);
   const currentSupervisorMeta = {
     id: effectiveSupervisorId,
-    name: (querySupId && progressSummary?.supervisor_name) ? progressSummary.supervisor_name : (user?.name || 'Site Supervisor'),
-    discipline: (querySupId && progressSummary?.discipline) ? progressSummary.discipline : userDiscipline,
+    name: progressSummary?.supervisor_name || activeSupervisorObj?.full || (user?.name || 'Site Supervisor'),
+    discipline: progressSummary?.discipline || activeSupervisorObj?.discipline || userDiscipline,
     email: user?.email || '',
   };
 
-  // Supervisor's own raised complaints
+  // Supervisor's own raised complaints (Project-scoped)
   const { data: myComplaints = [], isLoading: loadingComplaints } = useQuery({
-    queryKey: ['my-complaints', effectiveSupervisorId],
-    queryFn: () => (effectiveSupervisorId ? api.getMyComplaints(1) : Promise.resolve([])),
+    queryKey: ['my-complaints', effectiveSupervisorId, selectedProjectId],
+    queryFn: () => (effectiveSupervisorId ? api.getMyComplaints(selectedProjectId) : Promise.resolve([])),
     enabled: Boolean(effectiveSupervisorId),
   });
 
@@ -126,7 +147,7 @@ export const HomePage: React.FC = () => {
     if (!blockerDescription.trim()) return;
 
     raiseComplaintMutation.mutate({
-      project_id: 1,
+      project_id: selectedProjectId,
       activity_id: blockerActivityId.trim() || undefined,
       category: blockerCategory,
       description: blockerDescription.trim(),
@@ -249,35 +270,81 @@ export const HomePage: React.FC = () => {
     <div className="space-y-5">
       {/* Site Status Banner */}
       <div className="bg-gradient-to-r from-oil-900 via-oil-800 to-slate-900 rounded-2xl p-4 text-white shadow-md relative overflow-hidden">
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <div className="flex items-center gap-2 mb-2 flex-wrap">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/10 text-white text-[10px] font-medium backdrop-blur-sm">
-                <Sparkles className="w-3 h-3 text-amber-300" /> {t('home_expansion_subtitle')}
-              </span>
+        <div className="relative z-10 flex flex-col gap-3">
+          {/* Top Row: Project Badge & Blocker Button */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-white/10 pb-3">
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Active Project Mention & Switcher */}
+              <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white/10 hover:bg-white/15 border border-white/20 rounded-xl text-xs backdrop-blur-sm transition-colors shadow-2xs">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
+                <span className="text-[10px] font-black uppercase tracking-wider text-amber-300 flex-shrink-0">
+                  PROJECT:
+                </span>
+                <Building2 className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+                <select
+                  value={selectedProjectId}
+                  onChange={(e) => {
+                    const pid = Number(e.target.value);
+                    const match = KNOWN_PROJECTS.find((p) => p.id === pid);
+                    if (match) setProject(match);
+                  }}
+                  className="bg-transparent font-bold text-white outline-none cursor-pointer truncate max-w-[200px] sm:max-w-[280px] text-xs"
+                  title="Switch Active Project for Field Activities"
+                >
+                  {KNOWN_PROJECTS.map((p) => (
+                    <option key={p.id} value={p.id} className="bg-slate-900 text-white">
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-bold uppercase">
                 {currentSupervisorMeta.discipline} {language === 'hi' ? 'विभाग' : 'Discipline'}
               </span>
-
-              <div className="inline-flex items-center gap-1 bg-white/10 px-2 py-0.5 rounded-full text-[10px] text-slate-300 border border-white/15">
-                <HardHat className="w-3 h-3 text-amber-400" />
-                <span><strong className="text-white">{user?.name || currentSupervisorMeta.name}</strong></span>
-              </div>
             </div>
-            <h2 className="text-lg font-bold">{t('home_workspace_title')}</h2>
-            <p className="text-xs text-slate-300 mt-0.5">
-              {t('home_viewing_tasks_for')} <strong className="text-white">{currentSupervisorMeta.name}</strong> ({currentSupervisorMeta.discipline}). {t('home_viewing_tasks_desc')}
-            </p>
-          </div>
 
-          <div className="flex items-center gap-2">
             <button
               onClick={() => handleOpenBlockerModal()}
-              className="px-3 py-2 text-xs font-bold bg-rose-600/90 hover:bg-rose-600 text-white rounded-xl shadow-sm flex items-center gap-1.5 border border-rose-400/40 transition-all hover:shadow-rose-900/30 active:scale-95 cursor-pointer"
+              className="px-3 py-1.5 text-xs font-bold bg-rose-600/90 hover:bg-rose-600 text-white rounded-xl shadow-sm flex items-center gap-1.5 border border-rose-400/40 transition-all hover:shadow-rose-900/30 active:scale-95 cursor-pointer self-start sm:self-auto"
             >
               <AlertOctagon className="w-4 h-4" />
               {t('home_raise_blocker_btn')}
             </button>
+          </div>
+
+          {/* Supervisor 1 / Supervisor 2 Selection Bar */}
+          <div className="bg-black/25 border border-white/10 rounded-xl p-2.5 backdrop-blur-xs">
+            <div className="flex items-center justify-between gap-1 mb-2 text-[10px] text-slate-300 font-semibold">
+              <span className="flex items-center gap-1.5">
+                <Users className="w-3.5 h-3.5 text-amber-400" />
+                <span className="uppercase tracking-wider font-bold text-amber-300">Supervisor Terminal:</span>
+                <span className="text-white font-bold">{currentSupervisorMeta.name}</span>
+              </span>
+              <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                ACTIVE
+              </span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+              {DEMO_SUPERVISORS.map((sup) => {
+                const isSelected = effectiveSupervisorId === sup.id;
+                return (
+                  <button
+                    key={sup.id}
+                    type="button"
+                    onClick={() => setSelectedSupId(sup.id)}
+                    className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between gap-1 cursor-pointer border ${
+                      isSelected
+                        ? 'bg-amber-400 text-slate-950 border-amber-300 shadow-sm font-black'
+                        : 'bg-white/10 hover:bg-white/20 text-slate-200 border-white/10'
+                    }`}
+                  >
+                    <span className="truncate">{sup.label} - {sup.discipline}</span>
+                    {isSelected && <Check className="w-3.5 h-3.5 text-slate-950 shrink-0" />}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
         <div className="absolute -right-6 -bottom-6 w-28 h-28 bg-white/5 rounded-full pointer-events-none" />

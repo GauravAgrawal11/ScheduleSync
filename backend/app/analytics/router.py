@@ -833,3 +833,43 @@ def get_activity_forecast(
     return forecast
 
 
+# -----------------------------------------------------------------------------
+# Daily Activity Checker Endpoints (SIH26122 - Feature 2)
+# -----------------------------------------------------------------------------
+from app.analytics.daily_summary import (
+    DailySummary,
+    DailySummaryBySupervisor,
+    get_daily_summary,
+    get_daily_summary_by_supervisor,
+)
+
+
+@router.get(
+    "/daily-summary",
+    response_model=DailySummary,
+    summary="Daily activity completion and discipline backlog checker",
+    description="Computes activities completed today and remaining activities broken down by engineering discipline.",
+)
+def get_daily_activity_summary(
+    project_id: int = 1,
+    date: Optional[date] = None,
+    db: Session = Depends(get_db),
+):
+    return get_daily_summary(project_id=project_id, target_date=date, db=db)
+
+
+@router.get(
+    "/daily-summary/by-supervisor",
+    response_model=DailySummaryBySupervisor,
+    summary="Daily activity summary grouped by assigned supervisor",
+    description="Computes daily completed and remaining activities grouped by field supervisor reusing activity assignments.",
+)
+def get_daily_activity_summary_by_supervisor(
+    project_id: int = 1,
+    date: Optional[date] = None,
+    db: Session = Depends(get_db),
+):
+    return get_daily_summary_by_supervisor(project_id=project_id, target_date=date, db=db)
+
+
+

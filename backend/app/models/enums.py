@@ -4,8 +4,10 @@ import enum
 class DisciplineEnum(str, enum.Enum):
     CIVIL = "civil"
     PIPING = "piping"
+    STATIC = "static"
     ELECTRICAL = "electrical"
     INSTRUMENTATION = "instrumentation"
+    COMMISSIONING = "commissioning"
     HSE = "hse"
     OTHER = "other"
 

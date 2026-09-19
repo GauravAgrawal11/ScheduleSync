@@ -23,6 +23,11 @@ import {
   X,
   Radio,
   ExternalLink,
+  Building2,
+  FolderInput,
+  Loader2,
+  Sun,
+  Moon,
 } from 'lucide-react';
 
 // ============================================================================
@@ -183,7 +188,24 @@ function generateRoundedElbowPath(
 }
 
 export const LiveWorkflow: React.FC = () => {
-  const { selectedProjectId = 1 } = useProjectStore();
+  const {
+    selectedProjectId = 1,
+    selectedProjectName,
+    setProject,
+  } = useProjectStore();
+  const navigate = useNavigate();
+
+  const { data: projectsData } = useQuery({
+    queryKey: ['projects'],
+    queryFn: () => api.getProjects(),
+    staleTime: 60000,
+  });
+
+  const projects = projectsData?.projects || [
+    { id: 1, name: 'Numaligarh Refinery Expansion (Unit 3 & Offsites)', activity_count: 36 },
+    { id: 2, name: 'Duliajan Central Gas Gathering Station (CGGS-2)', activity_count: 22 },
+    { id: 3, name: 'Guwahati-Siliguri Pipeline Modernization (Phase II)', activity_count: 18 },
+  ];
 
   // Filter States
   const [criticalPathOnly, setCriticalPathOnly] = useState<boolean>(false);
@@ -233,7 +255,26 @@ export const LiveWorkflow: React.FC = () => {
     return () => document.removeEventListener('fullscreenchange', handleFsChange);
   }, []);
 
-  // Fetch initial graph data from FastAPI backend
+  // Theme state: dark and light mode (DEFAULT: light/white)
+  const [isDarkTheme, setIsDarkTheme] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('schedulesync_network_theme');
+      if (saved) return saved === 'dark';
+    }
+    return false; // Default white (light mode)
+  });
+
+  const toggleTheme = useCallback(() => {
+    setIsDarkTheme((prev) => {
+      const next = !prev;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('schedulesync_network_theme', next ? 'dark' : 'light');
+      }
+      return next;
+    });
+  }, []);
+
+  // Fetch initial graph data from FastAPI backend with 30s stale cache for blazing responsiveness
   const { data: graphData, isLoading } = useQuery({
     queryKey: ['live-workflow-graph', selectedProjectId, selectedDiscipline],
     queryFn: () =>
@@ -241,13 +282,14 @@ export const LiveWorkflow: React.FC = () => {
         selectedProjectId,
         selectedDiscipline !== 'ALL' ? selectedDiscipline : undefined
       ),
+    staleTime: 30000,
   });
 
   // Local live updated nodes
   const [liveNodes, setLiveNodes] = useState<WorkflowNodeData[]>([]);
 
   useEffect(() => {
-    if (graphData?.nodes) {
+    if (graphData?.nodes !== undefined) {
       setLiveNodes(graphData.nodes);
     }
   }, [graphData]);
@@ -575,21 +617,86 @@ export const LiveWorkflow: React.FC = () => {
       ref={containerRef}
       className={`flex flex-col ${
         isFullscreen ? 'h-screen w-screen' : 'h-[calc(100vh-64px)] w-full'
-      } bg-[#0C0C0D] text-[#F7F7F5] overflow-hidden select-none font-sans`}
+      } ${
+        isDarkTheme ? 'bg-[#0C0C0D] text-[#F7F7F5]' : 'bg-[#F8FAFC] text-[#0F172A]'
+      } overflow-hidden select-none font-sans`}
     >
       {/* ================================================================== */}
       {/* TOP CONTROL BAR                                                    */}
       {/* ================================================================== */}
-      <div className="h-12 px-4 bg-[#141417] border-b border-[#2A2A30] flex items-center justify-between gap-3 z-10 flex-shrink-0">
-        {/* Left: Critical Path toggle & Discipline Chips */}
+      <div
+        className={`min-h-12 px-3 py-1.5 ${
+          isDarkTheme ? 'bg-[#141417] border-[#2A2A30]' : 'bg-white border-[#E2E8F0] shadow-xs'
+        } border-b flex flex-wrap items-center justify-between gap-2.5 z-10 flex-shrink-0`}
+      >
+        {/* Left: Project Selector, Critical Path toggle & Discipline Chips */}
         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
+          {/* Prominent Project Selector */}
+          <div
+            className={`flex items-center gap-1.5 ${
+              isDarkTheme
+                ? 'bg-[#1B1B1F] border-[#2A2A30] text-[#F7F7F5]'
+                : 'bg-[#F1F5F9] border-[#CBD5E1] text-[#0F172A]'
+            } border hover:border-[#8E8E96] transition-colors rounded-lg px-2.5 py-1 text-xs flex-shrink-0 shadow-xs`}
+          >
+            <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse flex-shrink-0" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-[#E0242B] hidden md:inline flex-shrink-0">
+              PROJECT:
+            </span>
+            <Building2 className="w-3.5 h-3.5 text-[#E0242B] flex-shrink-0" />
+            <select
+              value={selectedProjectId}
+              onChange={(e) => {
+                const pid = Number(e.target.value);
+                const p = projects.find((x) => x.id === pid);
+                if (p) {
+                  setProject({
+                    id: p.id,
+                    name: p.name,
+                    client: (p as any).client,
+                    activity_count: p.activity_count ?? 0,
+                  });
+                }
+              }}
+              className={`bg-transparent text-xs font-bold ${
+                isDarkTheme ? 'text-[#F7F7F5]' : 'text-[#0F172A]'
+              } outline-none cursor-pointer max-w-[190px] sm:max-w-[280px] md:max-w-[360px] truncate`}
+              title="Active Project Live Workflow — Switch Project"
+            >
+              {projects.map((p) => (
+                <option
+                  key={p.id}
+                  value={p.id}
+                  className={isDarkTheme ? 'bg-[#141417] text-[#F7F7F5]' : 'bg-white text-slate-800'}
+                >
+                  {p.name} {p.activity_count !== undefined ? `(${p.activity_count} act)` : ''}
+                </option>
+              ))}
+            </select>
+            <span
+              className={`hidden xl:inline text-[10px] font-mono font-bold ${
+                isDarkTheme ? 'text-[#8E8E96] bg-[#2A2A30]/80' : 'text-slate-600 bg-slate-200'
+              } px-1.5 py-0.2 rounded`}
+            >
+              OIL INDIA
+            </span>
+          </div>
+
+          <div
+            className={`w-px h-4 ${
+              isDarkTheme ? 'bg-[#2A2A30]' : 'bg-slate-300'
+            } mx-0.5 hidden sm:block`}
+          />
+
           {/* Critical Path Toggle */}
           <button
             onClick={() => setCriticalPathOnly(!criticalPathOnly)}
             className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all cursor-pointer whitespace-nowrap ${
               criticalPathOnly
                 ? 'bg-[#E0242B] text-white border-[#E0242B] shadow-md shadow-red-950/60'
-                : 'bg-transparent text-[#8E8E96] hover:text-[#F7F7F5] border-[#2A2A30]'
+                : isDarkTheme
+                ? 'bg-transparent text-[#8E8E96] hover:text-[#F7F7F5] border-[#2A2A30]'
+                : 'bg-white text-slate-600 hover:text-slate-900 border-[#CBD5E1]'
             }`}
           >
             Critical path only
@@ -601,8 +708,12 @@ export const LiveWorkflow: React.FC = () => {
               onClick={() => setSelectedDiscipline('ALL')}
               className={`px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer whitespace-nowrap border ${
                 selectedDiscipline === 'ALL'
-                  ? 'bg-[#F7F7F5] text-[#0C0C0D] border-[#F7F7F5] font-semibold'
-                  : 'bg-transparent text-[#8E8E96] hover:text-[#F7F7F5] border-[#2A2A30]'
+                  ? isDarkTheme
+                    ? 'bg-[#F7F7F5] text-[#0C0C0D] border-[#F7F7F5] font-semibold'
+                    : 'bg-[#0F172A] text-white border-[#0F172A] font-semibold shadow-xs'
+                  : isDarkTheme
+                  ? 'bg-transparent text-[#8E8E96] hover:text-[#F7F7F5] border-[#2A2A30]'
+                  : 'bg-white text-slate-600 hover:text-slate-900 border-[#CBD5E1]'
               }`}
             >
               All Lanes
@@ -615,8 +726,12 @@ export const LiveWorkflow: React.FC = () => {
                   onClick={() => setSelectedDiscipline(isActive ? 'ALL' : d.id)}
                   className={`px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer whitespace-nowrap border ${
                     isActive
-                      ? 'bg-[#F7F7F5] text-[#0C0C0D] border-[#F7F7F5] font-semibold'
-                      : 'bg-transparent text-[#8E8E96] hover:text-[#F7F7F5] border-[#2A2A30]'
+                      ? isDarkTheme
+                        ? 'bg-[#F7F7F5] text-[#0C0C0D] border-[#F7F7F5] font-semibold'
+                        : 'bg-[#0F172A] text-white border-[#0F172A] font-semibold shadow-xs'
+                      : isDarkTheme
+                      ? 'bg-transparent text-[#8E8E96] hover:text-[#F7F7F5] border-[#2A2A30]'
+                      : 'bg-white text-slate-600 hover:text-slate-900 border-[#CBD5E1]'
                   }`}
                 >
                   {d.label}
@@ -626,43 +741,100 @@ export const LiveWorkflow: React.FC = () => {
           </div>
         </div>
 
-        {/* Right: Search, Zoom Controls & WebSocket Live Beacon */}
-        <div className="flex items-center gap-2.5">
+        {/* Right: Theme Toggle, Search, Zoom Controls & WebSocket Live Beacon */}
+        <div className="flex items-center gap-2">
+          {/* Theme Mode Toggle (Default: Light / White) */}
+          <button
+            onClick={toggleTheme}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border transition-colors cursor-pointer ${
+              isDarkTheme
+                ? 'bg-[#1B1B1F] border-[#2A2A30] text-[#F7F7F5] hover:border-[#8E8E96]'
+                : 'bg-white border-[#CBD5E1] text-[#0F172A] hover:border-slate-400 shadow-xs'
+            }`}
+            title={`Switch to ${isDarkTheme ? 'Light (White)' : 'Dark'} Mode`}
+          >
+            {isDarkTheme ? (
+              <>
+                <Sun className="w-3.5 h-3.5 text-amber-400" />
+                <span className="hidden lg:inline text-[11px]">Dark</span>
+              </>
+            ) : (
+              <>
+                <Moon className="w-3.5 h-3.5 text-indigo-600" />
+                <span className="hidden lg:inline text-[11px]">Light (White)</span>
+              </>
+            )}
+          </button>
+
           {/* Search Box */}
-          <div className="relative w-56">
-            <Search className="w-3.5 h-3.5 text-[#8E8E96] absolute left-2.5 top-1/2 -translate-y-1/2" />
+          <div className="relative w-44 sm:w-56">
+            <Search
+              className={`w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 ${
+                isDarkTheme ? 'text-[#8E8E96]' : 'text-slate-400'
+              }`}
+            />
             <input
               type="text"
-              placeholder="Activity, supervisor, tag no..."
+              placeholder="Activity, supervisor..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-[#1B1B1F] border border-[#2A2A30] focus:border-[#8E8E96] text-xs text-[#F7F7F5] pl-8 pr-2.5 py-1 rounded-md outline-none placeholder:text-[#8E8E96]"
+              className={`w-full text-xs pl-8 pr-2.5 py-1 rounded-md outline-none border transition-colors ${
+                isDarkTheme
+                  ? 'bg-[#1B1B1F] border-[#2A2A30] text-[#F7F7F5] placeholder:text-[#8E8E96] focus:border-[#8E8E96]'
+                  : 'bg-[#F8FAFC] border-[#CBD5E1] text-[#0F172A] placeholder:text-slate-400 focus:border-slate-500'
+              }`}
             />
           </div>
 
           {/* Zoom Buttons */}
-          <div className="flex items-center bg-[#1B1B1F] border border-[#2A2A30] rounded-md p-0.5 text-xs text-[#8E8E96]">
+          <div
+            className={`flex items-center border rounded-md p-0.5 text-xs ${
+              isDarkTheme
+                ? 'bg-[#1B1B1F] border-[#2A2A30] text-[#8E8E96]'
+                : 'bg-white border-[#CBD5E1] text-slate-600 shadow-xs'
+            }`}
+          >
             <button
               onClick={zoomOut}
-              className="px-2 py-0.5 hover:text-[#F7F7F5] hover:bg-[#2A2A30] rounded transition-colors cursor-pointer"
+              className={`px-2 py-0.5 rounded transition-colors cursor-pointer ${
+                isDarkTheme
+                  ? 'hover:text-[#F7F7F5] hover:bg-[#2A2A30]'
+                  : 'hover:text-slate-900 hover:bg-slate-100'
+              }`}
               title="Zoom Out"
             >
               −
             </button>
-            <span className="font-mono px-1.5 text-[11px] text-[#8E8E96] min-w-[38px] text-center">
+            <span
+              className={`font-mono px-1.5 text-[11px] min-w-[38px] text-center ${
+                isDarkTheme ? 'text-[#8E8E96]' : 'text-slate-600'
+              }`}
+            >
               {Math.round(zoom * 100)}%
             </span>
             <button
               onClick={zoomIn}
-              className="px-2 py-0.5 hover:text-[#F7F7F5] hover:bg-[#2A2A30] rounded transition-colors cursor-pointer"
+              className={`px-2 py-0.5 rounded transition-colors cursor-pointer ${
+                isDarkTheme
+                  ? 'hover:text-[#F7F7F5] hover:bg-[#2A2A30]'
+                  : 'hover:text-slate-900 hover:bg-slate-100'
+              }`}
               title="Zoom In"
             >
               +
             </button>
-            <div className="w-px h-3 bg-[#2A2A30] mx-0.5" />
+            <div
+              className={`w-px h-3 mx-0.5 ${
+                isDarkTheme ? 'bg-[#2A2A30]' : 'bg-slate-300'
+              }`}
+            />
             <button
               onClick={zoomFit}
-              className="px-2 py-0.5 text-[11px] font-semibold text-[#8E8E96] hover:text-[#F7F7F5] hover:bg-[#2A2A30] rounded transition-colors cursor-pointer"
+              className={`px-2 py-0.5 text-[11px] font-semibold rounded transition-colors cursor-pointer ${
+                isDarkTheme
+                  ? 'text-[#8E8E96] hover:text-[#F7F7F5] hover:bg-[#2A2A30]'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+              }`}
             >
               Fit
             </button>
@@ -670,23 +842,27 @@ export const LiveWorkflow: React.FC = () => {
 
           {/* Live WebSocket & Real-Time Sync Beacon */}
           <div
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-mono font-bold border select-none bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-mono font-bold border select-none bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30"
             title={
               connectionMode === 'live_ws'
                 ? 'WebSocket stream connected (real-time push)'
                 : 'Active real-time schedule sync'
             }
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             <span>
-              {connectionMode === 'live_ws' ? 'LIVE FEED' : 'LIVE SYNC'}
+              {connectionMode === 'live_ws' ? 'LIVE FEED' : 'LIVE SYNC'} ({liveNodes.length})
             </span>
           </div>
 
           {/* Fullscreen Toggle Option */}
           <button
             onClick={toggleFullscreen}
-            className="p-1.5 bg-[#1B1B1F] border border-[#2A2A30] hover:border-[#8E8E96] hover:text-[#F7F7F5] rounded-md transition-colors cursor-pointer text-[#8E8E96] flex items-center justify-center"
+            className={`p-1.5 border rounded-md transition-colors cursor-pointer flex items-center justify-center ${
+              isDarkTheme
+                ? 'bg-[#1B1B1F] border-[#2A2A30] text-[#8E8E96] hover:border-[#8E8E96] hover:text-[#F7F7F5]'
+                : 'bg-white border-[#CBD5E1] text-slate-600 hover:border-slate-400 hover:text-slate-900 shadow-xs'
+            }`}
             title={isFullscreen ? 'Exit Full Screen' : 'Enter Full Screen'}
             aria-label={isFullscreen ? 'Exit Full Screen' : 'Enter Full Screen'}
           >
@@ -702,17 +878,84 @@ export const LiveWorkflow: React.FC = () => {
       {/* ================================================================== */}
       {/* MAIN VIEWPORT: Sticky Left Gutter + Scrollable Canvas               */}
       {/* ================================================================== */}
-      <div className="flex-1 flex relative overflow-hidden bg-[#0C0C0D]">
+      {isLoading && liveNodes.length === 0 ? (
+        <div
+          className={`flex-1 flex flex-col items-center justify-center gap-3 ${
+            isDarkTheme ? 'bg-[#0C0C0D] text-[#8E8E96]' : 'bg-[#F8FAFC] text-slate-500'
+          }`}
+        >
+          <Loader2 className="w-8 h-8 text-[#E0242B] animate-spin" />
+          <span className="text-xs font-mono">Loading live project workflow...</span>
+        </div>
+      ) : liveNodes.length === 0 ? (
+        <div
+          className={`flex-1 flex flex-col items-center justify-center p-6 ${
+            isDarkTheme ? 'bg-[#0C0C0D] text-[#8E8E96]' : 'bg-[#F8FAFC] text-slate-600'
+          }`}
+        >
+          <div
+            className={`max-w-md w-full rounded-2xl p-6 text-center shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-200 border ${
+              isDarkTheme
+                ? 'bg-[#141417] border-[#2A2A30]'
+                : 'bg-white border-[#CBD5E1] shadow-xl'
+            }`}
+          >
+            <div className="w-12 h-12 rounded-xl bg-red-950/40 border border-[#E0242B]/30 flex items-center justify-center mx-auto text-[#E0242B]">
+              <FolderInput className="w-6 h-6" />
+            </div>
+            <div>
+              <h3
+                className={`text-base font-bold ${
+                  isDarkTheme ? 'text-[#F7F7F5]' : 'text-slate-900'
+                }`}
+              >
+                No Workflow Activities Found
+              </h3>
+              <p
+                className={`text-xs mt-1.5 leading-relaxed ${
+                  isDarkTheme ? 'text-[#8E8E96]' : 'text-slate-600'
+                }`}
+              >
+                Project{' '}
+                <strong className={isDarkTheme ? 'text-[#F7F7F5]' : 'text-slate-900'}>
+                  {selectedProjectName}
+                </strong>{' '}
+                does not have any baseline schedule activities yet.
+              </p>
+            </div>
+            <button
+              onClick={() => navigate('/planner/setup')}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#E0242B] text-white text-xs font-semibold hover:bg-[#c91e24] transition-colors shadow-md shadow-red-950/50 cursor-pointer"
+            >
+              <FolderInput className="w-4 h-4" />
+              Import Baseline Schedule (.xlsx / .xer)
+            </button>
+          </div>
+        </div>
+      ) : (
+      <div
+        className={`flex-1 flex relative overflow-hidden ${
+          isDarkTheme ? 'bg-[#0C0C0D]' : 'bg-[#F8FAFC]'
+        }`}
+      >
         {/* STICKY LEFT GUTTER (126px) */}
         <div
           ref={gutterRef}
           style={{ width: GUTTER_WIDTH }}
-          className="h-full bg-[#141417] border-r border-[#2A2A30] flex-shrink-0 overflow-hidden z-20 select-none pointer-events-auto"
+          className={`h-full border-r flex-shrink-0 overflow-hidden z-20 select-none pointer-events-auto ${
+            isDarkTheme
+              ? 'bg-[#141417] border-[#2A2A30]'
+              : 'bg-white border-[#CBD5E1] shadow-xs'
+          }`}
         >
           {/* Top ruler corner spacer */}
           <div
             style={{ height: RULER_HEIGHT }}
-            className="w-full bg-[#141417] border-b border-[#2A2A30] flex items-center px-3 text-[10px] font-mono font-semibold tracking-wider text-[#8E8E96] uppercase"
+            className={`w-full border-b flex items-center px-3 text-[10px] font-mono font-semibold tracking-wider uppercase ${
+              isDarkTheme
+                ? 'bg-[#141417] border-[#2A2A30] text-[#8E8E96]'
+                : 'bg-[#F1F5F9] border-[#CBD5E1] text-slate-600'
+            }`}
           >
             DISCIPLINE
           </div>
@@ -723,18 +966,34 @@ export const LiveWorkflow: React.FC = () => {
               <div
                 key={lane.id}
                 style={{ height: lane.height }}
-                className="w-full px-3 py-2 border-b border-[#2A2A30] flex flex-col justify-between bg-[#141417]"
+                className={`w-full px-3 py-2 border-b flex flex-col justify-between ${
+                  isDarkTheme
+                    ? 'border-[#2A2A30] bg-[#141417]'
+                    : 'border-[#CBD5E1] bg-white'
+                }`}
               >
                 <div className="space-y-0.5">
-                  <div className="text-xs font-semibold text-[#F7F7F5] truncate leading-tight">
+                  <div
+                    className={`text-xs font-semibold truncate leading-tight ${
+                      isDarkTheme ? 'text-[#F7F7F5]' : 'text-[#0F172A]'
+                    }`}
+                  >
                     {lane.label}
                   </div>
-                  <div className="font-mono text-[10px] text-[#8E8E96]">
+                  <div
+                    className={`font-mono text-[10px] ${
+                      isDarkTheme ? 'text-[#8E8E96]' : 'text-slate-500'
+                    }`}
+                  >
                     {lane.nodes.length} {lane.nodes.length === 1 ? 'task' : 'tasks'}
                   </div>
                 </div>
 
-                <div className="font-mono text-[9px] text-[#8E8E96] truncate">
+                <div
+                  className={`font-mono text-[9px] truncate ${
+                    isDarkTheme ? 'text-[#8E8E96]' : 'text-slate-500'
+                  }`}
+                >
                   {lane.nodes.filter((n) => n.status === 'completed').length} done
                 </div>
               </div>
@@ -746,7 +1005,9 @@ export const LiveWorkflow: React.FC = () => {
         <div
           ref={canvasScrollRef}
           onScroll={handleCanvasScroll}
-          className="flex-1 h-full overflow-auto relative custom-scrollbar bg-[#0C0C0D]"
+          className={`flex-1 h-full overflow-auto relative custom-scrollbar ${
+            isDarkTheme ? 'bg-[#0C0C0D]' : 'bg-[#F8FAFC]'
+          }`}
         >
           {/* Zoom wrapper */}
           <div
@@ -765,17 +1026,29 @@ export const LiveWorkflow: React.FC = () => {
                 width: layout.totalWidth - GUTTER_WIDTH,
                 height: RULER_HEIGHT,
               }}
-              className="sticky top-0 z-20 bg-[#141417] border-b border-[#2A2A30] flex select-none pointer-events-none"
+              className={`sticky top-0 z-20 border-b flex select-none pointer-events-none ${
+                isDarkTheme
+                  ? 'bg-[#141417] border-[#2A2A30]'
+                  : 'bg-[#F1F5F9] border-[#CBD5E1] shadow-xs'
+              }`}
             >
               {timelineColumns.map((w) => (
                 <div
                   key={w.id}
                   style={{ width: COL_WIDTH }}
-                  className="h-full border-r border-[#2A2A30] px-3 flex items-center justify-between text-xs font-mono text-[#8E8E96] relative"
+                  className={`h-full border-r px-3 flex items-center justify-between text-xs font-mono relative ${
+                    isDarkTheme
+                      ? 'border-[#2A2A30] text-[#8E8E96]'
+                      : 'border-[#CBD5E1] text-slate-600'
+                  }`}
                   title={w.dateRange}
                 >
                   <span className="font-semibold truncate">{w.label}</span>
-                  <span className="text-[9px] text-[#5A5A64] flex-shrink-0 ml-1">
+                  <span
+                    className={`text-[9px] flex-shrink-0 ml-1 ${
+                      isDarkTheme ? 'text-[#5A5A64]' : 'text-slate-400'
+                    }`}
+                  >
                     {w.dateRange.split(' ')[0]}–{w.dateRange.split(' ')[2]}
                   </span>
                 </div>
@@ -799,7 +1072,9 @@ export const LiveWorkflow: React.FC = () => {
                     left: idx * COL_WIDTH,
                     width: COL_WIDTH,
                   }}
-                  className="absolute top-0 bottom-0 border-r border-[#1B1B1F]"
+                  className={`absolute top-0 bottom-0 border-r ${
+                    isDarkTheme ? 'border-[#1B1B1F]' : 'border-[#E2E8F0]'
+                  }`}
                 />
               ))}
 
@@ -809,7 +1084,7 @@ export const LiveWorkflow: React.FC = () => {
                   style={{ left: Math.max(0, dataDateX - GUTTER_WIDTH) }}
                   className="absolute top-0 bottom-0 w-[1px] bg-[#E0242B] z-10 shadow-[0_0_8px_rgba(224,36,43,0.5)] flex flex-col items-center"
                 >
-                  <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-[#E0242B] text-white text-[9px] font-mono font-bold px-2 py-0.5 rounded tracking-wider uppercase whitespace-nowrap">
+                  <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-[#E0242B] text-white text-[9px] font-mono font-bold px-2 py-0.5 rounded tracking-wider uppercase whitespace-nowrap shadow-md">
                     DATA DATE · {formatExactDate(dataDateObj)}
                   </div>
                 </div>
@@ -833,7 +1108,9 @@ export const LiveWorkflow: React.FC = () => {
                     top: lane.top - RULER_HEIGHT + lane.height,
                     width: '100%',
                   }}
-                  className="absolute border-b border-[#2A2A30]"
+                  className={`absolute border-b ${
+                    isDarkTheme ? 'border-[#2A2A30]' : 'border-[#E2E8F0]'
+                  }`}
                 />
               ))}
             </div>
@@ -870,7 +1147,10 @@ export const LiveWorkflow: React.FC = () => {
                   markerHeight="6"
                   orient="auto-start-reverse"
                 >
-                  <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#3A3A42" />
+                  <path
+                    d="M 0 1.5 L 8 5 L 0 8.5 z"
+                    fill={isDarkTheme ? '#3A3A42' : '#94A3B8'}
+                  />
                 </marker>
               </defs>
 
@@ -885,7 +1165,7 @@ export const LiveWorkflow: React.FC = () => {
                     <path
                       d={c.pathD}
                       fill="none"
-                      stroke={c.isDriving ? '#E0242B' : '#3A3A42'}
+                      stroke={c.isDriving ? '#E0242B' : isDarkTheme ? '#3A3A42' : '#94A3B8'}
                       strokeWidth={c.isDriving ? 2.2 : 1.2}
                       markerEnd={
                         c.isDriving
@@ -924,7 +1204,9 @@ export const LiveWorkflow: React.FC = () => {
                   ? '#E0242B'
                   : isReview
                   ? '#C9942A'
-                  : '#F7F7F5';
+                  : isDarkTheme
+                  ? '#F7F7F5'
+                  : '#0284C7';
 
                 // Provenance / Supervisor status label
                 const provenanceDotColor = isComplete
@@ -933,7 +1215,9 @@ export const LiveWorkflow: React.FC = () => {
                   ? '#E0242B'
                   : isReview
                   ? '#C9942A'
-                  : '#F7F7F5';
+                  : isDarkTheme
+                  ? '#F7F7F5'
+                  : '#0284C7';
 
                 const displaySupervisor = node.supervisor_name
                   ? node.supervisor_name.split(' ').slice(0, 2).join(' ')
@@ -984,14 +1268,22 @@ export const LiveWorkflow: React.FC = () => {
                       height,
                       opacity,
                     }}
-                    className={`absolute pointer-events-auto rounded-[6px] bg-[#141417] text-left p-2.5 transition-all duration-150 cursor-pointer outline-none border focus-visible:ring-2 focus-visible:ring-[#F7F7F5] select-none ${
+                    className={`absolute pointer-events-auto rounded-[6px] text-left p-2.5 transition-all duration-150 cursor-pointer outline-none border select-none ${
+                      isDarkTheme ? 'bg-[#141417]' : 'bg-white shadow-xs'
+                    } ${
                       isSelected
-                        ? 'border-[#F7F7F5] ring-2 ring-[#F7F7F5] shadow-2xl'
+                        ? isDarkTheme
+                          ? 'border-[#F7F7F5] ring-2 ring-[#F7F7F5] shadow-2xl'
+                          : 'border-[#0F172A] ring-2 ring-[#0F172A] shadow-xl'
                         : isDelayed
                         ? 'border-[#E0242B]/80 hover:border-[#E0242B]'
                         : isComplete
-                        ? 'border-[#10B981]/40 hover:border-[#10B981]'
-                        : 'border-[#2A2A30] hover:border-[#8E8E96]'
+                        ? isDarkTheme
+                          ? 'border-[#10B981]/40 hover:border-[#10B981]'
+                          : 'border-[#10B981] hover:border-[#059669]'
+                        : isDarkTheme
+                        ? 'border-[#2A2A30] hover:border-[#8E8E96]'
+                        : 'border-[#CBD5E1] hover:border-slate-400'
                     }`}
                   >
                     {/* 2px Status Stripe on Left Edge */}
@@ -1011,7 +1303,11 @@ export const LiveWorkflow: React.FC = () => {
                     <div className="flex items-center justify-between pl-1 mb-1">
                       <span
                         className={`font-mono text-[10px] tracking-tight ${
-                          isComplete ? 'text-[#10B981]' : 'text-[#8E8E96]'
+                          isComplete
+                            ? 'text-[#10B981]'
+                            : isDarkTheme
+                            ? 'text-[#8E8E96]'
+                            : 'text-slate-500 font-semibold'
                         }`}
                       >
                         {node.activity_id}
@@ -1026,13 +1322,19 @@ export const LiveWorkflow: React.FC = () => {
 
                     {/* Activity Name (2 lines max clamped) */}
                     <div
-                      className="text-xs font-semibold leading-tight line-clamp-2 pl-1 mb-1 text-[#F7F7F5]"
+                      className={`text-xs font-semibold leading-tight line-clamp-2 pl-1 mb-1 ${
+                        isDarkTheme ? 'text-[#F7F7F5]' : 'text-[#0F172A]'
+                      }`}
                     >
                       {node.name}
                     </div>
 
                     {/* Exact Real-Time Schedule Dates */}
-                    <div className="flex items-center justify-between text-[9px] font-mono text-[#8E8E96] pl-1 mb-1">
+                    <div
+                      className={`flex items-center justify-between text-[9px] font-mono pl-1 mb-1 ${
+                        isDarkTheme ? 'text-[#8E8E96]' : 'text-slate-500'
+                      }`}
+                    >
                       <span className="truncate">
                         {formatShortDate(node.actual_start || node.planned_start)} → {formatShortDate(node.actual_finish || node.planned_finish)}
                       </span>
@@ -1042,7 +1344,9 @@ export const LiveWorkflow: React.FC = () => {
                             ? 'text-[#E0242B]'
                             : isComplete
                             ? 'text-[#10B981]'
-                            : 'text-[#8E8E96]'
+                            : isDarkTheme
+                            ? 'text-[#8E8E96]'
+                            : 'text-slate-500'
                         }`}
                       >
                         {floatVal}
@@ -1050,7 +1354,11 @@ export const LiveWorkflow: React.FC = () => {
                     </div>
 
                     {/* 2px Progress Bar */}
-                    <div className="w-full bg-[#1B1B1F] rounded-full h-[2px] mb-1.5 overflow-hidden">
+                    <div
+                      className={`w-full rounded-full h-[2px] mb-1.5 overflow-hidden ${
+                        isDarkTheme ? 'bg-[#1B1B1F]' : 'bg-slate-100'
+                      }`}
+                    >
                       <div
                         style={{
                           width: `${pct}%`,
@@ -1058,7 +1366,9 @@ export const LiveWorkflow: React.FC = () => {
                             ? '#10B981'
                             : isDelayed
                             ? '#E0242B'
-                            : '#F7F7F5',
+                            : isDarkTheme
+                            ? '#F7F7F5'
+                            : '#0284C7',
                         }}
                         className="h-[2px] transition-all"
                       />
@@ -1077,7 +1387,9 @@ export const LiveWorkflow: React.FC = () => {
                               ? 'text-[#10B981]'
                               : isReview
                               ? 'text-[#C9942A]'
-                              : 'text-[#8E8E96]'
+                              : isDarkTheme
+                              ? 'text-[#8E8E96]'
+                              : 'text-slate-600'
                           }`}
                         >
                           {isComplete
@@ -1097,7 +1409,9 @@ export const LiveWorkflow: React.FC = () => {
                             ? 'text-[#E0242B]'
                             : isComplete
                             ? 'text-[#10B981]'
-                            : 'text-[#8E8E96]'
+                            : isDarkTheme
+                            ? 'text-[#8E8E96]'
+                            : 'text-slate-500'
                         }`}
                       >
                         {floatVal}
@@ -1121,20 +1435,50 @@ export const LiveWorkflow: React.FC = () => {
 
         {/* Live Update Notification Beacon */}
         {lastLiveMessage && (
-          <div className="absolute bottom-12 right-6 z-10 px-3 py-2 rounded-lg bg-[#141417] border border-[#E0242B]/50 shadow-2xl flex items-center gap-2 select-none">
+          <div
+            className={`absolute bottom-12 right-6 z-10 px-3 py-2 rounded-lg border shadow-2xl flex items-center gap-2 select-none animate-in slide-in-from-bottom-2 duration-150 ${
+              isDarkTheme
+                ? 'bg-[#141417] border-[#E0242B]/50'
+                : 'bg-white border-[#E0242B] shadow-lg'
+            }`}
+          >
             <div className="w-2 h-2 rounded-full bg-[#E0242B] animate-ping" />
-            <span className="text-xs text-[#8E8E96]">
-              Live update: <span className="font-mono font-bold text-[#F7F7F5]">{lastLiveMessage.activity_id}</span> is{' '}
-              <span className="font-bold text-[#E0242B] uppercase">{lastLiveMessage.new_status}</span>
+            <span
+              className={`text-xs ${
+                isDarkTheme ? 'text-[#8E8E96]' : 'text-slate-600'
+              }`}
+            >
+              Live update:{' '}
+              <span
+                className={`font-mono font-bold ${
+                  isDarkTheme ? 'text-[#F7F7F5]' : 'text-slate-900'
+                }`}
+              >
+                {lastLiveMessage.activity_id}
+              </span>{' '}
+              is{' '}
+              <span className="font-bold text-[#E0242B] uppercase">
+                {lastLiveMessage.new_status}
+              </span>
             </span>
           </div>
         )}
 
         {/* Bottom Legend (Brightness encoding, Oil India Red, Green Complete) */}
-        <div className="absolute bottom-3 left-6 z-20 flex items-center gap-4 bg-[#141417]/95 border border-[#2A2A30] px-4 py-1.5 rounded-full text-xs text-[#8E8E96] shadow-xl backdrop-blur-md font-medium select-none">
+        <div
+          className={`absolute bottom-3 left-6 z-20 flex items-center gap-4 px-4 py-1.5 rounded-full text-xs shadow-xl backdrop-blur-md font-medium select-none border ${
+            isDarkTheme
+              ? 'bg-[#141417]/95 border-[#2A2A30] text-[#8E8E96]'
+              : 'bg-white/95 border-[#CBD5E1] text-slate-700 shadow-md'
+          }`}
+        >
           <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-[#F7F7F5]" />
-            <span className="text-[#F7F7F5]">In progress</span>
+            <span
+              className={`w-2 h-2 rounded-full ${
+                isDarkTheme ? 'bg-[#F7F7F5]' : 'bg-slate-700'
+              }`}
+            />
+            <span className={isDarkTheme ? 'text-[#F7F7F5]' : 'text-slate-800'}>In progress</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-[#10B981]" />
@@ -1148,17 +1492,26 @@ export const LiveWorkflow: React.FC = () => {
             <span className="w-2 h-2 rounded-full bg-[#E0242B]" />
             <span className="text-[#E0242B]">Behind / blocked</span>
           </div>
-          <div className="w-[1px] h-3 bg-[#2A2A30] mx-1" />
+          <div
+            className={`w-[1px] h-3 mx-1 ${
+              isDarkTheme ? 'bg-[#2A2A30]' : 'bg-slate-300'
+            }`}
+          />
           <div className="flex items-center gap-1.5">
             <span className="w-3 h-[2px] bg-[#E0242B] inline-block" />
             <span className="text-[#E0242B]">Driving path</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-3 h-[2px] bg-[#3A3A42] inline-block" />
+            <span
+              className={`w-3 h-[2px] inline-block ${
+                isDarkTheme ? 'bg-[#3A3A42]' : 'bg-[#94A3B8]'
+              }`}
+            />
             <span>Non-driving link</span>
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 };

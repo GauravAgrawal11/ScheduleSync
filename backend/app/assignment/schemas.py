@@ -71,6 +71,8 @@ class SupervisorTaskItem(BaseModel):
     starts_in_days: int = 0
     schedule_state: str = "active_now"
     assignment_timeline_status: str = "Assigned (Active Now)"
+    project_id: Optional[int] = None
+    project_name: Optional[str] = None
 
 
 class SupervisorWorkloadActivity(BaseModel):

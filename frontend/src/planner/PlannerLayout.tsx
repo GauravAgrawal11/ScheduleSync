@@ -556,36 +556,56 @@ export const PlannerLayout: React.FC = () => {
                   <div className="h-6 w-px bg-slate-200 mx-1 hidden sm:block" />
 
                   {/* Project Switcher when sidebar is OFF */}
-                  <div className="flex items-center gap-2">
-                    <Building2 className="w-4 h-4 text-slate-400 hidden sm:block flex-shrink-0" />
+                  <div className="flex items-center gap-2 bg-slate-100/90 hover:bg-slate-100 border border-slate-300/80 rounded-xl px-2.5 py-1 transition-all shadow-2xs">
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="text-[10px] font-black uppercase tracking-wider text-[#9e1218] hidden md:inline">
+                        PROJECT:
+                      </span>
+                      <Building2 className="w-3.5 h-3.5 text-[#9e1218] flex-shrink-0" />
+                    </div>
                     <select
                       value={selectedProjectId}
                       onChange={handleProjectChange}
-                      className="text-xs font-semibold bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-800 focus:outline-none focus:ring-1 focus:ring-slate-400 cursor-pointer max-w-[200px] sm:max-w-[280px] md:max-w-[360px] truncate"
+                      className="text-xs font-bold bg-transparent text-slate-900 focus:outline-none cursor-pointer max-w-[180px] sm:max-w-[260px] md:max-w-[340px] truncate"
+                      title="Switch Active Project (Updates all workflow, dependency, and schedule views)"
                     >
                       {projects.map((p) => (
                         <option key={p.id} value={p.id}>
-                          {p.name}
+                          {p.name} {p.activity_count !== undefined ? `(${p.activity_count} act)` : ''}
                         </option>
                       ))}
                     </select>
+                    <span className="hidden lg:inline text-[10px] font-black px-1.5 py-0.5 rounded bg-white text-slate-700 border border-slate-200">
+                      {selectedProjectActivityCount || 0} act
+                    </span>
                   </div>
                 </>
               ) : (
                 /* Project Switcher when sidebar is ON */
-                <div className="flex items-center gap-2">
-                  <Building2 className="w-4 h-4 text-slate-400 hidden sm:block flex-shrink-0" />
+                <div className="flex items-center gap-2 bg-slate-100/90 hover:bg-slate-100 border border-slate-300/80 rounded-xl px-2.5 py-1 transition-all shadow-2xs">
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-[10px] font-black uppercase tracking-wider text-[#9e1218] hidden md:inline">
+                      PROJECT:
+                    </span>
+                    <Building2 className="w-3.5 h-3.5 text-[#9e1218] flex-shrink-0" />
+                  </div>
                   <select
                     value={selectedProjectId}
                     onChange={handleProjectChange}
-                    className="text-xs font-semibold bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-800 focus:outline-none focus:ring-1 focus:ring-slate-400 cursor-pointer max-w-[220px] sm:max-w-[320px] md:max-w-[420px] truncate"
+                    className="text-xs font-bold bg-transparent text-slate-900 focus:outline-none cursor-pointer max-w-[200px] sm:max-w-[300px] md:max-w-[400px] truncate"
+                    title="Switch Active Project (Updates all workflow, dependency, and schedule views)"
                   >
                     {projects.map((p) => (
                       <option key={p.id} value={p.id}>
-                        {p.name}
+                        {p.name} {p.activity_count !== undefined ? `(${p.activity_count} act)` : ''}
                       </option>
                     ))}
                   </select>
+                  <span className="hidden lg:inline text-[10px] font-black px-1.5 py-0.5 rounded bg-white text-slate-700 border border-slate-200">
+                    {selectedProjectActivityCount || 0} act
+                  </span>
                 </div>
               )}
             </div>

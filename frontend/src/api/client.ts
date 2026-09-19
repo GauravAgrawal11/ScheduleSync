@@ -210,6 +210,7 @@ export interface MatchReviewItem {
   };
   final_confidence: number;
   decision: 'auto' | 'review' | 'held' | 'rejected';
+  hold_reason?: 'sequence_violation' | 'low_confidence' | string;
   is_verified: boolean;
   verification_type?: 'AI' | 'MANUAL';
   verified_by?: string;
@@ -420,6 +421,8 @@ export interface SupervisorTaskItem {
   starts_in_days?: number;
   schedule_state?: 'completed' | 'active_now' | 'queued';
   assignment_timeline_status?: string;
+  project_id?: number;
+  project_name?: string;
 }
 
 export interface SupervisorWorkloadActivity {
@@ -499,6 +502,54 @@ export interface DelayedSupervisorItem {
   status_detail: string;
   activities: ActivityProgressItem[];
 }
+
+export interface DailySummaryCompletedItem {
+  activity_id: string;
+  activity_name: string;
+  discipline: string;
+  supervisor: string;
+  actual_finish?: string;
+  confidence?: number;
+}
+
+export interface DailySummaryDisciplineItem {
+  discipline: string;
+  completed_today: number;
+  remaining: number;
+  total: number;
+}
+
+export interface DailySummary {
+  project_id: number;
+  date: string;
+  completed_today: DailySummaryCompletedItem[];
+  remaining_by_discipline: DailySummaryDisciplineItem[];
+  completed_today_count: number;
+  remaining_count: number;
+  total_activities: number;
+}
+
+export interface SupervisorDailySummaryItem {
+  supervisor_id?: number;
+  supervisor_name: string;
+  discipline?: string;
+  completed_today: number;
+  remaining: number;
+  total: number;
+  completed_activities: DailySummaryCompletedItem[];
+}
+
+export interface DailySummaryBySupervisor {
+  project_id: number;
+  date: string;
+  by_supervisor: SupervisorDailySummaryItem[];
+  totals: {
+    completed_today_count: number;
+    remaining_count: number;
+    total_activities: number;
+  };
+}
+
 
 export type ComplaintCategory = 'LABOR' | 'MATERIAL' | 'ACCESS' | 'EQUIPMENT' | 'SAFETY' | 'OTHER';
 export type ComplaintStatus = 'OPEN' | 'ACKNOWLEDGED' | 'RESOLVED';
@@ -1624,11 +1675,15 @@ export const api = {
 
   getSupervisorTasks: async (
     supervisorId: number,
-    week?: number
+    week?: number,
+    projectId?: number
   ): Promise<SupervisorTaskItem[]> => {
-    const url = week !== undefined
-      ? `${API_BASE_URL}/assignment/supervisor/${supervisorId}?week=${week}`
-      : `${API_BASE_URL}/assignment/supervisor/${supervisorId}`;
+    let url = `${API_BASE_URL}/assignment/supervisor/${supervisorId}`;
+    const params = new URLSearchParams();
+    if (week !== undefined) params.append('week', String(week));
+    if (projectId !== undefined) params.append('project_id', String(projectId));
+    const qs = params.toString();
+    if (qs) url += `?${qs}`;
     const res = await fetch(url, {
       headers: getAuthHeaders(),
     });
@@ -1806,59 +1861,77 @@ export const api = {
       const contentType = res.headers.get('content-type') || '';
       if (res.ok && contentType.includes('application/json')) {
         const data = await res.json();
-        if (data && Array.isArray(data.nodes) && data.nodes.length > 0) {
+        if (data && Array.isArray(data.nodes)) {
           return data;
         }
       }
     } catch {}
 
-    // Resilient fallback from canonical schedule baseline (e.g. on Vercel preview or offline)
-    const { MOCK_NETWORK_ACTIVITIES } = await import('../mock/network');
-    let filtered = MOCK_NETWORK_ACTIVITIES;
-    if (discipline && discipline.toUpperCase() !== 'ALL') {
-      filtered = filtered.filter((a) => a.discipline?.toLowerCase() === discipline.toLowerCase());
-    }
+    // Resilient fallback from canonical schedule baseline only for Project 1 when offline
+    if (projectId === 1) {
+      const { MOCK_NETWORK_ACTIVITIES } = await import('../mock/network');
+      let filtered = MOCK_NETWORK_ACTIVITIES;
+      if (discipline && discipline.toUpperCase() !== 'ALL') {
+        filtered = filtered.filter((a) => a.discipline?.toLowerCase() === discipline.toLowerCase());
+      }
 
-    const nodes: WorkflowNodeData[] = filtered.map((act, idx) => ({
-      activity_id: act.id,
-      id: act.id,
-      db_id: idx + 1,
-      wbs_code: act.parentId || 'WBS-REF-01',
-      name: act.name,
-      activity_name: act.name,
-      discipline: act.discipline,
-      location: 'Numaligarh MS Block',
-      planned_start: act.actualStart || '2026-02-01',
-      planned_finish: act.forecastFinish || '2026-02-15',
-      actual_start: act.actualStart || undefined,
-      actual_finish: act.status === 'complete' ? act.forecastFinish : undefined,
-      status:
-        act.status === 'complete'
-          ? 'completed'
-          : act.status === 'behind'
-          ? 'delayed'
-          : act.status === 'at_risk'
-          ? 'needs_review'
-          : 'in_progress',
-      supervisor_id: 1,
-      supervisor_name: act.supervisor,
-      has_sequence_violation: false,
-      predecessor_activity_id: act.predecessors?.[0]?.id || null,
-    }));
+      const nodes: WorkflowNodeData[] = filtered.map((act, idx) => ({
+        activity_id: act.id,
+        id: act.id,
+        db_id: idx + 1,
+        wbs_code: act.parentId || 'WBS-REF-01',
+        name: act.name,
+        activity_name: act.name,
+        discipline: act.discipline,
+        location: 'Numaligarh MS Block',
+        planned_start: act.actualStart || '2026-02-01',
+        planned_finish: act.forecastFinish || '2026-02-15',
+        actual_start: act.actualStart || undefined,
+        actual_finish: act.status === 'complete' ? act.forecastFinish : undefined,
+        status:
+          act.status === 'complete'
+            ? 'completed'
+            : act.status === 'behind'
+            ? 'delayed'
+            : act.status === 'at_risk'
+            ? 'needs_review'
+            : 'in_progress',
+        supervisor_id: 1,
+        supervisor_name: act.supervisor,
+        has_sequence_violation: false,
+        predecessor_activity_id: act.predecessors?.[0]?.id || null,
+      }));
 
-    const edges: WorkflowEdgeData[] = [];
-    filtered.forEach((act) => {
-      act.predecessors?.forEach((pred) => {
-        edges.push({
-          from: pred.id,
-          to: act.id,
-          source: pred.id,
-          target: act.id,
+      const edges: WorkflowEdgeData[] = [];
+      filtered.forEach((act) => {
+        act.predecessors?.forEach((pred) => {
+          edges.push({
+            from: pred.id,
+            to: act.id,
+            source: pred.id,
+            target: act.id,
+          });
         });
       });
-    });
 
-    return { nodes, edges };
+      return { nodes, edges };
+    }
+
+    return { nodes: [], edges: [] };
+  },
+
+  getActivityLiveDetail: async (
+    activityId: string,
+    projectId: number = 1
+  ): Promise<WorkflowActivityDetail | null> => {
+    try {
+      const res = await fetch(
+        `${API_BASE_URL}/workflow/activity/${encodeURIComponent(activityId)}/live-detail`,
+        { headers: getAuthHeaders() }
+      );
+      if (res.ok) return await res.json();
+    } catch {}
+    return null;
   },
 
   getWorkflowActivityDetail: async (activityId: string): Promise<WorkflowActivityDetail> => {
@@ -1933,6 +2006,25 @@ export const api = {
     } catch {}
     const { MOCK_NETWORK_ACTIVITIES } = await import('../mock/network');
     return MOCK_NETWORK_ACTIVITIES;
+  },
+
+  // ==================== DAILY ACTIVITY CHECKER ====================
+  getDailySummary: async (projectId: number = 1, date?: string): Promise<DailySummary> => {
+    const url = date
+      ? `${API_BASE_URL}/analytics/daily-summary?project_id=${projectId}&date=${encodeURIComponent(date)}`
+      : `${API_BASE_URL}/analytics/daily-summary?project_id=${projectId}`;
+    const res = await fetch(url, { headers: getAuthHeaders() });
+    if (!res.ok) throw new Error('Failed to fetch daily summary');
+    return await res.json();
+  },
+
+  getDailySummaryBySupervisor: async (projectId: number = 1, date?: string): Promise<DailySummaryBySupervisor> => {
+    const url = date
+      ? `${API_BASE_URL}/analytics/daily-summary/by-supervisor?project_id=${projectId}&date=${encodeURIComponent(date)}`
+      : `${API_BASE_URL}/analytics/daily-summary/by-supervisor?project_id=${projectId}`;
+    const res = await fetch(url, { headers: getAuthHeaders() });
+    if (!res.ok) throw new Error('Failed to fetch daily summary by supervisor');
+    return await res.json();
   },
 };
 

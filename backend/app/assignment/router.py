@@ -215,15 +215,20 @@ def reassign_activity(
 def get_supervisor_tasks(
     supervisor_id: int,
     week: Optional[int] = Query(None, description="Project week number (e.g. 1, 2)"),
+    project_id: Optional[int] = Query(None, description="Filter activities by Project ID"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     query = (
-        db.query(ActivityAssignment, Activity, User)
+        db.query(ActivityAssignment, Activity, User, Project)
         .join(Activity, ActivityAssignment.activity_id == Activity.id)
         .outerjoin(User, ActivityAssignment.assigned_by == User.id)
+        .outerjoin(Project, Activity.project_id == Project.id)
         .filter(ActivityAssignment.supervisor_id == supervisor_id)
     )
+
+    if project_id is not None:
+        query = query.filter(Activity.project_id == project_id)
 
     if week is not None:
         query = query.filter(ActivityAssignment.project_week == week)
@@ -235,10 +240,10 @@ def get_supervisor_tasks(
     ).all()
 
     tasks = []
-    sup_acts = [act for _, act, _ in results]
+    sup_acts = [act for _, act, _, _ in results]
     ref_date = date(2026, 2, 6)
 
-    for asgn, act, assigner in results:
+    for asgn, act, assigner, proj in results:
         disc_str = (
             act.discipline.value.capitalize()
             if hasattr(act.discipline, "value")
@@ -268,6 +273,8 @@ def get_supervisor_tasks(
                 starts_in_days=starts_in,
                 schedule_state=sch_state,
                 assignment_timeline_status=tl_status,
+                project_id=act.project_id,
+                project_name=proj.name if proj else None,
             )
         )
 

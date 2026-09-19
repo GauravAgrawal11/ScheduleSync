@@ -19,6 +19,7 @@ from app.models.progress_event import ProgressEvent
 from app.models.enums import DecisionEnum
 from app.linking.service import apply_match_link
 from app.models.audit_log import AuditLog
+from app.analytics.sequence import SequenceViolation
 
 router = APIRouter(tags=["Review Queue"])
 
@@ -61,6 +62,7 @@ class MatchQueueItem(BaseModel):
     signals: SignalBreakdown
     final_confidence: float
     decision: str
+    hold_reason: Optional[str] = None   # "sequence_violation" | "low_confidence"
     # Verification metadata
     is_verified: bool = False
     verification_type: Optional[str] = None   # "AI" | "MANUAL"
@@ -171,6 +173,22 @@ def get_review_queue(
             else:
                 verified_by_name = "AI Auto-Match"
 
+        # Determine hold reason: sequence violation vs low confidence
+        has_seq_violation = (
+            db.query(SequenceViolation)
+            .filter(
+                SequenceViolation.activity_id == act.activity_id,
+                SequenceViolation.acknowledged == False,
+            )
+            .first()
+            is not None
+        )
+        hold_reason = None
+        if has_seq_violation:
+            hold_reason = "sequence_violation"
+        elif m.decision == DecisionEnum.REVIEW or m.final_confidence < 0.90:
+            hold_reason = "low_confidence"
+
         results.append(
             MatchQueueItem(
                 match_id=m.id,
@@ -202,6 +220,7 @@ def get_review_queue(
                 ),
                 final_confidence=m.final_confidence,
                 decision=m.decision.value,
+                hold_reason=hold_reason,
                 is_verified=is_verified,
                 verification_type=verification_type,
                 verified_by=verified_by_name,

@@ -9,6 +9,7 @@ import {
   MOCK_NETWORK_ACTIVITIES,
 } from '../mock/network';
 import { useNetworkStore } from './networkStore';
+import { useProjectStore } from './projectStore';
 import { api, getWebSocketUrl } from '../api/client';
 import { SupervisorLayerCard } from './components/SupervisorLayerCard';
 import { SupervisorDetailPanel } from './components/SupervisorDetailPanel';
@@ -41,6 +42,11 @@ import {
   Link2,
   ArrowRight,
   Sliders,
+  Building2,
+  FolderInput,
+  Loader2,
+  Sun,
+  Moon,
 } from 'lucide-react';
 
 // ============================================================================
@@ -297,6 +303,24 @@ export const DependencyNetwork: React.FC = () => {
   const [searchParams] = useSearchParams();
 
   const {
+    selectedProjectId = 1,
+    selectedProjectName,
+    setProject,
+  } = useProjectStore();
+
+  const { data: projectsData } = useQuery({
+    queryKey: ['projects'],
+    queryFn: () => api.getProjects(),
+    staleTime: 60000,
+  });
+
+  const projects = projectsData?.projects || [
+    { id: 1, name: 'Numaligarh Refinery Expansion (Unit 3 & Offsites)', activity_count: 36 },
+    { id: 2, name: 'Duliajan Central Gas Gathering Station (CGGS-2)', activity_count: 22 },
+    { id: 3, name: 'Guwahati-Siliguri Pipeline Modernization (Phase II)', activity_count: 18 },
+  ];
+
+  const {
     hoveredActivityId,
     selectedActivityId,
     criticalPathOnly,
@@ -420,7 +444,7 @@ export const DependencyNetwork: React.FC = () => {
       const runPoll = async () => {
         if (!isMounted) return;
         try {
-          const res = await api.getWorkflowGraph(1);
+          const res = await api.getWorkflowGraph(selectedProjectId);
           if (res?.nodes && isMounted && res.nodes.length > 0) {
             const overrides: Record<string, Status> = {};
             res.nodes.forEach((n: any) => {
@@ -447,7 +471,7 @@ export const DependencyNetwork: React.FC = () => {
 
     const connectWs = () => {
       if (!isMounted) return;
-      const wsUrl = getWebSocketUrl('/workflow/ws/1');
+      const wsUrl = getWebSocketUrl(`/workflow/ws/${selectedProjectId}`);
       if (!wsUrl) {
         startHttpFallback();
         return;
@@ -538,7 +562,7 @@ export const DependencyNetwork: React.FC = () => {
         socket.close();
       }
     };
-  }, []);
+  }, [selectedProjectId]);
 
   // Sync gutter vertical scroll with main canvas
   const handleScroll = () => {
@@ -547,11 +571,11 @@ export const DependencyNetwork: React.FC = () => {
     }
   };
 
-  // TanStack Query to fetch network data
-  const { data: rawActivities = MOCK_NETWORK_ACTIVITIES } = useQuery<Activity[]>({
-    queryKey: ['dependency-network-activities'],
-    queryFn: () => api.getDependencyNetwork?.(1) || Promise.resolve(MOCK_NETWORK_ACTIVITIES),
-    initialData: MOCK_NETWORK_ACTIVITIES,
+  // TanStack Query to fetch project-wise dependency network data (cached for responsiveness)
+  const { data: rawActivities = [], isLoading } = useQuery<Activity[]>({
+    queryKey: ['dependency-network-activities', selectedProjectId],
+    queryFn: () => api.getDependencyNetwork(selectedProjectId),
+    staleTime: 30000,
   });
 
   // Merge custom predecessor links & simulation delays into activities
@@ -725,6 +749,25 @@ export const DependencyNetwork: React.FC = () => {
     return () => document.removeEventListener('fullscreenchange', handleFsChange);
   }, []);
 
+  // Theme state: dark and light mode (DEFAULT: light/white)
+  const [isDarkTheme, setIsDarkTheme] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('schedulesync_network_theme');
+      if (saved) return saved === 'dark';
+    }
+    return false; // Default white (light mode)
+  });
+
+  const toggleTheme = useCallback(() => {
+    setIsDarkTheme((prev) => {
+      const next = !prev;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('schedulesync_network_theme', next ? 'dark' : 'light');
+      }
+      return next;
+    });
+  }, []);
+
   // Sorted nodes in schedule order (by X column, then Y row) for accessible tab traversal
   const sortedScheduleNodes = useMemo(() => {
     return Array.from(layout.placedNodes.values()).sort(
@@ -737,21 +780,84 @@ export const DependencyNetwork: React.FC = () => {
       ref={containerRef}
       className={`flex flex-col ${
         isFullscreen ? 'h-screen w-screen' : 'h-[calc(100vh-64px)] w-full'
-      } bg-[#0C0C0D] text-[#F7F7F5] overflow-hidden select-none font-sans`}
+      } ${
+        isDarkTheme ? 'bg-[#0C0C0D] text-[#F7F7F5]' : 'bg-[#F8FAFC] text-[#0F172A]'
+      } overflow-hidden select-none font-sans transition-colors duration-200`}
     >
       {/* ================================================================== */}
       {/* TOP CONTROL BAR: Filters & Zoom                                    */}
       {/* ================================================================== */}
-      <div className="flex items-center justify-between gap-3 px-4 py-2 bg-[#141417] border-b border-[#2A2A30] z-10 flex-shrink-0">
-        {/* Left: Critical Path toggle & Discipline Chips */}
+      <div
+        className={`flex flex-wrap sm:flex-nowrap items-center justify-between gap-2.5 px-3 py-1.5 ${
+          isDarkTheme ? 'bg-[#141417] border-[#2A2A30]' : 'bg-white border-[#E2E8F0] shadow-xs'
+        } border-b z-10 flex-shrink-0 transition-colors duration-200`}
+      >
+        {/* Left: Project Selector, Critical Path toggle & Discipline Chips */}
         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
+          {/* Prominent Project Selector */}
+          <div
+            className={`flex items-center gap-1.5 ${
+              isDarkTheme
+                ? 'bg-[#1B1B1F] border-[#2A2A30] text-[#F7F7F5]'
+                : 'bg-[#F1F5F9] border-[#CBD5E1] text-[#0F172A]'
+            } border hover:border-[#8E8E96] transition-colors rounded-lg px-2.5 py-1 text-xs flex-shrink-0 shadow-xs`}
+          >
+            <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse flex-shrink-0" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-[#E0242B] hidden md:inline flex-shrink-0">
+              PROJECT:
+            </span>
+            <Building2 className="w-3.5 h-3.5 text-[#E0242B] flex-shrink-0" />
+            <select
+              value={selectedProjectId}
+              onChange={(e) => {
+                const pid = Number(e.target.value);
+                const p = projects.find((x) => x.id === pid);
+                if (p) {
+                  setProject({
+                    id: p.id,
+                    name: p.name,
+                    client: (p as any).client,
+                    activity_count: p.activity_count ?? 0,
+                  });
+                }
+              }}
+              className={`bg-transparent text-xs font-bold ${
+                isDarkTheme ? 'text-[#F7F7F5]' : 'text-[#0F172A]'
+              } outline-none cursor-pointer max-w-[190px] sm:max-w-[270px] md:max-w-[360px] truncate`}
+              title="Switch Active Project Dependency Network"
+            >
+              {projects.map((p) => (
+                <option
+                  key={p.id}
+                  value={p.id}
+                  className={isDarkTheme ? 'bg-[#141417] text-[#F7F7F5]' : 'bg-white text-[#0F172A]'}
+                >
+                  {p.name} {p.activity_count !== undefined ? `(${p.activity_count} act)` : ''}
+                </option>
+              ))}
+            </select>
+            <span
+              className={`hidden xl:inline text-[10px] font-mono font-bold ${
+                isDarkTheme ? 'text-[#8E8E96] bg-[#2A2A30]/80' : 'text-[#64748B] bg-[#E2E8F0]'
+              } px-1.5 py-0.2 rounded`}
+            >
+              {layout.placedNodes.size} activities
+            </span>
+          </div>
+
+          <div
+            className={`w-px h-4 ${isDarkTheme ? 'bg-[#2A2A30]' : 'bg-[#CBD5E1]'} mx-0.5 hidden sm:block`}
+          />
+
           {/* Critical Path Toggle */}
           <button
             onClick={toggleCriticalPathOnly}
             className={`px-3 py-1 rounded-full text-xs font-semibold tracking-wide transition-all cursor-pointer whitespace-nowrap border ${
               criticalPathOnly
                 ? 'bg-[#E0242B] text-white border-[#E0242B] shadow-md shadow-red-950/40'
-                : 'bg-[#1B1B1F] text-[#8E8E96] hover:text-[#F7F7F5] border-[#2A2A30]'
+                : isDarkTheme
+                ? 'bg-[#1B1B1F] text-[#8E8E96] hover:text-[#F7F7F5] border-[#2A2A30]'
+                : 'bg-white text-[#64748B] hover:text-[#0F172A] border-[#CBD5E1]'
             }`}
           >
             Critical path only
@@ -767,8 +873,12 @@ export const DependencyNetwork: React.FC = () => {
                   onClick={() => toggleDiscipline(d.id)}
                   className={`px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer whitespace-nowrap border ${
                     isActive
-                      ? 'bg-[#F7F7F5] text-[#0C0C0D] border-[#F7F7F5] font-semibold'
-                      : 'bg-transparent text-[#8E8E96] hover:text-[#F7F7F5] border-[#2A2A30]'
+                      ? isDarkTheme
+                        ? 'bg-[#F7F7F5] text-[#0C0C0D] border-[#F7F7F5] font-semibold'
+                        : 'bg-[#0F172A] text-white border-[#0F172A] font-semibold'
+                      : isDarkTheme
+                      ? 'bg-transparent text-[#8E8E96] hover:text-[#F7F7F5] border-[#2A2A30]'
+                      : 'bg-transparent text-[#64748B] hover:text-[#0F172A] border-[#CBD5E1]'
                   }`}
                 >
                   {d.label}
@@ -778,13 +888,21 @@ export const DependencyNetwork: React.FC = () => {
           </div>
 
           {/* L5 / L6 Density Switch */}
-          <div className="flex items-center bg-[#1B1B1F] border border-[#2A2A30] rounded-md p-0.5 text-xs text-[#8E8E96] ml-1">
+          <div
+            className={`flex items-center ${
+              isDarkTheme ? 'bg-[#1B1B1F] border-[#2A2A30]' : 'bg-[#F1F5F9] border-[#CBD5E1]'
+            } border rounded-md p-0.5 text-xs text-[#8E8E96] ml-1`}
+          >
             <button
               onClick={() => setDensityMode('L6')}
               className={`px-2.5 py-0.5 rounded text-[11px] font-semibold transition-colors cursor-pointer ${
                 densityMode === 'L6'
-                  ? 'bg-[#F7F7F5] text-[#0C0C0D] font-bold'
-                  : 'text-[#8E8E96] hover:text-[#F7F7F5]'
+                  ? isDarkTheme
+                    ? 'bg-[#F7F7F5] text-[#0C0C0D] font-bold'
+                    : 'bg-white text-[#0F172A] font-bold shadow-xs'
+                  : isDarkTheme
+                  ? 'text-[#8E8E96] hover:text-[#F7F7F5]'
+                  : 'text-[#64748B] hover:text-[#0F172A]'
               }`}
               title="L6 Individual Activity Level"
             >
@@ -794,8 +912,12 @@ export const DependencyNetwork: React.FC = () => {
               onClick={() => setDensityMode('L5')}
               className={`px-2.5 py-0.5 rounded text-[11px] font-semibold transition-colors cursor-pointer ${
                 densityMode === 'L5'
-                  ? 'bg-[#F7F7F5] text-[#0C0C0D] font-bold'
-                  : 'text-[#8E8E96] hover:text-[#F7F7F5]'
+                  ? isDarkTheme
+                    ? 'bg-[#F7F7F5] text-[#0C0C0D] font-bold'
+                    : 'bg-white text-[#0F172A] font-bold shadow-xs'
+                  : isDarkTheme
+                  ? 'text-[#8E8E96] hover:text-[#F7F7F5]'
+                  : 'text-[#64748B] hover:text-[#0F172A]'
               }`}
               title="L5 Consolidated Work Packages"
             >
@@ -809,7 +931,9 @@ export const DependencyNetwork: React.FC = () => {
             className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border transition-all cursor-pointer whitespace-nowrap ml-1 ${
               isSimulationActive
                 ? 'bg-[#C9942A] text-black border-[#C9942A] shadow-md shadow-amber-950/50 font-bold'
-                : 'bg-[#1B1B1F] text-[#8E8E96] hover:text-[#F7F7F5] border-[#2A2A30]'
+                : isDarkTheme
+                ? 'bg-[#1B1B1F] text-[#8E8E96] hover:text-[#F7F7F5] border-[#2A2A30]'
+                : 'bg-white text-[#64748B] hover:text-[#0F172A] border-[#CBD5E1]'
             }`}
             title="Simulate delay ripples on downstream activities"
           >
@@ -818,11 +942,37 @@ export const DependencyNetwork: React.FC = () => {
           </button>
         </div>
 
-        {/* Right: Live Beacon, Search Box & Zoom Controls */}
-        <div className="flex items-center gap-2.5">
+        {/* Right: Theme Toggle, Live Beacon, Search Box & Zoom Controls */}
+        <div className="flex items-center gap-2">
+          {/* Light / Dark Mode Toggle Button (Default White) */}
+          <button
+            onClick={toggleTheme}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
+              !isDarkTheme
+                ? 'bg-amber-500/10 text-amber-700 border-amber-500/30 hover:bg-amber-500/20'
+                : 'bg-[#1B1B1F] text-[#F7F7F5] border-[#2A2A30] hover:border-[#8E8E96]'
+            }`}
+            title={isDarkTheme ? 'Switch to Light Mode (Default White)' : 'Switch to Dark Mode'}
+            aria-label="Toggle Light and Dark Mode"
+          >
+            {!isDarkTheme ? (
+              <>
+                <Sun className="w-3.5 h-3.5 text-amber-500" />
+                <span className="text-[11px] font-bold">Light (White)</span>
+              </>
+            ) : (
+              <>
+                <Moon className="w-3.5 h-3.5 text-indigo-400" />
+                <span className="text-[11px] font-bold">Dark</span>
+              </>
+            )}
+          </button>
+
           {/* Live Feed Status Beacon */}
           <div
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#10B981]/10 border border-[#10B981]/30 text-[10px]"
+            className={`flex items-center gap-1.5 px-2 py-1 rounded-full ${
+              isDarkTheme ? 'bg-[#10B981]/10 border-[#10B981]/30' : 'bg-emerald-50 border-emerald-300'
+            } border text-[10px]`}
             title={
               connectionMode === 'live_ws'
                 ? 'WebSocket stream connected (real-time push)'
@@ -836,40 +986,70 @@ export const DependencyNetwork: React.FC = () => {
           </div>
 
           {/* Search Box */}
-          <div className="relative w-56">
-            <Search className="w-3.5 h-3.5 text-[#8E8E96] absolute left-2.5 top-1/2 -translate-y-1/2" />
+          <div className="relative w-48 sm:w-56">
+            <Search
+              className={`w-3.5 h-3.5 ${
+                isDarkTheme ? 'text-[#8E8E96]' : 'text-slate-400'
+              } absolute left-2.5 top-1/2 -translate-y-1/2`}
+            />
             <input
               type="text"
               placeholder="Activity, supervisor, tag no..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-[#1B1B1F] border border-[#2A2A30] focus:border-[#8E8E96] text-xs text-[#F7F7F5] pl-8 pr-2.5 py-1 rounded-md outline-none placeholder:text-[#8E8E96]"
+              className={`w-full ${
+                isDarkTheme
+                  ? 'bg-[#1B1B1F] border-[#2A2A30] text-[#F7F7F5] placeholder:text-[#8E8E96] focus:border-[#8E8E96]'
+                  : 'bg-[#F8FAFC] border-[#CBD5E1] text-[#0F172A] placeholder:text-slate-400 focus:border-slate-500'
+              } border text-xs pl-8 pr-2.5 py-1 rounded-md outline-none transition-colors`}
             />
           </div>
 
           {/* Zoom Buttons */}
-          <div className="flex items-center bg-[#1B1B1F] border border-[#2A2A30] rounded-md p-0.5 text-xs text-[#8E8E96]">
+          <div
+            className={`flex items-center ${
+              isDarkTheme ? 'bg-[#1B1B1F] border-[#2A2A30]' : 'bg-[#F1F5F9] border-[#CBD5E1]'
+            } border rounded-md p-0.5 text-xs text-[#8E8E96]`}
+          >
             <button
               onClick={zoomOut}
-              className="px-2 py-0.5 hover:text-[#F7F7F5] hover:bg-[#2A2A30] rounded transition-colors cursor-pointer"
+              className={`px-2 py-0.5 ${
+                isDarkTheme
+                  ? 'hover:text-[#F7F7F5] hover:bg-[#2A2A30]'
+                  : 'hover:text-[#0F172A] hover:bg-[#E2E8F0]'
+              } rounded transition-colors cursor-pointer`}
               title="Zoom Out"
             >
               −
             </button>
-            <span className="font-mono px-1.5 text-[11px] text-[#8E8E96] min-w-[38px] text-center">
+            <span
+              className={`font-mono px-1.5 text-[11px] ${
+                isDarkTheme ? 'text-[#8E8E96]' : 'text-slate-600'
+              } min-w-[38px] text-center font-bold`}
+            >
               {Math.round(zoom * 100)}%
             </span>
             <button
               onClick={zoomIn}
-              className="px-2 py-0.5 hover:text-[#F7F7F5] hover:bg-[#2A2A30] rounded transition-colors cursor-pointer"
+              className={`px-2 py-0.5 ${
+                isDarkTheme
+                  ? 'hover:text-[#F7F7F5] hover:bg-[#2A2A30]'
+                  : 'hover:text-[#0F172A] hover:bg-[#E2E8F0]'
+              } rounded transition-colors cursor-pointer`}
               title="Zoom In"
             >
               +
             </button>
-            <div className="w-px h-3 bg-[#2A2A30] mx-0.5" />
+            <div
+              className={`w-px h-3 ${isDarkTheme ? 'bg-[#2A2A30]' : 'bg-[#CBD5E1]'} mx-0.5`}
+            />
             <button
               onClick={zoomFit}
-              className="px-2 py-0.5 text-[11px] font-semibold text-[#8E8E96] hover:text-[#F7F7F5] hover:bg-[#2A2A30] rounded transition-colors cursor-pointer"
+              className={`px-2 py-0.5 text-[11px] font-semibold ${
+                isDarkTheme
+                  ? 'text-[#8E8E96] hover:text-[#F7F7F5] hover:bg-[#2A2A30]'
+                  : 'text-slate-600 hover:text-[#0F172A] hover:bg-[#E2E8F0]'
+              } rounded transition-colors cursor-pointer`}
             >
               Fit
             </button>
@@ -878,7 +1058,11 @@ export const DependencyNetwork: React.FC = () => {
           {/* Fullscreen Toggle Option */}
           <button
             onClick={toggleFullscreen}
-            className="p-1.5 bg-[#1B1B1F] border border-[#2A2A30] hover:border-[#8E8E96] hover:text-[#F7F7F5] rounded-md transition-colors cursor-pointer text-[#8E8E96] flex items-center justify-center"
+            className={`p-1.5 ${
+              isDarkTheme
+                ? 'bg-[#1B1B1F] border-[#2A2A30] hover:border-[#8E8E96] hover:text-[#F7F7F5] text-[#8E8E96]'
+                : 'bg-[#F1F5F9] border-[#CBD5E1] hover:border-slate-500 hover:text-[#0F172A] text-slate-600'
+            } border rounded-md transition-colors cursor-pointer flex items-center justify-center`}
             title={isFullscreen ? 'Exit Full Screen' : 'Enter Full Screen'}
             aria-label={isFullscreen ? 'Exit Full Screen' : 'Enter Full Screen'}
           >
@@ -912,17 +1096,54 @@ export const DependencyNetwork: React.FC = () => {
       {/* ================================================================== */}
       {/* MAIN VIEWPORT: Sticky Left Gutter + Scrollable Canvas + Right Panel */}
       {/* ================================================================== */}
-      <div className="flex-1 flex relative overflow-hidden bg-[#0C0C0D]">
+      {isLoading && effectiveActivities.length === 0 ? (
+        <div className="flex-1 flex flex-col items-center justify-center gap-3 bg-[#0C0C0D] text-[#8E8E96]">
+          <Loader2 className="w-8 h-8 text-[#E0242B] animate-spin" />
+          <span className="text-xs font-mono">Loading dependency network for {selectedProjectName}...</span>
+        </div>
+      ) : effectiveActivities.length === 0 ? (
+        <div className="flex-1 flex flex-col items-center justify-center p-6 bg-[#0C0C0D] text-[#8E8E96]">
+          <div className="max-w-md w-full bg-[#141417] border border-[#2A2A30] rounded-2xl p-6 text-center shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-200">
+            <div className="w-12 h-12 rounded-xl bg-red-950/40 border border-[#E0242B]/30 flex items-center justify-center mx-auto text-[#E0242B]">
+              <FolderInput className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-[#F7F7F5]">No Dependency Network Found</h3>
+              <p className="text-xs text-[#8E8E96] mt-1.5 leading-relaxed">
+                Project <strong className="text-[#F7F7F5]">{selectedProjectName}</strong> does not have any baseline schedule activities or dependency links yet.
+              </p>
+            </div>
+            <button
+              onClick={() => navigate('/planner/setup')}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#E0242B] text-white text-xs font-semibold hover:bg-[#c91e24] transition-colors shadow-md shadow-red-950/50 cursor-pointer"
+            >
+              <FolderInput className="w-4 h-4" />
+              Import Baseline Schedule (.xlsx / .xer)
+            </button>
+          </div>
+        </div>
+      ) : (
+      <div
+        className={`flex-1 flex relative overflow-hidden ${
+          isDarkTheme ? 'bg-[#0C0C0D]' : 'bg-[#F8FAFC]'
+        } transition-colors duration-200`}
+      >
         {/* STICKY LEFT GUTTER (126px) */}
         <div
           ref={gutterRef}
           style={{ width: GUTTER_WIDTH }}
-          className="h-full bg-[#141417] border-r border-[#2A2A30] flex-shrink-0 overflow-hidden z-20 select-none pointer-events-auto"
+          className={`h-full ${
+            isDarkTheme ? 'bg-[#141417] border-[#2A2A30]' : 'bg-white border-[#E2E8F0]'
+          } border-r flex-shrink-0 overflow-hidden z-20 select-none pointer-events-auto transition-colors duration-200`}
         >
           {/* Top ruler corner spacer */}
           <div
             style={{ height: RULER_HEIGHT }}
-            className="border-b border-[#2A2A30] bg-[#141417] flex items-center px-3 text-[10px] uppercase font-mono tracking-wider text-[#8E8E96]"
+            className={`border-b ${
+              isDarkTheme
+                ? 'border-[#2A2A30] bg-[#141417] text-[#8E8E96]'
+                : 'border-[#E2E8F0] bg-[#F1F5F9] text-slate-600'
+            } flex items-center px-3 text-[10px] uppercase font-mono tracking-wider font-bold`}
           >
             Discipline
           </div>
@@ -933,14 +1154,24 @@ export const DependencyNetwork: React.FC = () => {
               <div
                 key={lane.discipline}
                 style={{ height: lane.height }}
-                className="px-3 pt-3.5 border-b border-[#2A2A30]/60 flex flex-col justify-start"
+                className={`px-3 pt-3.5 border-b ${
+                  isDarkTheme ? 'border-[#2A2A30]/60' : 'border-[#E2E8F0]'
+                } flex flex-col justify-start`}
               >
                 <div className="flex items-start justify-between">
                   <div className="leading-snug pr-1">
-                    <span className="text-xs font-bold text-[#F7F7F5] block truncate">
+                    <span
+                      className={`text-xs font-bold ${
+                        isDarkTheme ? 'text-[#F7F7F5]' : 'text-[#0F172A]'
+                      } block truncate`}
+                    >
                       {lane.label}
                     </span>
-                    <span className="text-[10px] text-[#8E8E96] font-mono block mt-0.5">
+                    <span
+                      className={`text-[10px] ${
+                        isDarkTheme ? 'text-[#8E8E96]' : 'text-slate-500'
+                      } font-mono block mt-0.5`}
+                    >
                       {lane.activities.length} act
                     </span>
                   </div>
@@ -948,7 +1179,11 @@ export const DependencyNetwork: React.FC = () => {
                   {/* Collapse / Expand L5 Rollup Toggle */}
                   <button
                     onClick={() => toggleLaneCollapse(lane.discipline)}
-                    className="p-0.5 text-[#8E8E96] hover:text-white rounded hover:bg-[#1B1B1F] cursor-pointer"
+                    className={`p-0.5 ${
+                      isDarkTheme
+                        ? 'text-[#8E8E96] hover:text-white hover:bg-[#1B1B1F]'
+                        : 'text-slate-400 hover:text-slate-800 hover:bg-[#F1F5F9]'
+                    } rounded cursor-pointer transition-colors`}
                     title={lane.isCollapsed ? 'Expand Lane' : 'Collapse to L5 parents'}
                   >
                     {lane.isCollapsed ? (
@@ -967,7 +1202,9 @@ export const DependencyNetwork: React.FC = () => {
         <div
           ref={canvasScrollRef}
           onScroll={handleScroll}
-          className="flex-1 h-full overflow-auto relative custom-scrollbar bg-[#0C0C0D]"
+          className={`flex-1 h-full overflow-auto relative custom-scrollbar ${
+            isDarkTheme ? 'bg-[#0C0C0D]' : 'bg-[#F8FAFC]'
+          } transition-colors duration-200`}
         >
           {/* Canvas Transform Container */}
           <div
@@ -982,17 +1219,27 @@ export const DependencyNetwork: React.FC = () => {
             {/* STICKY TOP RULER (34px) */}
             <div
               style={{ height: RULER_HEIGHT, width: layout.totalWidth }}
-              className="sticky top-0 z-20 bg-[#141417] border-b border-[#2A2A30] flex items-center font-mono text-[11px] text-[#8E8E96]"
+              className={`sticky top-0 z-20 ${
+                isDarkTheme
+                  ? 'bg-[#141417] border-[#2A2A30] text-[#8E8E96]'
+                  : 'bg-white border-[#E2E8F0] text-slate-600 shadow-xs'
+              } border-b flex items-center font-mono text-[11px] transition-colors duration-200`}
             >
               {timelineColumns.map((w, i) => (
                 <div
                   key={w.id}
                   style={{ width: COLUMN_WIDTH }}
-                  className="px-4 font-semibold text-[#8E8E96] border-r border-[#2A2A30]/50 truncate flex items-center justify-between"
+                  className={`px-4 font-semibold ${
+                    isDarkTheme ? 'text-[#8E8E96] border-[#2A2A30]/50' : 'text-slate-700 border-[#E2E8F0]'
+                  } border-r truncate flex items-center justify-between`}
                   title={w.dateRange}
                 >
                   <span className="truncate">{w.label}</span>
-                  <span className="text-[9px] font-mono text-[#5A5A64] hidden xl:inline flex-shrink-0 ml-1">
+                  <span
+                    className={`text-[9px] font-mono ${
+                      isDarkTheme ? 'text-[#5A5A64]' : 'text-slate-400'
+                    } hidden xl:inline flex-shrink-0 ml-1`}
+                  >
                     {w.dateRange.split(' ')[0]}–{w.dateRange.split(' ')[2]}
                   </span>
                 </div>
@@ -1005,7 +1252,9 @@ export const DependencyNetwork: React.FC = () => {
                 <div
                   key={w.id}
                   style={{ left: (i + 1) * COLUMN_WIDTH }}
-                  className="absolute top-0 bottom-0 w-px border-r border-[#1B1B1F]"
+                  className={`absolute top-0 bottom-0 w-px border-r ${
+                    isDarkTheme ? 'border-[#1B1B1F]' : 'border-[#E2E8F0]'
+                  }`}
                 />
               ))}
 
@@ -1014,7 +1263,9 @@ export const DependencyNetwork: React.FC = () => {
                 <div
                   key={lane.discipline}
                   style={{ top: lane.top + lane.height }}
-                  className="absolute left-0 right-0 h-px border-b border-[#2A2A30]/50"
+                  className={`absolute left-0 right-0 h-px border-b ${
+                    isDarkTheme ? 'border-[#2A2A30]/50' : 'border-[#E2E8F0]'
+                  }`}
                 />
               ))}
 
@@ -1023,7 +1274,11 @@ export const DependencyNetwork: React.FC = () => {
                 style={{ left: dataDateX }}
                 className="absolute top-0 bottom-0 w-px bg-[#E0242B] z-10 flex flex-col items-center shadow-[0_0_8px_rgba(224,36,43,0.4)]"
               >
-                <div className="bg-[#141417] text-[#E0242B] border border-[#E0242B] text-[9px] font-mono font-bold px-2 py-0.5 rounded shadow-lg mt-1 whitespace-nowrap">
+                <div
+                  className={`${
+                    isDarkTheme ? 'bg-[#141417] text-[#E0242B]' : 'bg-white text-[#E0242B]'
+                  } border border-[#E0242B] text-[9px] font-mono font-bold px-2 py-0.5 rounded shadow-lg mt-1 whitespace-nowrap`}
+                >
                   DATA DATE · {formatExactDate(dataDateObj)}
                 </div>
               </div>
@@ -1063,7 +1318,10 @@ export const DependencyNetwork: React.FC = () => {
                   markerHeight="6"
                   orient="auto-start-reverse"
                 >
-                  <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#3A3A42" />
+                  <path
+                    d="M 0 1.5 L 8 5 L 0 8.5 z"
+                    fill={isDarkTheme ? '#3A3A42' : '#94A3B8'}
+                  />
                 </marker>
               </defs>
 
@@ -1078,8 +1336,8 @@ export const DependencyNetwork: React.FC = () => {
                     <path
                       d={c.pathD}
                       fill="none"
-                      stroke={c.isDriving ? '#E0242B' : '#3A3A42'}
-                      strokeWidth={c.isDriving ? 2.2 : 1.2}
+                      stroke={c.isDriving ? '#E0242B' : isDarkTheme ? '#3A3A42' : '#94A3B8'}
+                      strokeWidth={c.isDriving ? 2.2 : 1.4}
                       markerEnd={c.isDriving ? 'url(#arrow-driving)' : 'url(#arrow-default)'}
                       opacity={isDimmed ? 0.12 : 1.0}
                       className="transition-opacity duration-150"
@@ -1097,15 +1355,15 @@ export const DependencyNetwork: React.FC = () => {
                           width="48"
                           height="18"
                           rx="3"
-                          fill="#141417"
-                          stroke="#2A2A30"
+                          fill={isDarkTheme ? '#141417' : '#FFFFFF'}
+                          stroke={isDarkTheme ? '#2A2A30' : '#CBD5E1'}
                           strokeWidth="1"
                         />
                         <text
                           x="0"
                           y="3.5"
                           textAnchor="middle"
-                          fill="#F7F7F5"
+                          fill={isDarkTheme ? '#F7F7F5' : '#0F172A'}
                           fontFamily="IBM Plex Mono, monospace"
                           fontSize="9"
                           fontWeight="600"
@@ -1143,16 +1401,22 @@ export const DependencyNetwork: React.FC = () => {
                   ? '#E0242B'
                   : isAtRisk
                   ? '#C9942A'
-                  : '#F7F7F5';
+                  : isDarkTheme
+                  ? '#F7F7F5'
+                  : '#0284C7';
 
                 // Provenance label
                 const provenanceDotColor = isComplete
                   ? '#10B981'
                   : activity.provenance === 'ai_linked'
-                  ? '#F7F7F5'
+                  ? isDarkTheme
+                    ? '#F7F7F5'
+                    : '#0284C7'
                   : activity.provenance === 'needs_review'
                   ? '#C9942A'
-                  : '#8E8E96';
+                  : isDarkTheme
+                  ? '#8E8E96'
+                  : '#64748B';
 
                 const provenanceText =
                   activity.provenance === 'ai_linked'
@@ -1195,14 +1459,22 @@ export const DependencyNetwork: React.FC = () => {
                       height,
                       opacity,
                     }}
-                    className={`absolute pointer-events-auto rounded-[6px] bg-[#141417] text-left p-2.5 transition-all duration-150 cursor-pointer outline-none border focus-visible:ring-2 focus-visible:ring-[#F7F7F5] select-none ${
+                    className={`absolute pointer-events-auto rounded-[6px] text-left p-2.5 transition-all duration-150 cursor-pointer outline-none border focus-visible:ring-2 select-none ${
+                      isDarkTheme
+                        ? 'bg-[#141417] focus-visible:ring-[#F7F7F5]'
+                        : 'bg-white shadow-xs focus-visible:ring-slate-900'
+                    } ${
                       isSelected
-                        ? 'border-[#F7F7F5] ring-2 ring-[#F7F7F5] shadow-2xl'
+                        ? isDarkTheme
+                          ? 'border-[#F7F7F5] ring-2 ring-[#F7F7F5] shadow-2xl'
+                          : 'border-slate-900 ring-2 ring-slate-900 shadow-xl'
                         : isBehind || isBlocked
                         ? 'border-[#E0242B]/80 hover:border-[#E0242B]'
                         : isComplete
                         ? 'border-[#10B981]/40 hover:border-[#10B981]'
-                        : 'border-[#2A2A30] hover:border-[#8E8E96]'
+                        : isDarkTheme
+                        ? 'border-[#2A2A30] hover:border-[#8E8E96]'
+                        : 'border-[#CBD5E1] hover:border-slate-400'
                     }`}
                   >
                     {/* 2px Status Stripe on Left Edge */}
@@ -1219,8 +1491,12 @@ export const DependencyNetwork: React.FC = () => {
                     {/* Top Row: Activity Code + DRIVING badge */}
                     <div className="flex items-center justify-between pl-1 mb-1">
                       <span
-                        className={`font-mono text-[10px] tracking-tight ${
-                          isComplete ? 'text-[#10B981]' : 'text-[#8E8E96]'
+                        className={`font-mono text-[10px] tracking-tight font-semibold ${
+                          isComplete
+                            ? 'text-[#10B981]'
+                            : isDarkTheme
+                            ? 'text-[#8E8E96]'
+                            : 'text-slate-500'
                         }`}
                       >
                         {activity.id}
@@ -1235,23 +1511,41 @@ export const DependencyNetwork: React.FC = () => {
 
                     {/* Activity Name (2 lines max clamped) */}
                     <div
-                      className="text-xs font-semibold leading-tight line-clamp-2 pl-1 mb-1 text-[#F7F7F5]"
+                      className={`text-xs font-semibold leading-tight line-clamp-2 pl-1 mb-1 ${
+                        isDarkTheme ? 'text-[#F7F7F5]' : 'text-[#0F172A]'
+                      }`}
                     >
                       {activity.name}
                     </div>
 
                     {/* Exact Real-Time Schedule Dates */}
-                    <div className="flex items-center justify-between text-[9px] font-mono text-[#8E8E96] pl-1 mb-1">
+                    <div
+                      className={`flex items-center justify-between text-[9px] font-mono ${
+                        isDarkTheme ? 'text-[#8E8E96]' : 'text-slate-500'
+                      } pl-1 mb-1`}
+                    >
                       <span className="truncate">
                         {formatShortDate(activity.actualStart || (activity as any).planned_start)} → {formatShortDate(activity.forecastFinish)}
                       </span>
-                      <span className={activity.totalFloat < 0 ? 'text-[#E0242B] font-bold' : 'text-[#8E8E96]'}>
+                      <span
+                        className={
+                          activity.totalFloat < 0
+                            ? 'text-[#E0242B] font-bold'
+                            : isDarkTheme
+                            ? 'text-[#8E8E96]'
+                            : 'text-slate-500'
+                        }
+                      >
                         {activity.totalFloat > 0 ? `+${activity.totalFloat}d` : `${activity.totalFloat}d`}
                       </span>
                     </div>
 
                     {/* 2px Progress Bar */}
-                    <div className="w-full bg-[#1B1B1F] rounded-full h-[2px] mb-1.5 overflow-hidden">
+                    <div
+                      className={`w-full ${
+                        isDarkTheme ? 'bg-[#1B1B1F]' : 'bg-slate-100'
+                      } rounded-full h-[2px] mb-1.5 overflow-hidden`}
+                    >
                       <div
                         style={{
                           width: `${activity.percentComplete}%`,
@@ -1259,7 +1553,9 @@ export const DependencyNetwork: React.FC = () => {
                             ? '#10B981'
                             : isBehind
                             ? '#E0242B'
-                            : '#F7F7F5',
+                            : isDarkTheme
+                            ? '#F7F7F5'
+                            : '#0284C7',
                         }}
                         className="h-[2px] transition-all"
                       />
@@ -1279,7 +1575,9 @@ export const DependencyNetwork: React.FC = () => {
                               ? 'text-[#10B981]'
                               : activity.provenance === 'needs_review'
                               ? 'text-[#C9942A]'
-                              : 'text-[#8E8E96]'
+                              : isDarkTheme
+                              ? 'text-[#8E8E96]'
+                              : 'text-slate-600'
                           }`}
                         >
                           {provenanceText}
@@ -1293,7 +1591,9 @@ export const DependencyNetwork: React.FC = () => {
                             ? 'text-[#E0242B]'
                             : isComplete
                             ? 'text-[#10B981]'
-                            : 'text-[#8E8E96]'
+                            : isDarkTheme
+                            ? 'text-[#8E8E96]'
+                            : 'text-slate-500'
                         }`}
                       >
                         {activity.totalFloat > 0
@@ -1325,7 +1625,11 @@ export const DependencyNetwork: React.FC = () => {
               isBelow1100
                 ? 'fixed right-0 top-0 bottom-0 z-50 shadow-2xl animate-in slide-in-from-right duration-200'
                 : 'h-full z-40'
-            } bg-[#141417] border-l border-[#2A2A30] flex flex-col flex-shrink-0 shadow-2xl overflow-y-auto custom-scrollbar select-none transition-all duration-200`}
+            } ${
+              isDarkTheme
+                ? 'bg-[#141417] border-[#2A2A30]'
+                : 'bg-white border-[#E2E8F0] shadow-xl'
+            } border-l flex flex-col flex-shrink-0 shadow-2xl overflow-y-auto custom-scrollbar select-none transition-all duration-200`}
           >
             {drillSupervisor ? (
               <SupervisorDetailPanel
@@ -1345,20 +1649,36 @@ export const DependencyNetwork: React.FC = () => {
             ) : (
               <>
                 {/* Panel Header */}
-            <div className="p-4 border-b border-[#2A2A30]">
+            <div
+              className={`p-4 border-b ${
+                isDarkTheme ? 'border-[#2A2A30]' : 'border-[#E2E8F0]'
+              }`}
+            >
               <div className="flex items-start justify-between gap-2">
                 <div className="space-y-0.5">
-                  <div className="font-mono text-[10px] text-[#8E8E96]">
+                  <div
+                    className={`font-mono text-[10px] ${
+                      isDarkTheme ? 'text-[#8E8E96]' : 'text-slate-500'
+                    }`}
+                  >
                     {selectedActivity.id} · <span className="capitalize">{selectedActivity.discipline}</span>
                   </div>
-                  <h3 className="text-sm font-bold text-[#F7F7F5] leading-snug">
+                  <h3
+                    className={`text-sm font-bold ${
+                      isDarkTheme ? 'text-[#F7F7F5]' : 'text-[#0F172A]'
+                    } leading-snug`}
+                  >
                     {selectedActivity.name}
                   </h3>
                 </div>
 
                 <button
                   onClick={() => setSelectedActivityId(null)}
-                  className="p-1 text-[#8E8E96] hover:text-[#F7F7F5] rounded hover:bg-[#1B1B1F] cursor-pointer"
+                  className={`p-1 ${
+                    isDarkTheme
+                      ? 'text-[#8E8E96] hover:text-[#F7F7F5] hover:bg-[#1B1B1F]'
+                      : 'text-slate-400 hover:text-slate-800 hover:bg-[#F1F5F9]'
+                  } rounded cursor-pointer transition-colors`}
                   title="Close panel"
                 >
                   <X className="w-4 h-4" />
@@ -1367,9 +1687,13 @@ export const DependencyNetwork: React.FC = () => {
             </div>
 
             {/* Properties Grid */}
-            <div className="p-4 space-y-3 text-xs border-b border-[#2A2A30]">
+            <div
+              className={`p-4 space-y-3 text-xs border-b ${
+                isDarkTheme ? 'border-[#2A2A30]' : 'border-[#E2E8F0]'
+              }`}
+            >
               <div className="flex items-center justify-between">
-                <span className="text-[#8E8E96]">Status</span>
+                <span className={isDarkTheme ? 'text-[#8E8E96]' : 'text-slate-500'}>Status</span>
                 <span
                   className={`font-semibold capitalize ${
                     selectedActivity.status === 'behind' || selectedActivity.status === 'blocked'
@@ -1378,7 +1702,9 @@ export const DependencyNetwork: React.FC = () => {
                       ? 'text-[#C9942A]'
                       : selectedActivity.status === 'complete'
                       ? 'text-[#10B981]'
-                      : 'text-[#F7F7F5]'
+                      : isDarkTheme
+                      ? 'text-[#F7F7F5]'
+                      : 'text-slate-800'
                   }`}
                 >
                   {selectedActivity.status.replace('_', ' ')}
@@ -1386,31 +1712,47 @@ export const DependencyNetwork: React.FC = () => {
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-[#8E8E96]">Progress</span>
-                <span className="font-mono font-bold text-[#F7F7F5]">
+                <span className={isDarkTheme ? 'text-[#8E8E96]' : 'text-slate-500'}>Progress</span>
+                <span
+                  className={`font-mono font-bold ${
+                    isDarkTheme ? 'text-[#F7F7F5]' : 'text-[#0F172A]'
+                  }`}
+                >
                   {selectedActivity.percentComplete}%
                 </span>
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-[#8E8E96]">Start</span>
-                <span className="font-mono text-[#F7F7F5]">
+                <span className={isDarkTheme ? 'text-[#8E8E96]' : 'text-slate-500'}>Start</span>
+                <span
+                  className={`font-mono ${
+                    isDarkTheme ? 'text-[#F7F7F5]' : 'text-[#0F172A]'
+                  }`}
+                >
                   {formatExactDate(selectedActivity.actualStart || (selectedActivity as any).planned_start)}
                 </span>
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-[#8E8E96]">Finish</span>
-                <span className="font-mono text-[#F7F7F5]">
+                <span className={isDarkTheme ? 'text-[#8E8E96]' : 'text-slate-500'}>Finish</span>
+                <span
+                  className={`font-mono ${
+                    isDarkTheme ? 'text-[#F7F7F5]' : 'text-[#0F172A]'
+                  }`}
+                >
                   {formatExactDate(selectedActivity.forecastFinish)}
                 </span>
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-[#8E8E96]">Total float</span>
+                <span className={isDarkTheme ? 'text-[#8E8E96]' : 'text-slate-500'}>Total float</span>
                 <span
                   className={`font-mono font-bold ${
-                    selectedActivity.totalFloat < 0 ? 'text-[#E0242B]' : 'text-[#8E8E96]'
+                    selectedActivity.totalFloat < 0
+                      ? 'text-[#E0242B]'
+                      : isDarkTheme
+                      ? 'text-[#8E8E96]'
+                      : 'text-slate-600'
                   }`}
                 >
                   {selectedActivity.totalFloat > 0
@@ -1438,7 +1780,11 @@ export const DependencyNetwork: React.FC = () => {
             </div>
 
             {/* Layer-Wise Supervisor Intelligence Card */}
-            <div className="p-4 border-b border-[#2A2A30]">
+            <div
+              className={`p-4 border-b ${
+                isDarkTheme ? 'border-[#2A2A30]' : 'border-[#E2E8F0]'
+              }`}
+            >
               <SupervisorLayerCard
                 supervisorName={selectedActivity.supervisor}
                 discipline={selectedActivity.discipline}
@@ -1455,12 +1801,24 @@ export const DependencyNetwork: React.FC = () => {
             </div>
 
             {/* "Captured from" Section with Audio Note Player */}
-            <div className="p-4 space-y-2.5 border-b border-[#2A2A30]">
+            <div
+              className={`p-4 space-y-2.5 border-b ${
+                isDarkTheme ? 'border-[#2A2A30]' : 'border-[#E2E8F0]'
+              }`}
+            >
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#8E8E96]">
+                <span
+                  className={`text-[10px] font-bold uppercase tracking-wider ${
+                    isDarkTheme ? 'text-[#8E8E96]' : 'text-slate-500'
+                  }`}
+                >
                   Captured from
                 </span>
-                <span className="text-[10px] font-mono text-[#8E8E96]">
+                <span
+                  className={`text-[10px] font-mono ${
+                    isDarkTheme ? 'text-[#8E8E96]' : 'text-slate-500'
+                  }`}
+                >
                   {selectedActivity.provenance === 'ai_linked'
                     ? 'AI Auto-Linked'
                     : selectedActivity.provenance === 'needs_review'
@@ -1470,17 +1828,35 @@ export const DependencyNetwork: React.FC = () => {
               </div>
 
               {selectedActivity.sourceExcerpt ? (
-                <div className="p-2.5 rounded bg-[#0C0C0D] border border-[#2A2A30] text-[11px] text-[#8E8E96] italic leading-relaxed">
+                <div
+                  className={`p-2.5 rounded text-[11px] italic leading-relaxed border ${
+                    isDarkTheme
+                      ? 'bg-[#0C0C0D] border-[#2A2A30] text-[#8E8E96]'
+                      : 'bg-[#F8FAFC] border-[#E2E8F0] text-slate-600'
+                  }`}
+                >
                   "{selectedActivity.sourceExcerpt}"
                 </div>
               ) : (
-                <div className="p-2.5 rounded bg-[#0C0C0D] border border-[#2A2A30] text-[11px] text-[#4A4A52] italic">
+                <div
+                  className={`p-2.5 rounded text-[11px] italic border ${
+                    isDarkTheme
+                      ? 'bg-[#0C0C0D] border-[#2A2A30] text-[#4A4A52]'
+                      : 'bg-[#F8FAFC] border-[#E2E8F0] text-slate-400'
+                  }`}
+                >
                   Manual baseline schedule record
                 </div>
               )}
 
               {/* Voice Note Audio Player Widget */}
-              <div className="p-2.5 rounded bg-[#0C0C0D] border border-[#2A2A30] space-y-2">
+              <div
+                className={`p-2.5 rounded space-y-2 border ${
+                  isDarkTheme
+                    ? 'bg-[#0C0C0D] border-[#2A2A30]'
+                    : 'bg-[#F8FAFC] border-[#E2E8F0]'
+                }`}
+              >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <button
@@ -1495,11 +1871,21 @@ export const DependencyNetwork: React.FC = () => {
                       )}
                     </button>
                     <div>
-                      <div className="text-[11px] font-semibold text-[#F7F7F5] flex items-center gap-1.5">
+                      <div
+                        className={`text-[11px] font-semibold flex items-center gap-1.5 ${
+                          isDarkTheme ? 'text-[#F7F7F5]' : 'text-[#0F172A]'
+                        }`}
+                      >
                         <Volume2 className="w-3.5 h-3.5 text-[#C9942A]" />
                         <span>Supervisor Voice Log</span>
                       </div>
-                      <div className="text-[10px] text-[#8E8E96]">0:14s · Field Radio Transceiver</div>
+                      <div
+                        className={`text-[10px] ${
+                          isDarkTheme ? 'text-[#8E8E96]' : 'text-slate-500'
+                        }`}
+                      >
+                        0:14s · Field Radio Transceiver
+                      </div>
                     </div>
                   </div>
 
@@ -1521,7 +1907,9 @@ export const DependencyNetwork: React.FC = () => {
                       }`}
                     />
                     <span
-                      className={`w-1 rounded-sm bg-[#F7F7F5] transition-all duration-150 ${
+                      className={`w-1 rounded-sm ${
+                        isDarkTheme ? 'bg-[#F7F7F5]' : 'bg-slate-700'
+                      } transition-all duration-150 ${
                         isPlayingAudio ? 'h-2.5 animate-pulse delay-100' : 'h-1.5'
                       }`}
                     />
@@ -1529,7 +1917,11 @@ export const DependencyNetwork: React.FC = () => {
                 </div>
 
                 {/* Progress Bar */}
-                <div className="w-full bg-[#1B1B1F] h-1 rounded-full overflow-hidden">
+                <div
+                  className={`w-full ${
+                    isDarkTheme ? 'bg-[#1B1B1F]' : 'bg-slate-200'
+                  } h-1 rounded-full overflow-hidden`}
+                >
                   <div
                     className="bg-[#E0242B] h-full transition-all duration-200"
                     style={{ width: `${audioProgress}%` }}
@@ -1540,25 +1932,73 @@ export const DependencyNetwork: React.FC = () => {
               {/* 3 Signal Scores */}
               {selectedActivity.signals && (
                 <div className="grid grid-cols-3 gap-1.5 pt-1">
-                  <div className="p-2 rounded bg-[#1B1B1F] border border-[#2A2A30] text-center">
-                    <div className="font-mono text-xs font-bold text-[#F7F7F5]">
+                  <div
+                    className={`p-2 rounded text-center border ${
+                      isDarkTheme
+                        ? 'bg-[#1B1B1F] border-[#2A2A30]'
+                        : 'bg-white border-[#E2E8F0] shadow-sm'
+                    }`}
+                  >
+                    <div
+                      className={`font-mono text-xs font-bold ${
+                        isDarkTheme ? 'text-[#F7F7F5]' : 'text-[#0F172A]'
+                      }`}
+                    >
                       {selectedActivity.signals.semantic}%
                     </div>
-                    <div className="text-[9px] text-[#8E8E96] mt-0.5">Semantic</div>
+                    <div
+                      className={`text-[9px] mt-0.5 ${
+                        isDarkTheme ? 'text-[#8E8E96]' : 'text-slate-500'
+                      }`}
+                    >
+                      Semantic
+                    </div>
                   </div>
 
-                  <div className="p-2 rounded bg-[#1B1B1F] border border-[#2A2A30] text-center">
-                    <div className="font-mono text-xs font-bold text-[#F7F7F5]">
+                  <div
+                    className={`p-2 rounded text-center border ${
+                      isDarkTheme
+                        ? 'bg-[#1B1B1F] border-[#2A2A30]'
+                        : 'bg-white border-[#E2E8F0] shadow-sm'
+                    }`}
+                  >
+                    <div
+                      className={`font-mono text-xs font-bold ${
+                        isDarkTheme ? 'text-[#F7F7F5]' : 'text-[#0F172A]'
+                      }`}
+                    >
                       {selectedActivity.signals.entity}%
                     </div>
-                    <div className="text-[9px] text-[#8E8E96] mt-0.5">Entity</div>
+                    <div
+                      className={`text-[9px] mt-0.5 ${
+                        isDarkTheme ? 'text-[#8E8E96]' : 'text-slate-500'
+                      }`}
+                    >
+                      Entity
+                    </div>
                   </div>
 
-                  <div className="p-2 rounded bg-[#1B1B1F] border border-[#2A2A30] text-center">
-                    <div className="font-mono text-xs font-bold text-[#F7F7F5]">
+                  <div
+                    className={`p-2 rounded text-center border ${
+                      isDarkTheme
+                        ? 'bg-[#1B1B1F] border-[#2A2A30]'
+                        : 'bg-white border-[#E2E8F0] shadow-sm'
+                    }`}
+                  >
+                    <div
+                      className={`font-mono text-xs font-bold ${
+                        isDarkTheme ? 'text-[#F7F7F5]' : 'text-[#0F172A]'
+                      }`}
+                    >
                       {selectedActivity.signals.metadata}%
                     </div>
-                    <div className="text-[9px] text-[#8E8E96] mt-0.5">Metadata</div>
+                    <div
+                      className={`text-[9px] mt-0.5 ${
+                        isDarkTheme ? 'text-[#8E8E96]' : 'text-slate-500'
+                      }`}
+                    >
+                      Metadata
+                    </div>
                   </div>
                 </div>
               )}
@@ -1568,7 +2008,7 @@ export const DependencyNetwork: React.FC = () => {
                 <div className="flex gap-2 pt-1">
                   <button
                     onClick={() => alert(`Confirmed link for ${selectedActivity.id}`)}
-                    className="flex-1 py-1.5 px-3 rounded bg-[#E0242B] hover:bg-red-700 text-white font-semibold text-xs transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                    className="flex-1 py-1.5 px-3 rounded bg-[#E0242B] hover:bg-red-700 text-white font-semibold text-xs transition-colors flex items-center justify-center gap-1 cursor-pointer shadow-sm"
                   >
                     <Check className="w-3.5 h-3.5" />
                     <span>Confirm link</span>
@@ -1576,7 +2016,11 @@ export const DependencyNetwork: React.FC = () => {
 
                   <button
                     onClick={() => alert(`Relink triggered for ${selectedActivity.id}`)}
-                    className="py-1.5 px-3 rounded bg-[#1B1B1F] hover:bg-[#2A2A30] text-[#F7F7F5] border border-[#2A2A30] text-xs transition-colors cursor-pointer"
+                    className={`py-1.5 px-3 rounded text-xs transition-colors cursor-pointer border ${
+                      isDarkTheme
+                        ? 'bg-[#1B1B1F] hover:bg-[#2A2A30] text-[#F7F7F5] border-[#2A2A30]'
+                        : 'bg-white hover:bg-slate-100 text-slate-700 border-[#CBD5E1]'
+                    }`}
                   >
                     Relink
                   </button>
@@ -1584,16 +2028,30 @@ export const DependencyNetwork: React.FC = () => {
               ) : (
                 <button
                   onClick={() => alert(`Audit log entries for ${selectedActivity.id}`)}
-                  className="w-full mt-1 py-1.5 px-3 rounded bg-[#1B1B1F] hover:bg-[#2A2A30] text-[#F7F7F5] border border-[#2A2A30] text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                  className={`w-full mt-1 py-1.5 px-3 rounded text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer border ${
+                    isDarkTheme
+                      ? 'bg-[#1B1B1F] hover:bg-[#2A2A30] text-[#F7F7F5] border-[#2A2A30]'
+                      : 'bg-white hover:bg-slate-100 text-slate-700 border-[#CBD5E1]'
+                  }`}
                 >
-                  <FileText className="w-3.5 h-3.5 text-[#8E8E96]" />
+                  <FileText
+                    className={`w-3.5 h-3.5 ${
+                      isDarkTheme ? 'text-[#8E8E96]' : 'text-slate-500'
+                    }`}
+                  />
                   <span>View audit trail</span>
                 </button>
               )}
             </div>
 
             {/* What-If Delay Simulation (Slippage Sandbox) */}
-            <div className="p-4 space-y-2.5 border-b border-[#2A2A30] bg-[#101012]">
+            <div
+              className={`p-4 space-y-2.5 border-b ${
+                isDarkTheme
+                  ? 'border-[#2A2A30] bg-[#101012]'
+                  : 'border-[#E2E8F0] bg-amber-50/40'
+              }`}
+            >
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[#C9942A] flex items-center gap-1.5">
                   <FlaskConical className="w-3 h-3" />
@@ -1602,7 +2060,11 @@ export const DependencyNetwork: React.FC = () => {
                 {(simulationDays[selectedActivity.id] || 0) > 0 && (
                   <button
                     onClick={() => setSimulatedDelay(selectedActivity.id, 0)}
-                    className="text-[10px] text-[#8E8E96] hover:text-[#E0242B] cursor-pointer"
+                    className={`text-[10px] cursor-pointer ${
+                      isDarkTheme
+                        ? 'text-[#8E8E96] hover:text-[#E0242B]'
+                        : 'text-slate-500 hover:text-[#E0242B]'
+                    }`}
                   >
                     Reset
                   </button>
@@ -1622,7 +2084,9 @@ export const DependencyNetwork: React.FC = () => {
                       className={`flex-1 py-1 rounded text-xs font-mono font-semibold transition-colors border cursor-pointer ${
                         isCurrent
                           ? 'bg-[#C9942A] text-black border-[#C9942A] font-bold'
-                          : 'bg-[#1B1B1F] text-[#8E8E96] hover:text-[#F7F7F5] border-[#2A2A30]'
+                          : isDarkTheme
+                          ? 'bg-[#1B1B1F] text-[#8E8E96] hover:text-[#F7F7F5] border-[#2A2A30]'
+                          : 'bg-white text-slate-600 hover:text-slate-900 border-[#CBD5E1]'
                       }`}
                     >
                       +{days}d
@@ -1636,8 +2100,12 @@ export const DependencyNetwork: React.FC = () => {
                 <div
                   className={`p-2 rounded text-[11px] leading-tight border ${
                     selectedActivity.totalFloat < 0
-                      ? 'bg-red-950/40 border-red-800/60 text-[#E0242B]'
-                      : 'bg-amber-950/30 border-amber-800/50 text-[#C9942A]'
+                      ? isDarkTheme
+                        ? 'bg-red-950/40 border-red-800/60 text-[#E0242B]'
+                        : 'bg-red-50 border-red-300 text-red-700'
+                      : isDarkTheme
+                      ? 'bg-amber-950/30 border-amber-800/50 text-[#C9942A]'
+                      : 'bg-amber-50 border-amber-300 text-amber-800'
                   }`}
                 >
                   {selectedActivity.totalFloat < 0 ? (
@@ -1654,9 +2122,17 @@ export const DependencyNetwork: React.FC = () => {
             </div>
 
             {/* Predecessors & Interactive Predecessor Linker */}
-            <div className="p-4 space-y-2.5 border-b border-[#2A2A30]">
+            <div
+              className={`p-4 space-y-2.5 border-b ${
+                isDarkTheme ? 'border-[#2A2A30]' : 'border-[#E2E8F0]'
+              }`}
+            >
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#8E8E96]">
+                <span
+                  className={`text-[10px] font-bold uppercase tracking-wider ${
+                    isDarkTheme ? 'text-[#8E8E96]' : 'text-slate-500'
+                  }`}
+                >
                   Predecessors ({selectedActivity.predecessors.length})
                 </span>
                 <button
@@ -1670,12 +2146,28 @@ export const DependencyNetwork: React.FC = () => {
 
               {/* Predecessor Linker Form */}
               {isLinkingOpen && (
-                <div className="p-2.5 rounded bg-[#0C0C0D] border border-[#C9942A]/40 space-y-2 animate-in fade-in duration-150">
-                  <label className="text-[10px] text-[#8E8E96] block">Select Driving Activity:</label>
+                <div
+                  className={`p-2.5 rounded border space-y-2 animate-in fade-in duration-150 ${
+                    isDarkTheme
+                      ? 'bg-[#0C0C0D] border-[#C9942A]/40'
+                      : 'bg-amber-50/50 border-[#C9942A]/50'
+                  }`}
+                >
+                  <label
+                    className={`text-[10px] block ${
+                      isDarkTheme ? 'text-[#8E8E96]' : 'text-slate-500'
+                    }`}
+                  >
+                    Select Driving Activity:
+                  </label>
                   <select
                     value={selectedCandidateId}
                     onChange={(e) => setSelectedCandidateId(e.target.value)}
-                    className="w-full bg-[#1B1B1F] border border-[#2A2A30] text-xs text-[#F7F7F5] rounded p-1 outline-none"
+                    className={`w-full text-xs rounded p-1 outline-none border ${
+                      isDarkTheme
+                        ? 'bg-[#1B1B1F] border-[#2A2A30] text-[#F7F7F5]'
+                        : 'bg-white border-[#CBD5E1] text-slate-800'
+                    }`}
                   >
                     <option value="">-- Choose predecessor activity --</option>
                     {effectiveActivities
@@ -1693,11 +2185,21 @@ export const DependencyNetwork: React.FC = () => {
 
                   <div className="grid grid-cols-2 gap-2 pt-0.5">
                     <div>
-                      <label className="text-[10px] text-[#8E8E96] block">Link Type:</label>
+                      <label
+                        className={`text-[10px] block ${
+                          isDarkTheme ? 'text-[#8E8E96]' : 'text-slate-500'
+                        }`}
+                      >
+                        Link Type:
+                      </label>
                       <select
                         value={selectedLinkType}
                         onChange={(e) => setSelectedLinkType(e.target.value as any)}
-                        className="w-full bg-[#1B1B1F] border border-[#2A2A30] text-xs text-[#F7F7F5] rounded p-1 outline-none"
+                        className={`w-full text-xs rounded p-1 outline-none border ${
+                          isDarkTheme
+                            ? 'bg-[#1B1B1F] border-[#2A2A30] text-[#F7F7F5]'
+                            : 'bg-white border-[#CBD5E1] text-slate-800'
+                        }`}
                       >
                         <option value="FS">Finish-to-Start (FS)</option>
                         <option value="SS">Start-to-Start (SS)</option>
@@ -1705,14 +2207,24 @@ export const DependencyNetwork: React.FC = () => {
                       </select>
                     </div>
                     <div>
-                      <label className="text-[10px] text-[#8E8E96] block">Lag (Days):</label>
+                      <label
+                        className={`text-[10px] block ${
+                          isDarkTheme ? 'text-[#8E8E96]' : 'text-slate-500'
+                        }`}
+                      >
+                        Lag (Days):
+                      </label>
                       <input
                         type="number"
                         min="0"
                         max="14"
                         value={selectedLinkLag}
                         onChange={(e) => setSelectedLinkLag(Number(e.target.value))}
-                        className="w-full bg-[#1B1B1F] border border-[#2A2A30] text-xs text-[#F7F7F5] rounded p-1 outline-none font-mono"
+                        className={`w-full text-xs rounded p-1 outline-none font-mono border ${
+                          isDarkTheme
+                            ? 'bg-[#1B1B1F] border-[#2A2A30] text-[#F7F7F5]'
+                            : 'bg-white border-[#CBD5E1] text-slate-800'
+                        }`}
                       />
                     </div>
                   </div>
@@ -1734,7 +2246,9 @@ export const DependencyNetwork: React.FC = () => {
                     className={`w-full py-1.5 rounded text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
                       selectedCandidateId
                         ? 'bg-[#C9942A] text-black hover:bg-amber-500 font-bold'
-                        : 'bg-[#2A2A30] text-[#8E8E96] cursor-not-allowed'
+                        : isDarkTheme
+                        ? 'bg-[#2A2A30] text-[#8E8E96] cursor-not-allowed'
+                        : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                     }`}
                   >
                     <Link2 className="w-3.5 h-3.5" />
@@ -1745,7 +2259,11 @@ export const DependencyNetwork: React.FC = () => {
 
               {/* Current Predecessors List */}
               {selectedActivity.predecessors.length === 0 ? (
-                <div className="text-[11px] text-[#4A4A52] italic">
+                <div
+                  className={`text-[11px] italic ${
+                    isDarkTheme ? 'text-[#4A4A52]' : 'text-slate-400'
+                  }`}
+                >
                   Head task — no incoming dependencies.
                 </div>
               ) : (
@@ -1754,17 +2272,37 @@ export const DependencyNetwork: React.FC = () => {
                     <button
                       key={pred.id}
                       onClick={() => setSelectedActivityId(pred.id)}
-                      className="w-full p-2 rounded bg-[#0C0C0D] border border-[#2A2A30] hover:border-[#8E8E96] transition-colors flex items-center justify-between text-left cursor-pointer group"
+                      className={`w-full p-2 rounded border transition-colors flex items-center justify-between text-left cursor-pointer group ${
+                        isDarkTheme
+                          ? 'bg-[#0C0C0D] border-[#2A2A30] hover:border-[#8E8E96]'
+                          : 'bg-white border-[#E2E8F0] hover:border-slate-400 shadow-sm'
+                      }`}
                     >
                       <div className="truncate pr-2">
-                        <div className="font-mono text-[10px] text-[#8E8E96] group-hover:text-white">
+                        <div
+                          className={`font-mono text-[10px] ${
+                            isDarkTheme
+                              ? 'text-[#8E8E96] group-hover:text-white'
+                              : 'text-slate-500 group-hover:text-slate-900'
+                          }`}
+                        >
                           {pred.id}
                         </div>
-                        <div className="text-xs text-[#F7F7F5] truncate leading-tight mt-0.5">
+                        <div
+                          className={`text-xs truncate leading-tight mt-0.5 ${
+                            isDarkTheme ? 'text-[#F7F7F5]' : 'text-slate-800 font-medium'
+                          }`}
+                        >
                           {effectiveActivities.find((a) => a.id === pred.id)?.name || 'Predecessor'}
                         </div>
                       </div>
-                      <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-[#1B1B1F] text-[#8E8E96] border border-[#2A2A30]">
+                      <span
+                        className={`font-mono text-[10px] px-1.5 py-0.5 rounded border ${
+                          isDarkTheme
+                            ? 'bg-[#1B1B1F] text-[#8E8E96] border-[#2A2A30]'
+                            : 'bg-slate-100 text-slate-600 border-slate-200'
+                        }`}
+                      >
                         {pred.type} {pred.lagDays > 0 ? `+${pred.lagDays}d` : '+0d'}
                       </span>
                     </button>
@@ -1775,12 +2313,20 @@ export const DependencyNetwork: React.FC = () => {
 
             {/* "Drives" Downstream Activities Section */}
             <div className="p-4 space-y-2 flex-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#8E8E96]">
+              <span
+                className={`text-[10px] font-bold uppercase tracking-wider ${
+                  isDarkTheme ? 'text-[#8E8E96]' : 'text-slate-500'
+                }`}
+              >
                 Drives ({drivesActivities.length})
               </span>
 
               {drivesActivities.length === 0 ? (
-                <div className="text-[11px] text-[#4A4A52] italic">
+                <div
+                  className={`text-[11px] italic ${
+                    isDarkTheme ? 'text-[#4A4A52]' : 'text-slate-400'
+                  }`}
+                >
                   Terminal task — no successor links.
                 </div>
               ) : (
@@ -1789,20 +2335,38 @@ export const DependencyNetwork: React.FC = () => {
                     <button
                       key={succ.id}
                       onClick={() => setSelectedActivityId(succ.id)}
-                      className="w-full p-2 rounded bg-[#0C0C0D] border border-[#2A2A30] hover:border-[#8E8E96] transition-colors flex items-center justify-between text-left cursor-pointer group"
+                      className={`w-full p-2 rounded border transition-colors flex items-center justify-between text-left cursor-pointer group ${
+                        isDarkTheme
+                          ? 'bg-[#0C0C0D] border-[#2A2A30] hover:border-[#8E8E96]'
+                          : 'bg-white border-[#E2E8F0] hover:border-slate-400 shadow-sm'
+                      }`}
                     >
                       <div className="truncate pr-2">
-                        <div className="font-mono text-[10px] text-[#8E8E96] group-hover:text-white">
+                        <div
+                          className={`font-mono text-[10px] ${
+                            isDarkTheme
+                              ? 'text-[#8E8E96] group-hover:text-white'
+                              : 'text-slate-500 group-hover:text-slate-900'
+                          }`}
+                        >
                           {succ.id}
                         </div>
-                        <div className="text-xs text-[#F7F7F5] truncate leading-tight mt-0.5">
+                        <div
+                          className={`text-xs truncate leading-tight mt-0.5 ${
+                            isDarkTheme ? 'text-[#F7F7F5]' : 'text-slate-800 font-medium'
+                          }`}
+                        >
                           {succ.name}
                         </div>
                       </div>
 
                       <span
                         className={`font-mono text-[10px] font-bold ${
-                          succ.totalFloat < 0 ? 'text-[#E0242B]' : 'text-[#8E8E96]'
+                          succ.totalFloat < 0
+                            ? 'text-[#E0242B]'
+                            : isDarkTheme
+                            ? 'text-[#8E8E96]'
+                            : 'text-slate-500'
                         }`}
                       >
                         {succ.totalFloat > 0 ? `+${succ.totalFloat}d` : `${succ.totalFloat}d`}
@@ -1814,7 +2378,13 @@ export const DependencyNetwork: React.FC = () => {
             </div>
 
             {/* Bi-directional Navigation Quick-Jump Button */}
-            <div className="p-4 border-t border-[#2A2A30] bg-[#0C0C0D]">
+            <div
+              className={`p-4 border-t ${
+                isDarkTheme
+                  ? 'border-[#2A2A30] bg-[#0C0C0D]'
+                  : 'border-[#E2E8F0] bg-slate-50'
+              }`}
+            >
               <button
                 onClick={() => navigate(`/planner/workflow?selectedId=${selectedActivity.id}`)}
                 className="w-full py-2 px-3 rounded bg-[#E0242B] hover:bg-red-700 text-white text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-lg shadow-red-950/50"
@@ -1830,20 +2400,40 @@ export const DependencyNetwork: React.FC = () => {
 
         {/* Live Update Notification Beacon */}
         {lastLiveMessage && (
-          <div className="absolute bottom-12 right-6 z-10 px-3 py-2 rounded-lg bg-[#141417] border border-[#E0242B]/50 shadow-2xl flex items-center gap-2 select-none animate-in slide-in-from-bottom-2 duration-150">
+          <div
+            className={`absolute bottom-12 right-6 z-10 px-3 py-2 rounded-lg border shadow-2xl flex items-center gap-2 select-none animate-in slide-in-from-bottom-2 duration-150 ${
+              isDarkTheme
+                ? 'bg-[#141417] border-[#E0242B]/50'
+                : 'bg-white border-[#E0242B] shadow-lg'
+            }`}
+          >
             <div className="w-2 h-2 rounded-full bg-[#E0242B] animate-ping" />
-            <span className="text-xs text-[#8E8E96]">
-              Live update: <span className="font-mono font-bold text-[#F7F7F5]">{lastLiveMessage.activity_id}</span> is{' '}
+            <span
+              className={`text-xs ${
+                isDarkTheme ? 'text-[#8E8E96]' : 'text-slate-600'
+              }`}
+            >
+              Live update: <span className={`font-mono font-bold ${isDarkTheme ? 'text-[#F7F7F5]' : 'text-slate-900'}`}>{lastLiveMessage.activity_id}</span> is{' '}
               <span className="font-bold text-[#E0242B] uppercase">{lastLiveMessage.new_status}</span>
             </span>
           </div>
         )}
 
         {/* Bottom Legend (Green for Complete) */}
-        <div className="absolute bottom-3 left-6 z-20 flex items-center gap-4 bg-[#141417]/95 border border-[#2A2A30] px-4 py-1.5 rounded-full text-xs text-[#8E8E96] shadow-xl backdrop-blur-md font-medium select-none">
+        <div
+          className={`absolute bottom-3 left-6 z-20 flex items-center gap-4 px-4 py-1.5 rounded-full text-xs shadow-xl backdrop-blur-md font-medium select-none border ${
+            isDarkTheme
+              ? 'bg-[#141417]/95 border-[#2A2A30] text-[#8E8E96]'
+              : 'bg-white/95 border-[#CBD5E1] text-slate-700 shadow-md'
+          }`}
+        >
           <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-[#F7F7F5]" />
-            <span className="text-[#F7F7F5]">In progress</span>
+            <span
+              className={`w-2 h-2 rounded-full ${
+                isDarkTheme ? 'bg-[#F7F7F5]' : 'bg-slate-700'
+              }`}
+            />
+            <span className={isDarkTheme ? 'text-[#F7F7F5]' : 'text-slate-800'}>In progress</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-[#10B981]" />
@@ -1857,17 +2447,26 @@ export const DependencyNetwork: React.FC = () => {
             <span className="w-2 h-2 rounded-full bg-[#E0242B]" />
             <span className="text-[#E0242B]">Behind / blocked</span>
           </div>
-          <div className="w-[1px] h-3 bg-[#2A2A30] mx-1" />
+          <div
+            className={`w-[1px] h-3 mx-1 ${
+              isDarkTheme ? 'bg-[#2A2A30]' : 'bg-slate-300'
+            }`}
+          />
           <div className="flex items-center gap-1.5">
             <span className="w-3 h-[2px] bg-[#E0242B] inline-block" />
             <span className="text-[#E0242B]">Driving path</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-3 h-[2px] bg-[#3A3A42] inline-block" />
+            <span
+              className={`w-3 h-[2px] inline-block ${
+                isDarkTheme ? 'bg-[#3A3A42]' : 'bg-[#94A3B8]'
+              }`}
+            />
             <span>Non-driving link</span>
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 };
