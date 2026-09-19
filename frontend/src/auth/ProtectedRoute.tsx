@@ -14,31 +14,23 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowe
   const isSupervisorRoute = location.pathname.startsWith('/supervisor');
 
   // FIELD SUPERVISOR ROUTES:
-  // Must NEVER redirect to /planner, /planner/review, or /admin/login!
-  // If unauthenticated or currently in an admin session, auto-initialize a clean supervisor session.
+  // Requires supervisor login first. Must NEVER redirect to admin!
   if (isSupervisorRoute) {
     if (!isAuthenticated || !user || user.role !== 'supervisor') {
-      const defaultSupervisorUser = {
-        id: 2,
-        name: 'Supervisor 1 - Piping',
-        email: 'piping.sup1@oilindia.in',
-        role: 'supervisor' as const,
-        discipline: 'Piping',
-      };
-      const existingToken = useAuthStore.getState().token || 'demo-supervisor-session-token';
-      setAuth(defaultSupervisorUser, existingToken);
+      return <Navigate to="/supervisor/login" state={{ from: location }} replace />;
     }
     return <>{children}</>;
   }
 
   // PLANNER / ADMIN COCKPIT ROUTES:
+  // Requires planner/admin login first.
   if (!isAuthenticated || !user) {
     return <Navigate to="/admin/login" state={{ from: location }} replace />;
   }
 
   // STRICT ROLE ISOLATION: Supervisors can NEVER view the central planner cockpit
   if (user.role === 'supervisor') {
-    return <Navigate to="/supervisor" replace />;
+    return <Navigate to="/supervisor/login" replace />;
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
