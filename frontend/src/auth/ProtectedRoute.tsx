@@ -20,10 +20,10 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowe
     if (!isAuthenticated || !user || user.role !== 'supervisor') {
       const defaultSupervisorUser = {
         id: 2,
-        name: 'Supervisor 1 (Civil)',
-        email: 'supervisor@oilindia.in',
+        name: 'Supervisor 1 - Piping',
+        email: 'piping.sup1@oilindia.in',
         role: 'supervisor' as const,
-        discipline: 'Civil',
+        discipline: 'Piping',
       };
       const existingToken = useAuthStore.getState().token || 'demo-supervisor-session-token';
       setAuth(defaultSupervisorUser, existingToken);

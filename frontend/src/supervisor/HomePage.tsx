@@ -74,15 +74,14 @@ export const HomePage: React.FC = () => {
   ];
 
   // STRICT DISCIPLINE & CREDENTIAL ISOLATION:
+  // The supervisor portal strictly belongs to the authenticated individual supervisor!
   const querySupId = searchParams.get('sup_id') ? Number(searchParams.get('sup_id')) : null;
   const isSupervisorRole = user?.role === 'supervisor';
-  const initialSupId = querySupId || (isSupervisorRole ? user?.id : 2) || 2;
-  const [selectedSupId, setSelectedSupId] = useState<number>(initialSupId);
-  const effectiveSupervisorId = selectedSupId;
+  const effectiveSupervisorId = (isSupervisorRole && user?.id) ? user.id : (querySupId || user?.id || 2);
 
   const userDiscipline = user?.discipline
     ? (user.discipline.charAt(0).toUpperCase() + user.discipline.slice(1).toLowerCase())
-    : 'Field';
+    : 'Piping';
 
   // Submissions query
   const { data: submissions = [], isLoading: loadingSubmissions } = useQuery({
@@ -107,8 +106,8 @@ export const HomePage: React.FC = () => {
   const activeSupervisorObj = DEMO_SUPERVISORS.find((s) => s.id === effectiveSupervisorId);
   const currentSupervisorMeta = {
     id: effectiveSupervisorId,
-    name: progressSummary?.supervisor_name || activeSupervisorObj?.full || (user?.name || 'Site Supervisor'),
-    discipline: progressSummary?.discipline || activeSupervisorObj?.discipline || userDiscipline,
+    name: (isSupervisorRole && user?.name) ? user.name : (progressSummary?.supervisor_name || activeSupervisorObj?.full || 'Site Supervisor'),
+    discipline: userDiscipline || progressSummary?.discipline || activeSupervisorObj?.discipline || 'Piping',
     email: user?.email || '',
   };
 
@@ -159,7 +158,7 @@ export const HomePage: React.FC = () => {
   const rejectedCount = submissions.filter((s) => s.status === 'rejected').length;
 
   // Combine task information with progress details
-  const allActivities: ActivityProgressItem[] =
+  const rawActivities: ActivityProgressItem[] =
     (progressSummary?.activities && progressSummary.activities.length > 0 ? progressSummary.activities : null) ||
     (progressSummary?.all_activities && progressSummary.all_activities.length > 0 ? progressSummary.all_activities : null) ||
     supervisorTasks.map((t) => ({
@@ -177,6 +176,15 @@ export const HomePage: React.FC = () => {
       assignment_timeline_status: t.assignment_timeline_status,
       is_completed: t.status === 'COMPLETED',
     }));
+
+  // Strict Discipline Isolation: only show activities matching this individual supervisor's discipline
+  const targetDiscipline = (currentSupervisorMeta.discipline || userDiscipline || '').toLowerCase();
+  const allActivities: ActivityProgressItem[] = rawActivities.filter((act) => {
+    if (!act) return false;
+    if (!targetDiscipline || targetDiscipline === 'field' || targetDiscipline === 'general') return true;
+    const actDisc = (act.discipline || '').toLowerCase();
+    return !actDisc || actDisc === targetDiscipline;
+  });
 
   // Filter activities safely without risk of runtime exception
   const filteredActivities = (allActivities || []).filter((act) => {
@@ -313,37 +321,32 @@ export const HomePage: React.FC = () => {
             </button>
           </div>
 
-          {/* Supervisor 1 / Supervisor 2 Selection Bar */}
-          <div className="bg-black/25 border border-white/10 rounded-xl p-2.5 backdrop-blur-xs">
-            <div className="flex items-center justify-between gap-1 mb-2 text-[10px] text-slate-300 font-semibold">
-              <span className="flex items-center gap-1.5">
-                <Users className="w-3.5 h-3.5 text-amber-400" />
-                <span className="uppercase tracking-wider font-bold text-amber-300">Supervisor Terminal:</span>
-                <span className="text-white font-bold">{currentSupervisorMeta.name}</span>
-              </span>
-              <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                ACTIVE
-              </span>
+          {/* Dedicated Individual Supervisor Terminal Badge (No Multi-Supervisor Switcher) */}
+          <div className="bg-black/25 border border-white/10 rounded-xl p-3 backdrop-blur-xs flex items-center justify-between gap-2.5">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-lg bg-amber-400/20 text-amber-300 border border-amber-400/30 flex items-center justify-center font-bold text-xs shrink-0">
+                <HardHat className="w-4 h-4 text-amber-400" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5 text-[10px] text-slate-300 font-semibold">
+                  <span className="uppercase tracking-wider font-bold text-amber-300">Supervisor Terminal:</span>
+                  <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-1.5 py-0.2 rounded border border-emerald-500/20">
+                    ACTIVE
+                  </span>
+                </div>
+                <div className="text-xs font-bold text-white truncate flex items-center gap-2 mt-0.5">
+                  <span>{currentSupervisorMeta.name}</span>
+                  <span className="text-[11px] font-mono text-amber-200/80 font-normal">
+                    • {currentSupervisorMeta.discipline} {language === 'hi' ? 'विभाग' : 'Discipline'}
+                  </span>
+                </div>
+              </div>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-              {DEMO_SUPERVISORS.map((sup) => {
-                const isSelected = effectiveSupervisorId === sup.id;
-                return (
-                  <button
-                    key={sup.id}
-                    type="button"
-                    onClick={() => setSelectedSupId(sup.id)}
-                    className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between gap-1 cursor-pointer border ${
-                      isSelected
-                        ? 'bg-amber-400 text-slate-950 border-amber-300 shadow-sm font-black'
-                        : 'bg-white/10 hover:bg-white/20 text-slate-200 border-white/10'
-                    }`}
-                  >
-                    <span className="truncate">{sup.label} - {sup.discipline}</span>
-                    {isSelected && <Check className="w-3.5 h-3.5 text-slate-950 shrink-0" />}
-                  </button>
-                );
-              })}
+
+            <div className="text-right shrink-0">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-bold uppercase shadow-2xs">
+                {currentSupervisorMeta.discipline}
+              </span>
             </div>
           </div>
         </div>
