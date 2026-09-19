@@ -22,8 +22,16 @@ class CompletedActivityItem(BaseModel):
     activity_name: str
     discipline: str
     supervisor: str
+    supervisor_id: Optional[int] = None
+    status: str = "COMPLETED"
+    planned_start: Optional[date] = None
+    planned_finish: Optional[date] = None
     actual_finish: Optional[date] = None
+    progress_percent: Optional[int] = 100
     confidence: Optional[float] = None
+    wbs_code: Optional[str] = None
+    location: Optional[str] = None
+    predecessor_activity_id: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -36,11 +44,30 @@ class DisciplineSummaryItem(BaseModel):
     total: int
 
 
+class RemainingActivityItem(BaseModel):
+    activity_id: str
+    activity_name: str
+    discipline: str
+    supervisor: str
+    supervisor_id: Optional[int] = None
+    status: str = "PLANNED"
+    planned_start: Optional[date] = None
+    planned_finish: Optional[date] = None
+    progress_percent: Optional[int] = 0
+    wbs_code: Optional[str] = None
+    location: Optional[str] = None
+    predecessor_activity_id: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
 class DailySummary(BaseModel):
     project_id: int
     date: date
     completed_today: List[CompletedActivityItem]
     remaining_by_discipline: List[DisciplineSummaryItem]
+    remaining_activities: List[RemainingActivityItem] = Field(default_factory=list)
     completed_today_count: int
     remaining_count: int
     total_activities: int
@@ -54,6 +81,7 @@ class SupervisorSummaryItem(BaseModel):
     remaining: int
     total: int
     completed_activities: List[CompletedActivityItem] = Field(default_factory=list)
+    remaining_activities: List[RemainingActivityItem] = Field(default_factory=list)
 
 
 class DailySummaryBySupervisor(BaseModel):
@@ -66,23 +94,17 @@ class DailySummaryBySupervisor(BaseModel):
 def get_daily_summary(
     project_id: int,
     target_date: Optional[date] = None,
+    supervisor_id: Optional[int] = None,
     db: Session = None,
 ) -> DailySummary:
     """
     Compute daily activity completion and discipline backlog for a given date.
+    Can optionally filter by assigned supervisor_id for individual supervisor views.
     """
     if target_date is None:
         target_date = date.today()
 
-    # 1. Fetch all project activities
-    activities = (
-        db.query(Activity)
-        .filter(Activity.project_id == project_id)
-        .all()
-    )
-    total_activities = len(activities)
-
-    # 2. Fetch assignments for this project to determine supervisors
+    # 1. Fetch assignments for this project to determine supervisors
     assignments = (
         db.query(ActivityAssignment)
         .join(Activity, ActivityAssignment.activity_id == Activity.id)
@@ -98,8 +120,24 @@ def get_daily_summary(
                 return assign.supervisor.id, assign.supervisor.name
         return None, "Unassigned"
 
+    # 2. Fetch all project activities (filter by supervisor_id if supplied)
+    activities_query = (
+        db.query(Activity)
+        .filter(Activity.project_id == project_id)
+    )
+    activities = activities_query.all()
+
+    if supervisor_id is not None:
+        activities = [
+            act for act in activities
+            if act.id in act_to_assignment and act_to_assignment[act.id].supervisor_id == supervisor_id
+        ]
+
+    total_activities = len(activities)
+    scoped_act_ids = {act.id for act in activities}
+
     # 3. Find progress events completed on target_date
-    completed_events = (
+    completed_events_query = (
         db.query(ProgressEvent)
         .join(Activity, ProgressEvent.activity_id == Activity.id)
         .filter(
@@ -111,9 +149,10 @@ def get_daily_summary(
                 | (Activity.actual_finish == target_date)
             ),
         )
-        .all()
     )
-    completed_act_ids = {pe.activity_id for pe in completed_events}
+    completed_events = completed_events_query.all()
+
+    completed_act_ids = {pe.activity_id for pe in completed_events if pe.activity_id in scoped_act_ids}
     for act in activities:
         if act.status == "COMPLETED" and act.actual_finish == target_date:
             completed_act_ids.add(act.id)
@@ -136,13 +175,22 @@ def get_daily_summary(
                     activity_name=act.activity_name,
                     discipline=disc_str,
                     supervisor=sup_name,
+                    supervisor_id=sup_id,
+                    status="COMPLETED",
+                    planned_start=act.planned_start,
+                    planned_finish=act.planned_finish,
                     actual_finish=act.actual_finish or target_date,
+                    progress_percent=100,
                     confidence=conf,
+                    wbs_code=act.wbs_code,
+                    location=act.location,
+                    predecessor_activity_id=act.predecessor_activity_id,
                 )
             )
 
-    # 5. Build discipline breakdown
+    # 5. Build discipline breakdown & remaining activities list
     disc_groups: Dict[str, Dict[str, int]] = {}
+    remaining_items: List[RemainingActivityItem] = []
     remaining_count = 0
 
     for act in activities:
@@ -161,6 +209,24 @@ def get_daily_summary(
         elif act.status != "COMPLETED":
             disc_groups[disc_str]["remaining"] += 1
             remaining_count += 1
+            sup_id, sup_name = get_supervisor_info(act)
+            pct = 60 if act.status == "IN_PROGRESS" else (30 if act.status == "DELAYED" else 0)
+            remaining_items.append(
+                RemainingActivityItem(
+                    activity_id=act.activity_id,
+                    activity_name=act.activity_name,
+                    discipline=disc_str,
+                    supervisor=sup_name,
+                    supervisor_id=sup_id,
+                    status=act.status or "PLANNED",
+                    planned_start=act.planned_start,
+                    planned_finish=act.planned_finish,
+                    progress_percent=pct,
+                    wbs_code=act.wbs_code,
+                    location=act.location,
+                    predecessor_activity_id=act.predecessor_activity_id,
+                )
+            )
 
     remaining_by_discipline = [
         DisciplineSummaryItem(
@@ -177,6 +243,7 @@ def get_daily_summary(
         date=target_date,
         completed_today=completed_today_items,
         remaining_by_discipline=remaining_by_discipline,
+        remaining_activities=remaining_items,
         completed_today_count=len(completed_today_items),
         remaining_count=remaining_count,
         total_activities=total_activities,
@@ -262,6 +329,7 @@ def get_daily_summary_by_supervisor(
                 "remaining": 0,
                 "total": 0,
                 "completed_activities": [],
+                "remaining_activities": [],
             }
 
         sup_groups[key]["total"] += 1
@@ -276,13 +344,38 @@ def get_daily_summary_by_supervisor(
                     activity_name=act.activity_name,
                     discipline=disc_str,
                     supervisor=sup_name,
+                    supervisor_id=sup_id,
+                    status="COMPLETED",
+                    planned_start=act.planned_start,
+                    planned_finish=act.planned_finish,
                     actual_finish=act.actual_finish or target_date,
+                    progress_percent=100,
                     confidence=pe.confidence if pe else None,
+                    wbs_code=act.wbs_code,
+                    location=act.location,
+                    predecessor_activity_id=act.predecessor_activity_id,
                 )
             )
         elif act.status != "COMPLETED":
             sup_groups[key]["remaining"] += 1
             remaining_total += 1
+            pct = 60 if act.status == "IN_PROGRESS" else (30 if act.status == "DELAYED" else 0)
+            sup_groups[key]["remaining_activities"].append(
+                RemainingActivityItem(
+                    activity_id=act.activity_id,
+                    activity_name=act.activity_name,
+                    discipline=disc_str,
+                    supervisor=sup_name,
+                    supervisor_id=sup_id,
+                    status=act.status or "PLANNED",
+                    planned_start=act.planned_start,
+                    planned_finish=act.planned_finish,
+                    progress_percent=pct,
+                    wbs_code=act.wbs_code,
+                    location=act.location,
+                    predecessor_activity_id=act.predecessor_activity_id,
+                )
+            )
 
     by_supervisor = [
         SupervisorSummaryItem(
@@ -293,6 +386,7 @@ def get_daily_summary_by_supervisor(
             remaining=info["remaining"],
             total=info["total"],
             completed_activities=info["completed_activities"],
+            remaining_activities=info["remaining_activities"],
         )
         for _, info in sorted(sup_groups.items(), key=lambda x: (x[1]["supervisor_name"] == "Unassigned", x[1]["supervisor_name"]))
     ]
@@ -307,3 +401,4 @@ def get_daily_summary_by_supervisor(
             "total_activities": total_activities,
         },
     )
+

@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Check, X, Eye, Calendar, MapPin, Tag, AlertTriangle } from "lucide-react";
+import { Check, X, Eye, Calendar, MapPin, Tag, AlertTriangle, ExternalLink, ChevronRight } from "lucide-react";
 import { ConfidenceBadge } from "../components/ConfidenceBadge";
 import { BrandLogo } from "../components/BrandLogo";
 import { api } from "../api/client";
+import { DailyActivitiesModal } from "./components/DailyActivitiesModal";
 
 /**
  * Frontend 2: Planner/Admin Dashboard & The Hero Approval Screen
@@ -15,6 +16,10 @@ export const PlannerDashboard: React.FC = () => {
 
   // Sample hero card state demonstrating 3-signal scoring match
   const [matchStatus, setMatchStatus] = useState<"PENDING" | "APPROVED" | "REJECTED">("PENDING");
+  const [isDailyModalOpen, setIsDailyModalOpen] = useState<boolean>(false);
+  const [selectedDailyDate, setSelectedDailyDate] = useState<string>(
+    new Date().toISOString().split("T")[0]
+  );
 
   const { data: sequenceViolations = [] } = useQuery({
     queryKey: ["sequence-violations-dashboard"],
@@ -30,8 +35,8 @@ export const PlannerDashboard: React.FC = () => {
   });
 
   const { data: dailySummary } = useQuery({
-    queryKey: ["daily-summary-dashboard"],
-    queryFn: () => api.getDailySummary(1),
+    queryKey: ["daily-summary-dashboard", selectedDailyDate],
+    queryFn: () => api.getDailySummary(1, selectedDailyDate),
     refetchInterval: 30000,
   });
 
@@ -62,45 +67,88 @@ export const PlannerDashboard: React.FC = () => {
 
       {/* Main Content */}
       <main className="max-w-6xl mx-auto p-8 space-y-6">
-        {/* Today's Activity Summary Banner */}
+        {/* Today's Activity Summary Banner with Calendar Picker & Detail Modal Click */}
         <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700">
               <Calendar className="w-5 h-5" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="text-sm font-bold text-slate-900">Today's Activity Tracker</h3>
-                <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-mono font-medium">
-                  {dailySummary?.date || new Date().toISOString().split("T")[0]}
-                </span>
+                <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-2 py-0.5 rounded-lg">
+                  <span className="text-[10px] text-slate-500 font-bold uppercase">Date:</span>
+                  <input
+                    type="date"
+                    value={selectedDailyDate}
+                    onChange={(e) => setSelectedDailyDate(e.target.value)}
+                    className="text-xs font-mono font-semibold bg-transparent text-slate-800 border-none p-0 focus:outline-none focus:ring-0 cursor-pointer"
+                  />
+                </div>
               </div>
-              <p className="text-xs text-slate-500">Field progress vs remaining baseline tasks</p>
+              <p className="text-xs text-slate-500">
+                Daily assigned baseline activities vs completed field events
+              </p>
             </div>
           </div>
+
           <div className="flex items-center gap-6">
-            <div className="text-center">
-              <div className="text-xl font-black text-emerald-600 font-mono">
+            <button
+              type="button"
+              onClick={() => setIsDailyModalOpen(true)}
+              className="text-center group cursor-pointer hover:opacity-80 transition"
+              title="Click to view completed activities and supervisors"
+            >
+              <div className="text-xl font-black text-emerald-600 font-mono group-hover:scale-105 transition-transform">
                 {dailySummary?.completed_today_count ?? 0}
               </div>
-              <div className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Completed Today</div>
-            </div>
+              <div className="text-[10px] uppercase font-bold tracking-wider text-slate-400 group-hover:text-emerald-700">
+                Completed Today
+              </div>
+            </button>
             <div className="h-8 w-px bg-slate-200" />
-            <div className="text-center">
-              <div className="text-xl font-black text-slate-800 font-mono">
+            <button
+              type="button"
+              onClick={() => setIsDailyModalOpen(true)}
+              className="text-center group cursor-pointer hover:opacity-80 transition"
+              title="Click to view remaining backlog and supervisors"
+            >
+              <div className="text-xl font-black text-slate-800 font-mono group-hover:scale-105 transition-transform">
                 {dailySummary?.remaining_count ?? 0}
               </div>
-              <div className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Remaining Tasks</div>
-            </div>
+              <div className="text-[10px] uppercase font-bold tracking-wider text-slate-400 group-hover:text-slate-700">
+                Remaining Tasks
+              </div>
+            </button>
             <div className="h-8 w-px bg-slate-200" />
             <div className="text-center">
               <div className="text-xl font-black text-blue-600 font-mono">
                 {dailySummary?.total_activities ?? 0}
               </div>
-              <div className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Total Activities</div>
+              <div className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
+                Total Activities
+              </div>
             </div>
+            <div className="h-8 w-px bg-slate-200" />
+            <button
+              type="button"
+              onClick={() => setIsDailyModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition shadow-xs"
+            >
+              <span>View Activities & Supervisors</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
+
+        {/* Daily Activities Breakdown & Supervisor Modal */}
+        <DailyActivitiesModal
+          isOpen={isDailyModalOpen}
+          onClose={() => setIsDailyModalOpen(false)}
+          projectId={1}
+          initialDate={selectedDailyDate}
+        />
+
 
         {/* Sequence Violations Alert List */}
         {sequenceViolations.length > 0 && (

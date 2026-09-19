@@ -32,6 +32,7 @@ import {
   Paperclip,
   Image as ImageIcon,
 } from 'lucide-react';
+import { DailyActivitiesModal } from './components/DailyActivitiesModal';
 
 
 export const ReviewQueue: React.FC = () => {
@@ -42,6 +43,10 @@ export const ReviewQueue: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [tierFilter, setTierFilter] = useState<'ALL' | 'REVIEW' | 'UNMATCHED' | 'VERIFIED'>('ALL');
   const [disciplineFilter, setDisciplineFilter] = useState<'ALL' | 'PIPING' | 'CIVIL' | 'ELECTRICAL'>('ALL');
+  const [isDailyModalOpen, setIsDailyModalOpen] = useState<boolean>(false);
+  const [dailySelectedDate, setDailySelectedDate] = useState<string>(
+    new Date().toISOString().split('T')[0]
+  );
 
   const { data: queue = [], isLoading } = useQuery({
     queryKey: ['review-queue'],
@@ -51,13 +56,14 @@ export const ReviewQueue: React.FC = () => {
 
   // Daily activity checker query (Feature 2)
   const { data: dailySummary } = useQuery({
-    queryKey: ['daily-summary', selectedProjectId],
-    queryFn: () => api.getDailySummary(selectedProjectId),
+    queryKey: ['daily-summary', selectedProjectId, dailySelectedDate],
+    queryFn: () => api.getDailySummary(selectedProjectId, dailySelectedDate),
     refetchInterval: 15000,
   });
 
   // Sequence violations alert list
   const { data: sequenceViolations = [] } = useQuery({
+
     queryKey: ['sequence-violations', selectedProjectId],
     queryFn: () => api.getSequenceViolations(selectedProjectId),
     refetchInterval: 15000,
@@ -203,27 +209,39 @@ export const ReviewQueue: React.FC = () => {
       {/* KPI Stats Cards including Today's Activity Checker */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Today's Daily Activity Checker Card */}
-        <Card className="p-5 bg-white border-slate-200 border-l-4 border-l-emerald-600 shadow-sm relative overflow-hidden">
-          <Calendar className="w-5 h-5 text-slate-300 absolute top-4 right-4 stroke-[1.5]" />
-          <div className="text-xs font-bold text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            TODAY'S ACTIVITY
+        <Card
+          onClick={() => setIsDailyModalOpen(true)}
+          className="p-5 bg-white border-slate-200 border-l-4 border-l-emerald-600 shadow-sm relative overflow-hidden cursor-pointer hover:shadow-md hover:border-emerald-300 transition group"
+        >
+          <Calendar className="w-5 h-5 text-slate-300 group-hover:text-emerald-500 absolute top-4 right-4 stroke-[1.5] transition-colors" />
+          <div className="flex items-center justify-between">
+            <div className="text-xs font-bold text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              TODAY'S ACTIVITY
+            </div>
+            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 mr-6">
+              Click to view
+            </span>
           </div>
           <div className="flex items-baseline gap-2 mt-2">
-            <span className="text-3xl font-black text-emerald-600 font-mono">
+            <span className="text-3xl font-black text-emerald-600 font-mono group-hover:scale-105 transition-transform">
               {dailySummary?.completed_today_count ?? 0}
             </span>
             <span className="text-xs font-semibold text-slate-600">completed</span>
             <span className="text-slate-300">/</span>
-            <span className="text-xl font-bold text-slate-700 font-mono">
+            <span className="text-xl font-bold text-slate-700 font-mono group-hover:scale-105 transition-transform">
               {dailySummary?.remaining_count ?? 0}
             </span>
             <span className="text-xs font-medium text-slate-400">remaining</span>
           </div>
-          <div className="text-[11px] text-slate-500 mt-1 font-medium">
-            Total project scope: {dailySummary?.total_activities ?? 0} activities
+          <div className="text-[11px] text-slate-500 mt-1 font-medium flex items-center justify-between">
+            <span>Total scope: {dailySummary?.total_activities ?? 0} activities</span>
+            <span className="text-emerald-700 font-semibold group-hover:underline text-[10px]">
+              Inspect breakdown →
+            </span>
           </div>
         </Card>
+
 
         {/* Card 1: Total in Queue */}
         <Card className="p-5 bg-white border-slate-200 border-l-4 border-l-[#9e1218] shadow-sm relative overflow-hidden">
@@ -523,6 +541,15 @@ export const ReviewQueue: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Daily Activities Modal for Calendar-Wise Inspection */}
+      <DailyActivitiesModal
+        isOpen={isDailyModalOpen}
+        onClose={() => setIsDailyModalOpen(false)}
+        projectId={selectedProjectId}
+        initialDate={dailySelectedDate}
+      />
     </div>
   );
 };
+

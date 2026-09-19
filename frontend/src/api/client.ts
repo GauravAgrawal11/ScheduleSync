@@ -508,8 +508,31 @@ export interface DailySummaryCompletedItem {
   activity_name: string;
   discipline: string;
   supervisor: string;
+  supervisor_id?: number;
+  status?: string;
+  planned_start?: string;
+  planned_finish?: string;
   actual_finish?: string;
+  progress_percent?: number;
   confidence?: number;
+  wbs_code?: string;
+  location?: string;
+  predecessor_activity_id?: string;
+}
+
+export interface DailySummaryRemainingItem {
+  activity_id: string;
+  activity_name: string;
+  discipline: string;
+  supervisor: string;
+  supervisor_id?: number;
+  status: string;
+  planned_start?: string;
+  planned_finish?: string;
+  progress_percent?: number;
+  wbs_code?: string;
+  location?: string;
+  predecessor_activity_id?: string;
 }
 
 export interface DailySummaryDisciplineItem {
@@ -524,6 +547,7 @@ export interface DailySummary {
   date: string;
   completed_today: DailySummaryCompletedItem[];
   remaining_by_discipline: DailySummaryDisciplineItem[];
+  remaining_activities: DailySummaryRemainingItem[];
   completed_today_count: number;
   remaining_count: number;
   total_activities: number;
@@ -537,6 +561,7 @@ export interface SupervisorDailySummaryItem {
   remaining: number;
   total: number;
   completed_activities: DailySummaryCompletedItem[];
+  remaining_activities?: DailySummaryRemainingItem[];
 }
 
 export interface DailySummaryBySupervisor {
@@ -549,6 +574,7 @@ export interface DailySummaryBySupervisor {
     total_activities: number;
   };
 }
+
 
 
 export type ComplaintCategory = 'LABOR' | 'MATERIAL' | 'ACCESS' | 'EQUIPMENT' | 'SAFETY' | 'OTHER';
@@ -2009,10 +2035,12 @@ export const api = {
   },
 
   // ==================== DAILY ACTIVITY CHECKER ====================
-  getDailySummary: async (projectId: number = 1, date?: string): Promise<DailySummary> => {
-    const url = date
-      ? `${API_BASE_URL}/analytics/daily-summary?project_id=${projectId}&date=${encodeURIComponent(date)}`
-      : `${API_BASE_URL}/analytics/daily-summary?project_id=${projectId}`;
+  getDailySummary: async (projectId: number = 1, date?: string, supervisorId?: number): Promise<DailySummary> => {
+    const params = new URLSearchParams();
+    params.set('project_id', String(projectId));
+    if (date) params.set('date', date);
+    if (supervisorId) params.set('supervisor_id', String(supervisorId));
+    const url = `${API_BASE_URL}/analytics/daily-summary?${params.toString()}`;
     const res = await fetch(url, { headers: getAuthHeaders() });
     if (!res.ok) throw new Error('Failed to fetch daily summary');
     return await res.json();
@@ -2026,6 +2054,7 @@ export const api = {
     if (!res.ok) throw new Error('Failed to fetch daily summary by supervisor');
     return await res.json();
   },
+
 };
 
 

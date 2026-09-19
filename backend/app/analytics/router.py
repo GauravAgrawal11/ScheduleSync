@@ -853,9 +853,10 @@ from app.analytics.daily_summary import (
 def get_daily_activity_summary(
     project_id: int = 1,
     date: Optional[date] = None,
+    supervisor_id: Optional[int] = None,
     db: Session = Depends(get_db),
 ):
-    return get_daily_summary(project_id=project_id, target_date=date, db=db)
+    return get_daily_summary(project_id=project_id, target_date=date, supervisor_id=supervisor_id, db=db)
 
 
 @router.get(

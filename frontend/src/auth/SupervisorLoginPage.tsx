@@ -25,22 +25,23 @@ export const SupervisorLoginPage: React.FC = () => {
   const { isAuthenticated, user, setAuth } = useAuthStore();
   const navigate = useNavigate();
 
-  // If already authenticated as a supervisor, redirect straight to supervisor portal
+  // If already authenticated as a supervisor, redirect straight to supervisor portal.
+  // If authenticated as non-supervisor (admin/planner), clear session so supervisor can log in cleanly.
   React.useEffect(() => {
     if (isAuthenticated && user) {
       if (user.role === 'supervisor') {
         navigate('/supervisor', { replace: true });
+      } else {
+        useAuthStore.getState().logout();
       }
-      // Never redirect to /planner/review from the supervisor login page!
     }
   }, [isAuthenticated, user, navigate]);
 
-  // Guarantee fields are completely blank and not auto-filled on mount
+  // Guarantee fields are clean on mount
   React.useEffect(() => {
-    setUsername('');
-    setPassword('');
     setError(null);
   }, []);
+
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -165,12 +166,53 @@ export const SupervisorLoginPage: React.FC = () => {
             <Button
               type="submit"
               isLoading={loading}
-              className="w-full py-3 text-xs font-bold rounded-xl bg-[#9e1218] hover:bg-[#a51016] text-white shadow-md shadow-red-950/20 transition-all flex items-center justify-center gap-2 mt-2"
+              className="w-full py-3 text-xs font-bold rounded-xl bg-[#9e1218] hover:bg-[#a51016] text-white shadow-md shadow-red-950/20 transition-all flex items-center justify-center gap-2 mt-2 cursor-pointer"
             >
               <span>Enter Site Terminal</span>
               <ArrowRight className="w-4 h-4" />
             </Button>
+
+            {/* Quick 1-Click Supervisor Demo Fill */}
+            <div className="pt-2 space-y-1.5">
+              <div className="flex items-center justify-between text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                <span>1-Click Quick Demo Login</span>
+                <span className="text-red-700 font-semibold font-mono">Field IDs</span>
+              </div>
+              <div className="grid grid-cols-3 gap-1.5 text-xs">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUsername('supervisor@oilindia.in');
+                    setPassword('SecureSupervisorPassword123!');
+                  }}
+                  className="px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-red-50 hover:border-red-300 text-slate-800 text-[11px] font-bold transition text-center shadow-2xs cursor-pointer"
+                >
+                  Civil Sup
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUsername('piping.sup1@oilindia.in');
+                    setPassword('SecureSupervisorPassword123!');
+                  }}
+                  className="px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-red-50 hover:border-red-300 text-slate-800 text-[11px] font-bold transition text-center shadow-2xs cursor-pointer"
+                >
+                  Piping Sup
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUsername('electrical.sup1@oilindia.in');
+                    setPassword('SecureSupervisorPassword123!');
+                  }}
+                  className="px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-red-50 hover:border-red-300 text-slate-800 text-[11px] font-bold transition text-center shadow-2xs cursor-pointer"
+                >
+                  Elec Sup
+                </button>
+              </div>
+            </div>
           </form>
+
 
           {/* Sunlight & Field Advice */}
           <div className="pt-3 border-t border-slate-100 flex items-start gap-2 text-slate-500 text-[11px]">
