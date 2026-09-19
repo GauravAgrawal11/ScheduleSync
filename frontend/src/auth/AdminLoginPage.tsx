@@ -44,12 +44,8 @@ export const AdminLoginPage: React.FC = () => {
   const { isAuthenticated, user, setAuth } = useAuthStore();
   const navigate = useNavigate();
 
-  // If already authenticated as planner/admin, redirect straight to planner cockpit without re-login
-  React.useEffect(() => {
-    if (isAuthenticated && user && user.role !== 'supervisor') {
-      navigate('/planner/review', { replace: true });
-    }
-  }, [isAuthenticated, user, navigate]);
+  // Always display the login page first when visiting /admin/login.
+  // Never auto-redirect away from the login page!
 
   React.useEffect(() => {
     setUsername('');
