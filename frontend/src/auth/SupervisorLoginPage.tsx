@@ -25,14 +25,13 @@ export const SupervisorLoginPage: React.FC = () => {
   const { isAuthenticated, user, setAuth } = useAuthStore();
   const navigate = useNavigate();
 
-  // If already authenticated, redirect straight to supervisor portal without re-login
+  // If already authenticated as a supervisor, redirect straight to supervisor portal
   React.useEffect(() => {
     if (isAuthenticated && user) {
       if (user.role === 'supervisor') {
         navigate('/supervisor', { replace: true });
-      } else {
-        navigate('/planner/review', { replace: true });
       }
+      // Never redirect to /planner/review from the supervisor login page!
     }
   }, [isAuthenticated, user, navigate]);
 

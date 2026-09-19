@@ -134,7 +134,7 @@ export const AdminLoginPage: React.FC = () => {
 
           <div className="flex items-center gap-2 sm:gap-3">
             <a
-              href="/supervisor/login"
+              href="/supervisor"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-50 hover:bg-amber-100 text-amber-950 border border-amber-300 transition-all shadow-2xs group"
@@ -172,7 +172,7 @@ export const AdminLoginPage: React.FC = () => {
           </p>
           <div className="grid grid-cols-2 gap-2.5 pt-1">
             <a
-              href="/supervisor/login"
+              href="/supervisor"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-950 transition-all shadow-xs group cursor-pointer text-center"

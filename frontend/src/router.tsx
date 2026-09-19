@@ -62,7 +62,7 @@ export const AppRoutes: React.FC = () => {
         <Route
           path="/supervisor"
           element={
-            <ProtectedRoute allowedRoles={['supervisor', 'admin']}>
+            <ProtectedRoute allowedRoles={['supervisor', 'admin', 'planner']}>
               <ErrorBoundary fallbackTitle="Field Supervisor Workspace Render Issue">
                 <SupervisorLayout />
               </ErrorBoundary>
