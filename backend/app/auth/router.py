@@ -54,7 +54,7 @@ def login_form(
     uname = (form_data.username or "").strip().lower()
     user = db.query(User).filter(User.email.ilike(uname)).first()
     if not user:
-        if uname in ("planner", "admin", "lead planner"):
+        if uname in ("planner", "admin", "lead planner", "planner.arun@oilindia.in", "arun", "epc admin"):
             user = db.query(User).filter(User.email == "planner@oilindia.in").first()
         elif uname in ("supervisor", "supervisor1"):
             user = db.query(User).filter(User.email == "supervisor@oilindia.in").first()
@@ -110,7 +110,7 @@ def login_json(
     uname = (credentials.email or "").strip().lower()
     user = db.query(User).filter(User.email.ilike(uname)).first()
     if not user:
-        if uname in ("planner", "admin", "lead planner"):
+        if uname in ("planner", "admin", "lead planner", "planner.arun@oilindia.in", "arun", "epc admin"):
             user = db.query(User).filter(User.email == "planner@oilindia.in").first()
         elif uname in ("supervisor", "supervisor1"):
             user = db.query(User).filter(User.email == "supervisor@oilindia.in").first()

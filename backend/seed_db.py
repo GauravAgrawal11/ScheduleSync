@@ -50,6 +50,7 @@ def seed():
         # 2. Seed Users
         users_to_seed = [
             ("Admin", "planner@oilindia.in", "planner", "piping", "SecurePlannerPassword123!"),
+            ("Arun Sharma (EPC Admin)", "planner.arun@oilindia.in", "planner", "planning", "SecurePlannerPassword123!"),
             ("Supervisor 1 - Piping", "piping.sup1@oilindia.in", "supervisor", "piping", "SecureSupervisorPassword123!"),
             ("Supervisor 2 - Piping", "piping.sup2@oilindia.in", "supervisor", "piping", "SecureSupervisorPassword123!"),
             ("Supervisor 1 - Civil", "supervisor@oilindia.in", "supervisor", "civil", "SecureSupervisorPassword123!"),

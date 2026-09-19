@@ -288,7 +288,7 @@ export const AdminLoginPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => {
-                      setUsername('planner.arun@oilindia.in');
+                      setUsername('planner@oilindia.in');
                       setPassword('SecurePlannerPassword123!');
                     }}
                     className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-red-50 hover:border-red-300 text-slate-800 text-[11px] font-bold transition text-center shadow-2xs cursor-pointer"
