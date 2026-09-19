@@ -207,13 +207,16 @@ export const HomePage: React.FC = () => {
   const delayedCount = (allActivities || []).filter((a) => (a?.status || '').toUpperCase() === 'DELAYED' || a?.is_delayed).length;
   const plannedCount = (allActivities || []).filter((a) => (a?.status || '').toUpperCase() === 'PLANNED').length;
 
-  const overallStatus = (progressSummary?.overall_status || (delayedCount > 0 ? 'delayed' : completedCount === allActivities.length && allActivities.length > 0 ? 'completed' : 'on_track')).toLowerCase();
-  const statusDetail = progressSummary?.status_detail || (delayedCount > 0 ? `Delayed by ${delayedCount} task(s)` : 'All assigned schedule activities on track');
-  const remainingTasks = progressSummary?.remaining_count ?? (allActivities.length - completedCount);
-  const totalAssigned = progressSummary?.total_assigned ?? allActivities.length;
-  const countCompleted = progressSummary?.completed_count ?? completedCount;
-  const countInProgress = progressSummary?.in_progress_count ?? inProgressCount;
-  const countDelayed = progressSummary?.critical_delayed_activities?.length ?? delayedCount;
+  const totalAssigned = allActivities.length;
+  const countCompleted = completedCount;
+  const countInProgress = inProgressCount;
+  const countDelayed = delayedCount;
+  const remainingTasks = totalAssigned - countCompleted;
+
+  const overallStatus = (delayedCount > 0 ? 'delayed' : (completedCount === totalAssigned && totalAssigned > 0 ? 'completed' : 'in_progress')).toLowerCase();
+  const statusDetail = delayedCount > 0
+    ? `Delayed by ${delayedCount} task(s)`
+    : (completedCount === totalAssigned ? 'All assigned schedule activities completed' : `${completedCount} of ${totalAssigned} assigned activities completed`);
 
   // Delayed activities list and auto-popup state
   const [isDelayedModalOpen, setIsDelayedModalOpen] = useState<boolean>(false);

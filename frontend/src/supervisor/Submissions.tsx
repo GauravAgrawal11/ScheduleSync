@@ -10,12 +10,17 @@ import { getQueuedReports } from './offline/queue';
 import { onSyncCompleted, flushQueue } from './offline/syncManager';
 import { useLanguageStore, translateActivityName, translateDiscipline, translateLocation, translateStatus } from './languageStore';
 
+import { useAuthStore } from '../auth/authStore';
+
 export const Submissions: React.FC = () => {
   const [filter, setFilter] = useState<'all' | 'matched' | 'pending' | 'rejected'>('all');
   const [search, setSearch] = useState('');
+  const { user } = useAuthStore();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { language, t } = useLanguageStore();
+
+  const userDiscipline = (user?.discipline || '').toLowerCase();
 
   // Listen for sync completions to automatically refresh queued and server lists
   useEffect(() => {
@@ -33,15 +38,22 @@ export const Submissions: React.FC = () => {
     refetchInterval: 4000,
   });
 
+  // Filter queued reports by discipline if applicable
+  const relevantQueuedReports = queuedReports.filter((q) => {
+    if (!userDiscipline || userDiscipline === 'field' || userDiscipline === 'general') return true;
+    const qDisc = (q.discipline || '').toLowerCase();
+    return !qDisc || qDisc === userDiscipline;
+  });
+
   // Fetch real submissions from server
   const { data: submissions = [], isLoading } = useQuery({
-    queryKey: ['my-submissions'],
+    queryKey: ['my-submissions', user?.discipline],
     queryFn: () => api.getMySubmissions(),
     refetchInterval: 15000, // auto-refresh to pick up planner approvals
   });
 
   // Map queued reports into compatible shape
-  const normalizedQueued = queuedReports.map((q) => ({
+  const normalizedQueued = relevantQueuedReports.map((q) => ({
     id: q.id as any,
     is_queued: true,
     date: q.queued_at ? q.queued_at.split('T')[0] : 'Today',

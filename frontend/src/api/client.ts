@@ -689,18 +689,19 @@ export interface WorkflowActivityDetail extends WorkflowNodeData {
 
 // In-memory mock database for frontend simulation if backend endpoints are staging
 const MOCK_REPORTS: SubmissionSummary[] = [
+  // --- PIPING SUBMISSIONS ---
   {
     id: 101,
     date: "2026-02-10",
-    supervisor_name: "Foreman Iqbal",
-    raw_text: "11kv cable pulling done substation side, feeder run complete. tray install ongoing MCC building ground floor.",
-    discipline: "Electrical",
-    location: "Substation",
+    supervisor_name: "Biren Das (Supervisor 1 - Piping)",
+    raw_text: "Erect Line 24 (12in CS pipe) completed in Unit 3 with 100% flange alignment and torque tightening verified.",
+    discipline: "Piping",
+    location: "Unit 3",
     status: "matched",
-    confidence: 0.94,
-    suggested_activity_id: "L6-ELE-301",
-    suggested_activity_name: "Pull 11kV cable - Substation to MCC",
-    match_log: [{ match_id: 201, activity_id: "L6-ELE-301", activity_name: "Pull 11kV cable - Substation to MCC", semantic_score: 0.95, entity_score: 0.93, metadata_score: 0.94, final_confidence: 0.94, decision: "auto", is_verified: true, verification_type: "AI", verified_by: "AI Auto-Match", verified_at: "2026-02-10", activity_status: "COMPLETED", matched_at: "2026-02-10" }],
+    confidence: 0.96,
+    suggested_activity_id: "L6-PIP-101",
+    suggested_activity_name: "Erect Line 24 (12in CS pipe)",
+    match_log: [{ match_id: 201, activity_id: "L6-PIP-101", activity_name: "Erect Line 24 (12in CS pipe)", semantic_score: 0.97, entity_score: 0.95, metadata_score: 0.96, final_confidence: 0.96, decision: "auto", is_verified: true, verification_type: "AI", verified_by: "AI Auto-Match", verified_at: "2026-02-10", activity_status: "COMPLETED", matched_at: "2026-02-10" }],
     is_verified: true,
     verification_type: "AI",
     verified_by: "AI Auto-Match",
@@ -710,30 +711,15 @@ const MOCK_REPORTS: SubmissionSummary[] = [
   {
     id: 102,
     date: "2026-02-10",
-    supervisor_name: "R. Sharma",
-    raw_text: "Piping crew completed spool erection for Line 24 in Unit 3 today. 4 joints fitted up, flange bolt-up in progress.",
+    supervisor_name: "Biren Das (Supervisor 1 - Piping)",
+    raw_text: "Line 31 (8in CS pipe) spool erection complete, hydro-test manifold blinded for testing.",
     discipline: "Piping",
     location: "Unit 3",
-    status: "pending review",
-    confidence: 0.88,
-    suggested_activity_id: "L6-PIP-101",
-    suggested_activity_name: "Erect Line 24 (12in CS pipe)",
-    match_log: [{ match_id: 202, activity_id: "L6-PIP-101", activity_name: "Erect Line 24 (12in CS pipe)", semantic_score: 0.91, entity_score: 0.88, metadata_score: 0.85, final_confidence: 0.88, decision: "review", is_verified: false, matched_at: "2026-02-10", activity_status: "IN_PROGRESS" }],
-    is_verified: false,
-    activity_status: "IN_PROGRESS",
-  },
-  {
-    id: 103,
-    date: "2026-02-10",
-    supervisor_name: "Civil Lead Baruah",
-    raw_text: "Excavation for footing F-12 completed, 18 cum ready for PCC. Column C-7 RCC pour ongoing.",
-    discipline: "Civil",
-    location: "Unit 3",
     status: "matched",
-    confidence: 0.96,
-    suggested_activity_id: "L6-CIV-201",
-    suggested_activity_name: "Excavate footing F-12",
-    match_log: [{ match_id: 203, activity_id: "L6-CIV-201", activity_name: "Excavate footing F-12", semantic_score: 0.97, entity_score: 0.95, metadata_score: 0.96, final_confidence: 0.96, decision: "auto", is_verified: true, verification_type: "MANUAL", verified_by: "Priya Mehta (Planner)", verified_at: "2026-02-10", activity_status: "COMPLETED", matched_at: "2026-02-10" }],
+    confidence: 0.94,
+    suggested_activity_id: "L6-PIP-102",
+    suggested_activity_name: "Erect Line 31 (8in CS pipe)",
+    match_log: [{ match_id: 202, activity_id: "L6-PIP-102", activity_name: "Erect Line 31 (8in CS pipe)", semantic_score: 0.95, entity_score: 0.93, metadata_score: 0.94, final_confidence: 0.94, decision: "auto", is_verified: true, verification_type: "MANUAL", verified_by: "Priya Mehta (Planner)", verified_at: "2026-02-10", activity_status: "COMPLETED", matched_at: "2026-02-10" }],
     is_verified: true,
     verification_type: "MANUAL",
     verified_by: "Priya Mehta (Planner)",
@@ -741,19 +727,260 @@ const MOCK_REPORTS: SubmissionSummary[] = [
     activity_status: "COMPLETED",
   },
   {
+    id: 103,
+    date: "2026-02-09",
+    supervisor_name: "Biren Das (Supervisor 1 - Piping)",
+    raw_text: "Hydrotest completed for Line 24 manifold at 45 kg/cm2 pressure hold test successful.",
+    discipline: "Piping",
+    location: "Unit 3",
+    status: "matched",
+    confidence: 0.97,
+    suggested_activity_id: "L6-PIP-103",
+    suggested_activity_name: "Hydrotest Line 24 manifold",
+    match_log: [{ match_id: 203, activity_id: "L6-PIP-103", activity_name: "Hydrotest Line 24 manifold", semantic_score: 0.98, entity_score: 0.96, metadata_score: 0.97, final_confidence: 0.97, decision: "auto", is_verified: true, verification_type: "AI", verified_by: "AI Auto-Match", verified_at: "2026-02-09", activity_status: "COMPLETED", matched_at: "2026-02-09" }],
+    is_verified: true,
+    verification_type: "AI",
+    verified_by: "AI Auto-Match",
+    verified_at: "2026-02-09",
+    activity_status: "COMPLETED",
+  },
+  {
     id: 104,
-    date: "2026-02-10",
-    supervisor_name: "Safety Officer Deb",
-    raw_text: "Perimeter bush cutting and grass clearance done along north security fence.",
-    discipline: "Civil",
-    location: "Boundary Wall",
-    status: "rejected",
-    confidence: 0.52,
-    suggested_activity_id: "L6-CIV-210",
-    suggested_activity_name: "Boundary wall brickwork",
-    match_log: [{ match_id: 204, activity_id: "L6-CIV-210", activity_name: "Boundary wall brickwork", semantic_score: 0.55, entity_score: 0.48, metadata_score: 0.52, final_confidence: 0.52, decision: "rejected", is_verified: false, matched_at: "2026-02-10", activity_status: "PLANNED" }],
+    date: "2026-02-09",
+    supervisor_name: "Biren Das (Supervisor 1 - Piping)",
+    raw_text: "Gate valve GV-01 installed on Line 24 and gland packing inspected.",
+    discipline: "Piping",
+    location: "Unit 3",
+    status: "matched",
+    confidence: 0.93,
+    suggested_activity_id: "L6-PIP-105",
+    suggested_activity_name: "Install gate valve GV-01",
+    match_log: [{ match_id: 204, activity_id: "L6-PIP-105", activity_name: "Install gate valve GV-01", semantic_score: 0.94, entity_score: 0.92, metadata_score: 0.93, final_confidence: 0.93, decision: "auto", is_verified: true, verification_type: "MANUAL", verified_by: "Lead Planner", verified_at: "2026-02-09", activity_status: "COMPLETED", matched_at: "2026-02-09" }],
+    is_verified: true,
+    verification_type: "MANUAL",
+    verified_by: "Lead Planner",
+    verified_at: "2026-02-09",
+    activity_status: "COMPLETED",
+  },
+  {
+    id: 105,
+    date: "2026-02-08",
+    supervisor_name: "Biren Das (Supervisor 1 - Piping)",
+    raw_text: "Spool SP-046 erection on Line 31 ongoing, 2 joints fit-up complete.",
+    discipline: "Piping",
+    location: "Unit 3",
+    status: "pending review",
+    confidence: 0.88,
+    suggested_activity_id: "L6-PIP-108",
+    suggested_activity_name: "Erect spool SP-046 on Line 31",
+    match_log: [{ match_id: 205, activity_id: "L6-PIP-108", activity_name: "Erect spool SP-046 on Line 31", semantic_score: 0.90, entity_score: 0.86, metadata_score: 0.88, final_confidence: 0.88, decision: "review", is_verified: false, matched_at: "2026-02-08", activity_status: "IN_PROGRESS" }],
     is_verified: false,
-    activity_status: "PLANNED",
+    activity_status: "IN_PROGRESS",
+  },
+  {
+    id: 106,
+    date: "2026-02-07",
+    supervisor_name: "Biren Das (Supervisor 1 - Piping)",
+    raw_text: "Spool SP-045 fit-up delayed due to crane boom breakdown at Unit 3 rack.",
+    discipline: "Piping",
+    location: "Unit 3",
+    status: "rejected",
+    confidence: 0.62,
+    suggested_activity_id: "L6-PIP-104",
+    suggested_activity_name: "Fit-up spool SP-045 (12in CS)",
+    match_log: [{ match_id: 206, activity_id: "L6-PIP-104", activity_name: "Fit-up spool SP-045 (12in CS)", semantic_score: 0.65, entity_score: 0.60, metadata_score: 0.62, final_confidence: 0.62, decision: "rejected", is_verified: false, matched_at: "2026-02-07", activity_status: "DELAYED" }],
+    is_verified: false,
+    activity_status: "DELAYED",
+  },
+
+  // --- CIVIL SUBMISSIONS ---
+  {
+    id: 201,
+    date: "2026-02-10",
+    supervisor_name: "Sanjay Supervisor (Civil 1)",
+    raw_text: "Footing F-12 excavation completed to bedrock level (-3.5m) and handed over for PCC.",
+    discipline: "Civil",
+    location: "Unit 3",
+    status: "matched",
+    confidence: 0.97,
+    suggested_activity_id: "L6-CIV-201",
+    suggested_activity_name: "Excavate footing F-12",
+    match_log: [{ match_id: 301, activity_id: "L6-CIV-201", activity_name: "Excavate footing F-12", semantic_score: 0.98, entity_score: 0.96, metadata_score: 0.97, final_confidence: 0.97, decision: "auto", is_verified: true, verification_type: "AI", verified_by: "AI Auto-Match", verified_at: "2026-02-10", activity_status: "COMPLETED", matched_at: "2026-02-10" }],
+    is_verified: true,
+    verification_type: "AI",
+    verified_by: "AI Auto-Match",
+    verified_at: "2026-02-10",
+    activity_status: "COMPLETED",
+  },
+  {
+    id: 202,
+    date: "2026-02-10",
+    supervisor_name: "Sanjay Supervisor (Civil 1)",
+    raw_text: "PCC pour 1:4:8 mix completed for footing F-12, 14 cum placed.",
+    discipline: "Civil",
+    location: "Unit 3",
+    status: "matched",
+    confidence: 0.95,
+    suggested_activity_id: "L6-CIV-202",
+    suggested_activity_name: "Lay PCC for F-12 footing",
+    match_log: [{ match_id: 302, activity_id: "L6-CIV-202", activity_name: "Lay PCC for F-12 footing", semantic_score: 0.96, entity_score: 0.94, metadata_score: 0.95, final_confidence: 0.95, decision: "auto", is_verified: true, verification_type: "MANUAL", verified_by: "Lead Planner", verified_at: "2026-02-10", activity_status: "COMPLETED", matched_at: "2026-02-10" }],
+    is_verified: true,
+    verification_type: "MANUAL",
+    verified_by: "Lead Planner",
+    verified_at: "2026-02-10",
+    activity_status: "COMPLETED",
+  },
+  {
+    id: 203,
+    date: "2026-02-09",
+    supervisor_name: "Sanjay Supervisor (Civil 1)",
+    raw_text: "Backfilling around footing F-12 completed with compacted earth in layers.",
+    discipline: "Civil",
+    location: "Unit 3",
+    status: "matched",
+    confidence: 0.93,
+    suggested_activity_id: "L6-CIV-204",
+    suggested_activity_name: "Backfill around footing F-12",
+    match_log: [{ match_id: 303, activity_id: "L6-CIV-204", activity_name: "Backfill around footing F-12", semantic_score: 0.94, entity_score: 0.92, metadata_score: 0.93, final_confidence: 0.93, decision: "auto", is_verified: true, verification_type: "AI", verified_by: "AI Auto-Match", verified_at: "2026-02-09", activity_status: "COMPLETED", matched_at: "2026-02-09" }],
+    is_verified: true,
+    verification_type: "AI",
+    verified_by: "AI Auto-Match",
+    verified_at: "2026-02-09",
+    activity_status: "COMPLETED",
+  },
+  {
+    id: 204,
+    date: "2026-02-09",
+    supervisor_name: "Sanjay Supervisor (Civil 1)",
+    raw_text: "Trench TR-03 excavation finished along north battery limit.",
+    discipline: "Civil",
+    location: "Unit 3",
+    status: "matched",
+    confidence: 0.92,
+    suggested_activity_id: "L6-CIV-205",
+    suggested_activity_name: "Excavate trench TR-03",
+    match_log: [{ match_id: 304, activity_id: "L6-CIV-205", activity_name: "Excavate trench TR-03", semantic_score: 0.93, entity_score: 0.91, metadata_score: 0.92, final_confidence: 0.92, decision: "auto", is_verified: true, verification_type: "MANUAL", verified_by: "Priya Mehta (Planner)", verified_at: "2026-02-09", activity_status: "COMPLETED", matched_at: "2026-02-09" }],
+    is_verified: true,
+    verification_type: "MANUAL",
+    verified_by: "Priya Mehta (Planner)",
+    verified_at: "2026-02-09",
+    activity_status: "COMPLETED",
+  },
+  {
+    id: 205,
+    date: "2026-02-08",
+    supervisor_name: "Sanjay Supervisor (Civil 1)",
+    raw_text: "Reinforcement bar tying for Column C-7 ongoing, 80% rebars tied.",
+    discipline: "Civil",
+    location: "Unit 3",
+    status: "pending review",
+    confidence: 0.87,
+    suggested_activity_id: "L6-CIV-207",
+    suggested_activity_name: "Reinforcement bar tying column C-7",
+    match_log: [{ match_id: 305, activity_id: "L6-CIV-207", activity_name: "Reinforcement bar tying column C-7", semantic_score: 0.89, entity_score: 0.85, metadata_score: 0.87, final_confidence: 0.87, decision: "review", is_verified: false, matched_at: "2026-02-08", activity_status: "IN_PROGRESS" }],
+    is_verified: false,
+    activity_status: "IN_PROGRESS",
+  },
+  {
+    id: 206,
+    date: "2026-02-07",
+    supervisor_name: "Sanjay Supervisor (Civil 1)",
+    raw_text: "Column C-7 casting delayed due to shuttering material stock shortage.",
+    discipline: "Civil",
+    location: "Unit 3",
+    status: "rejected",
+    confidence: 0.58,
+    suggested_activity_id: "L6-CIV-203",
+    suggested_activity_name: "Cast column C-7 (RCC)",
+    match_log: [{ match_id: 306, activity_id: "L6-CIV-203", activity_name: "Cast column C-7 (RCC)", semantic_score: 0.60, entity_score: 0.56, metadata_score: 0.58, final_confidence: 0.58, decision: "rejected", is_verified: false, matched_at: "2026-02-07", activity_status: "DELAYED" }],
+    is_verified: false,
+    activity_status: "DELAYED",
+  },
+
+  // --- ELECTRICAL SUBMISSIONS ---
+  {
+    id: 301,
+    date: "2026-02-10",
+    supervisor_name: "Rajesh Das (Supervisor 1 - Electrical)",
+    raw_text: "Pull 11kV cable from Substation to MCC building completed, megger test passed.",
+    discipline: "Electrical",
+    location: "Substation",
+    status: "matched",
+    confidence: 0.96,
+    suggested_activity_id: "L6-ELE-301",
+    suggested_activity_name: "Pull 11kV cable - Substation to MCC",
+    match_log: [{ match_id: 401, activity_id: "L6-ELE-301", activity_name: "Pull 11kV cable - Substation to MCC", semantic_score: 0.97, entity_score: 0.95, metadata_score: 0.96, final_confidence: 0.96, decision: "auto", is_verified: true, verification_type: "AI", verified_by: "AI Auto-Match", verified_at: "2026-02-10", activity_status: "COMPLETED", matched_at: "2026-02-10" }],
+    is_verified: true,
+    verification_type: "AI",
+    verified_by: "AI Auto-Match",
+    verified_at: "2026-02-10",
+    activity_status: "COMPLETED",
+  },
+  {
+    id: 302,
+    date: "2026-02-10",
+    supervisor_name: "Rajesh Das (Supervisor 1 - Electrical)",
+    raw_text: "Cable tray installation completed in MCC building ground floor.",
+    discipline: "Electrical",
+    location: "Unit 3",
+    status: "matched",
+    confidence: 0.94,
+    suggested_activity_id: "L6-ELE-302",
+    suggested_activity_name: "Install cable tray in MCC building",
+    match_log: [{ match_id: 402, activity_id: "L6-ELE-302", activity_name: "Install cable tray in MCC building", semantic_score: 0.95, entity_score: 0.93, metadata_score: 0.94, final_confidence: 0.94, decision: "auto", is_verified: true, verification_type: "MANUAL", verified_by: "Lead Planner", verified_at: "2026-02-10", activity_status: "COMPLETED", matched_at: "2026-02-10" }],
+    is_verified: true,
+    verification_type: "MANUAL",
+    verified_by: "Lead Planner",
+    verified_at: "2026-02-10",
+    activity_status: "COMPLETED",
+  },
+  {
+    id: 303,
+    date: "2026-02-09",
+    supervisor_name: "Rajesh Das (Supervisor 1 - Electrical)",
+    raw_text: "Earthing conductor laying at Substation completed and earth pit resistance measured at 1.2 ohms.",
+    discipline: "Electrical",
+    location: "Substation",
+    status: "matched",
+    confidence: 0.95,
+    suggested_activity_id: "L6-ELE-304",
+    suggested_activity_name: "Earthing conductor laying Substation",
+    match_log: [{ match_id: 403, activity_id: "L6-ELE-304", activity_name: "Earthing conductor laying Substation", semantic_score: 0.96, entity_score: 0.94, metadata_score: 0.95, final_confidence: 0.95, decision: "auto", is_verified: true, verification_type: "AI", verified_by: "AI Auto-Match", verified_at: "2026-02-09", activity_status: "COMPLETED", matched_at: "2026-02-09" }],
+    is_verified: true,
+    verification_type: "AI",
+    verified_by: "AI Auto-Match",
+    verified_at: "2026-02-09",
+    activity_status: "COMPLETED",
+  },
+  {
+    id: 304,
+    date: "2026-02-08",
+    supervisor_name: "Rajesh Das (Supervisor 1 - Electrical)",
+    raw_text: "MCC panel positioning ongoing on ground floor plinth.",
+    discipline: "Electrical",
+    location: "Unit 3",
+    status: "pending review",
+    confidence: 0.86,
+    suggested_activity_id: "L6-ELE-305",
+    suggested_activity_name: "MCC panel positioning ground floor",
+    match_log: [{ match_id: 404, activity_id: "L6-ELE-305", activity_name: "MCC panel positioning ground floor", semantic_score: 0.88, entity_score: 0.84, metadata_score: 0.86, final_confidence: 0.86, decision: "review", is_verified: false, matched_at: "2026-02-08", activity_status: "IN_PROGRESS" }],
+    is_verified: false,
+    activity_status: "IN_PROGRESS",
+  },
+  {
+    id: 305,
+    date: "2026-02-07",
+    supervisor_name: "Rajesh Das (Supervisor 1 - Electrical)",
+    raw_text: "Feeder cable termination delayed awaiting breaker terminal lugs.",
+    discipline: "Electrical",
+    location: "Substation",
+    status: "rejected",
+    confidence: 0.60,
+    suggested_activity_id: "L6-ELE-303",
+    suggested_activity_name: "Terminate 11kV feeder cable at switchgear",
+    match_log: [{ match_id: 405, activity_id: "L6-ELE-303", activity_name: "Terminate 11kV feeder cable at switchgear", semantic_score: 0.62, entity_score: 0.58, metadata_score: 0.60, final_confidence: 0.60, decision: "rejected", is_verified: false, matched_at: "2026-02-07", activity_status: "DELAYED" }],
+    is_verified: false,
+    activity_status: "DELAYED",
   },
 ];
 
@@ -1197,19 +1424,25 @@ export const api = {
     const newSub: SubmissionSummary = {
       id: newId,
       date: new Date().toISOString().split("T")[0],
-      supervisor_name: useAuthStore.getState().user?.name || "Foreman Iqbal",
+      supervisor_name: useAuthStore.getState().user?.name || "Biren Das (Supervisor 1 - Piping)",
       raw_text: text,
       discipline: matchedDisc,
       location: matchedLoc,
       status: "pending review",
       confidence: 0.89,
-      suggested_activity_id: isPiping ? "L6-PIP-101" : "L6-CIV-201",
-      suggested_activity_name: isPiping ? "Erect Line 24 (12in CS pipe)" : "Excavate footing F-12",
+      suggested_activity_id: isPiping ? "L6-PIP-108" : isCivil ? "L6-CIV-207" : "L6-ELE-305",
+      suggested_activity_name: isPiping ? "Erect spool SP-046 on Line 31" : isCivil ? "Reinforcement bar tying column C-7" : "MCC panel positioning ground floor",
       match_log: [],
       is_verified: false,
     };
 
     MOCK_REPORTS.unshift(newSub);
+
+    try {
+      const storedList = JSON.parse(localStorage.getItem("schedulesync_submissions") || "[]");
+      storedList.unshift(newSub);
+      localStorage.setItem("schedulesync_submissions", JSON.stringify(storedList));
+    } catch {}
 
     return {
       report_id: newId,
@@ -1285,34 +1518,61 @@ export const api = {
   },
 
   getMySubmissions: async (): Promise<SubmissionSummary[]> => {
+    const authUser = useAuthStore.getState().user;
+    const targetDisc = (authUser?.discipline || '').toLowerCase();
+
+    // 1. Try real server
+    if (API_BASE_URL) {
+      try {
+        const res = await fetch(`${API_BASE_URL}/reports/mine`, {
+          headers: getAuthHeaders(),
+        });
+        if (res.ok) {
+          const data: any[] = await res.json();
+          if (data && data.length > 0) {
+            return data.map((r: any) => ({
+              id: r.id,
+              date: r.uploaded_at ? r.uploaded_at.split('T')[0] : '',
+              supervisor_name: r.supervisor_name || authUser?.name || 'Site Supervisor',
+              raw_text: r.raw_text || '',
+              discipline: r.discipline || authUser?.discipline || 'Piping',
+              location: r.location || 'Unit 3',
+              status: r.status || 'pending review',
+              confidence: r.confidence || 0,
+              suggested_activity_id: r.suggested_activity_id,
+              suggested_activity_name: r.suggested_activity_name,
+              match_log: r.match_log || [],
+              is_verified: r.is_verified || false,
+              verification_type: r.verification_type,
+              verified_by: r.verified_by,
+              verified_at: r.verified_at,
+              activity_status: r.activity_status,
+            }));
+          }
+        }
+      } catch {}
+    }
+
+    // 2. Load locally created submissions from localStorage
+    let localSaved: SubmissionSummary[] = [];
     try {
-      const res = await fetch(`${API_BASE_URL}/reports/mine`, {
-        headers: getAuthHeaders(),
-      });
-      if (res.ok) {
-        const data: any[] = await res.json();
-        return data.map((r: any) => ({
-          id: r.id,
-          date: r.uploaded_at ? r.uploaded_at.split('T')[0] : '',
-          supervisor_name: r.supervisor_name || '',
-          raw_text: r.raw_text || '',
-          discipline: r.discipline || '',
-          location: r.location || '',
-          status: r.status || 'pending review',
-          confidence: r.confidence || 0,
-          suggested_activity_id: r.suggested_activity_id,
-          suggested_activity_name: r.suggested_activity_name,
-          match_log: r.match_log || [],
-          is_verified: r.is_verified || false,
-          verification_type: r.verification_type,
-          verified_by: r.verified_by,
-          verified_at: r.verified_at,
-          activity_status: r.activity_status,
-        }));
+      const stored = localStorage.getItem('schedulesync_submissions');
+      if (stored) {
+        localSaved = JSON.parse(stored);
       }
     } catch {}
 
-    return MOCK_REPORTS;
+    const allReports = [...localSaved, ...MOCK_REPORTS];
+
+    // 3. Filter by supervisor's discipline
+    if (targetDisc && targetDisc !== 'field' && targetDisc !== 'general') {
+      const filtered = allReports.filter(
+        (r) => (r.discipline || '').toLowerCase() === targetDisc
+      );
+      if (filtered.length > 0) return filtered;
+    }
+
+    return allReports;
   },
 
   getSubmissionDetail: async (id: number): Promise<SubmissionSummary | null> => {
