@@ -22,7 +22,7 @@
     min-height: 100dvh;
   }
 
-  /* Sidebar-matched brand red text selection (#9e1218) with crisp white text */
+  /* High-visibility Brand Selection: Clean Oil India Red selection with crisp white text for copying/pasting */
   ::selection {
     background-color: #9e1218 !important;
     color: #ffffff !important;

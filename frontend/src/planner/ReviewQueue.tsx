@@ -492,7 +492,7 @@ export const ReviewQueue: React.FC = () => {
                           {isUnmatched ? 'Nearest Candidate (Low Confidence):' : 'Suggested Activity:'}
                         </span>
                         {item.suggested_activity ? (
-                          <div className="flex items-center gap-1.5 flex-wrap">
+                          <div className="flex items-center gap-1.5">
                             <strong className="text-oil-900 font-bold font-mono">
                               {item.suggested_activity.activity_id}
                             </strong>

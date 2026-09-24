@@ -122,7 +122,20 @@ export const PlannerLayout: React.FC = () => {
     queryFn: () => api.getProjects(),
   });
 
-
+  // Keep active project activity count synchronized so header badge does not shift or jump on refresh
+  useEffect(() => {
+    if (projectsData?.projects && projectsData.projects.length > 0) {
+      const match = projectsData.projects.find((p) => p.id === selectedProjectId);
+      if (match && match.activity_count !== undefined && match.activity_count !== selectedProjectActivityCount) {
+        setProject({
+          id: match.id,
+          name: match.name,
+          client: match.client,
+          activity_count: match.activity_count,
+        });
+      }
+    }
+  }, [projectsData, selectedProjectId, selectedProjectActivityCount, setProject]);
 
   // 1. Open site blockers & HSE issues
   const { data: openComplaints = [] } = useQuery({
@@ -516,12 +529,12 @@ export const PlannerLayout: React.FC = () => {
 
         {/* ── Top Header Bar with Custom Oilfield Rig Artwork Banner ── */}
         <header className="bg-white border-b border-slate-200 sticky top-0 z-[100] shadow-xs flex-shrink-0 relative">
-          {/* Custom Oilfield Rig Artwork Panoramic Header Banner */}
-          <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden flex items-center">
+          {/* Subtle Right-aligned Oilfield Rig Artwork Banner (Prevents layout shifts and text occlusion on refresh) */}
+          <div className="absolute right-0 top-0 bottom-0 h-full pointer-events-none opacity-25 z-0 flex items-center justify-end overflow-hidden max-w-[45%]">
             <img
               src="/assets/header-bg.png"
               alt="Oilfield Rigs Banner"
-              className="w-full h-full object-cover object-center select-none opacity-90"
+              className="h-full w-auto object-contain object-right select-none"
             />
           </div>
 
