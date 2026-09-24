@@ -22,21 +22,21 @@
     min-height: 100dvh;
   }
 
-  /* Refined, clean text selection with subtle brand tint (keeps text crisp and fully legible) */
+  /* Sidebar-matched brand red text selection (#9e1218) with crisp white text */
   ::selection {
-    background-color: rgba(158, 18, 24, 0.18) !important;
-    color: inherit !important;
+    background-color: #9e1218 !important;
+    color: #ffffff !important;
   }
 
   ::-moz-selection {
-    background-color: rgba(158, 18, 24, 0.18) !important;
-    color: inherit !important;
+    background-color: #9e1218 !important;
+    color: #ffffff !important;
   }
 
   input::selection,
   textarea::selection {
-    background-color: rgba(158, 18, 24, 0.22) !important;
-    color: inherit !important;
+    background-color: #9e1218 !important;
+    color: #ffffff !important;
   }
 }
 
