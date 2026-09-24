@@ -21,6 +21,23 @@
     overflow-x: hidden;
     min-height: 100dvh;
   }
+
+  /* Refined, clean text selection with subtle brand tint (keeps text crisp and fully legible) */
+  ::selection {
+    background-color: rgba(158, 18, 24, 0.18) !important;
+    color: inherit !important;
+  }
+
+  ::-moz-selection {
+    background-color: rgba(158, 18, 24, 0.18) !important;
+    color: inherit !important;
+  }
+
+  input::selection,
+  textarea::selection {
+    background-color: rgba(158, 18, 24, 0.22) !important;
+    color: inherit !important;
+  }
 }
 
 /* iOS Safari: Prevent automatic zoom on focus by ensuring font-size >= 16px on mobile */

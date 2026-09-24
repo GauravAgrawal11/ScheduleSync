@@ -141,7 +141,7 @@ export const SupervisorDetailPanel: React.FC<SupervisorDetailPanelProps> = ({
   }, [resolvedDiscipline]);
 
   return (
-    <div className="flex flex-col h-full bg-[#0C0C0D] text-[#F7F7F5] select-none">
+    <div className="flex flex-col h-full bg-[#0C0C0D] text-[#F7F7F5]">
       {/* Header bar */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-[#2A2A30] bg-[#141417]">
         <button

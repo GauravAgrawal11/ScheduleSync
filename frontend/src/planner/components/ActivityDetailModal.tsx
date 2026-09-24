@@ -124,7 +124,7 @@ export const ActivityDetailModal: React.FC<ActivityDetailModalProps> = ({
   const isFloatNegative = floatStr.startsWith('-');
 
   return (
-    <div className="absolute right-0 top-0 bottom-0 w-[420px] max-w-full bg-[#0d1117] border-l border-[#21262d] z-40 flex flex-col shadow-2xl select-none animate-in slide-in-from-right duration-200">
+    <div className="absolute right-0 top-0 bottom-0 w-[420px] max-w-full bg-[#0d1117] border-l border-[#21262d] z-40 flex flex-col shadow-2xl animate-in slide-in-from-right duration-200">
       {/* If drilling down into supervisor, show supervisor panel */}
       {drillSupervisorId ? (
         <SupervisorDetailPanel

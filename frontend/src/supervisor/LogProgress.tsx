@@ -261,7 +261,24 @@ export const LogProgress: React.FC = () => {
       }
 
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
+      
+      // Determine optimal mimeType supported by browser (iOS WebKit uses audio/mp4, Chromium/Android uses audio/webm)
+      let selectedMimeType = '';
+      if (typeof MediaRecorder !== 'undefined' && typeof MediaRecorder.isTypeSupported === 'function') {
+        if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+          selectedMimeType = 'audio/webm;codecs=opus';
+        } else if (MediaRecorder.isTypeSupported('audio/webm')) {
+          selectedMimeType = 'audio/webm';
+        } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+          selectedMimeType = 'audio/mp4';
+        } else if (MediaRecorder.isTypeSupported('audio/aac')) {
+          selectedMimeType = 'audio/aac';
+        }
+      }
+
+      const mediaRecorder = selectedMimeType
+        ? new MediaRecorder(stream, { mimeType: selectedMimeType })
+        : new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
 
       mediaRecorder.ondataavailable = (event) => {
@@ -274,13 +291,15 @@ export const LogProgress: React.FC = () => {
         // Stop audio tracks promptly
         stream.getTracks().forEach((track) => track.stop());
 
-        const recordedBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const finalMime = mediaRecorder.mimeType || selectedMimeType || 'audio/webm';
+        const recordedBlob = new Blob(audioChunksRef.current, { type: finalMime });
         if (recordedBlob.size > 0) {
           if (audioUrl) URL.revokeObjectURL(audioUrl);
           const newUrl = URL.createObjectURL(recordedBlob);
           setAudioUrl(newUrl);
           setAudioBlob(recordedBlob);
-          const genName = `voice_${new Date().toLocaleTimeString().replace(/:/g, '-')}.webm`;
+          const ext = finalMime.includes('mp4') ? 'mp4' : finalMime.includes('aac') ? 'aac' : 'webm';
+          const genName = `voice_${new Date().toLocaleTimeString().replace(/:/g, '-')}.${ext}`;
           setAudioFileName(genName);
 
           // Transcribe through Faster-Whisper with language hint

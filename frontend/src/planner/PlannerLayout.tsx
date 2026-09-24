@@ -59,7 +59,23 @@ export const PlannerLayout: React.FC = () => {
     setProject,
   } = useProjectStore();
 
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
+  const SIDEBAR_STORAGE_KEY = 'schedulesync_planner_sidebar_collapsed';
+
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(SIDEBAR_STORAGE_KEY) === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const toggleSidebar = (collapsed: boolean) => {
+    setIsSidebarCollapsed(collapsed);
+    try {
+      localStorage.setItem(SIDEBAR_STORAGE_KEY, String(collapsed));
+    } catch {}
+  };
+
   const [isReportModalOpen, setIsReportModalOpen] = useState<boolean>(false);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState<boolean>(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState<boolean>(false);
@@ -105,6 +121,21 @@ export const PlannerLayout: React.FC = () => {
     queryKey: ['projects'],
     queryFn: () => api.getProjects(),
   });
+
+  // Keep active project activity count synchronized so header badge does not shift or jump on refresh
+  useEffect(() => {
+    if (projectsData?.projects && projectsData.projects.length > 0) {
+      const match = projectsData.projects.find((p) => p.id === selectedProjectId);
+      if (match && match.activity_count !== undefined && match.activity_count !== selectedProjectActivityCount) {
+        setProject({
+          id: match.id,
+          name: match.name,
+          client: match.client,
+          activity_count: match.activity_count,
+        });
+      }
+    }
+  }, [projectsData, selectedProjectId, selectedProjectActivityCount, setProject]);
 
   // 1. Open site blockers & HSE issues
   const { data: openComplaints = [] } = useQuery({
@@ -184,7 +215,7 @@ export const PlannerLayout: React.FC = () => {
   };
 
   return (
-    <div className="h-screen w-screen overflow-hidden flex bg-[#0a0b0e] text-slate-900 font-sans antialiased select-none">
+    <div className="h-screen w-screen overflow-hidden flex bg-[#0a0b0e] text-slate-900 font-sans antialiased">
 
       {/* ── Left Stationary Navigation Bar (Fixed & Never Moves on Page Scroll) ── */}
       <aside
@@ -230,7 +261,7 @@ export const PlannerLayout: React.FC = () => {
           </button>
 
           <button
-            onClick={() => setIsSidebarCollapsed(true)}
+            onClick={() => toggleSidebar(true)}
             className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-all cursor-pointer flex-shrink-0"
             title="Collapse Navigation Bar"
             aria-label="Collapse Navigation Bar"
@@ -498,12 +529,12 @@ export const PlannerLayout: React.FC = () => {
 
         {/* ── Top Header Bar with Custom Oilfield Rig Artwork Banner ── */}
         <header className="bg-white border-b border-slate-200 sticky top-0 z-[100] shadow-xs flex-shrink-0 relative">
-          {/* Custom Oilfield Rig Artwork Panoramic Header Banner */}
-          <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden flex items-center">
+          {/* Subtle Right-aligned Oilfield Rig Artwork Banner (Prevents layout shifts and text occlusion on refresh) */}
+          <div className="absolute right-0 top-0 bottom-0 h-full pointer-events-none opacity-25 z-0 flex items-center justify-end overflow-hidden max-w-[45%]">
             <img
               src="/assets/header-bg.png"
               alt="Oilfield Rigs Banner"
-              className="w-full h-full object-cover object-center select-none opacity-90"
+              className="h-full w-auto object-contain object-right select-none"
             />
           </div>
 
@@ -518,7 +549,7 @@ export const PlannerLayout: React.FC = () => {
                 <>
                   {/* Menu button to open navigation bar */}
                   <button
-                    onClick={() => setIsSidebarCollapsed(false)}
+                    onClick={() => toggleSidebar(false)}
                     className="p-2 rounded-lg hover:bg-slate-100 text-slate-700 hover:text-black border border-slate-200 transition-all cursor-pointer flex items-center justify-center shadow-2xs bg-white/90"
                     title="Open Navigation Bar"
                     aria-label="Open Navigation Bar"

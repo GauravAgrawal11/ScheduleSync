@@ -88,7 +88,7 @@ export const SupervisorLayerCard: React.FC<SupervisorLayerCardProps> = ({
   }, [discipline]);
 
   return (
-    <div className="rounded-lg bg-[#0C0C0D] border border-[#2A2A30] overflow-hidden space-y-0 select-none shadow-lg">
+    <div className="rounded-lg bg-[#0C0C0D] border border-[#2A2A30] overflow-hidden space-y-0 shadow-lg">
       {/* Section Title Header */}
       <div className="px-3 py-2 bg-[#141417] border-b border-[#2A2A30] flex items-center justify-between">
         <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-[#C9942A]">

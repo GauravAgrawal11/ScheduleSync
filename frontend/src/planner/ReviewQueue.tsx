@@ -33,6 +33,7 @@ import {
   Image as ImageIcon,
 } from 'lucide-react';
 import { DailyActivitiesModal } from './components/DailyActivitiesModal';
+import { CopyableText } from '../components/CopyableText';
 
 
 export const ReviewQueue: React.FC = () => {
@@ -475,16 +476,22 @@ export const ReviewQueue: React.FC = () => {
                         )}
                       </div>
 
-                      {/* Report Snippet */}
-                      <p
+                      {/* Report Snippet (1-Click Copy with 'Copied!' Badge) */}
+                      <div
                         className={`text-xs text-slate-800 font-medium leading-relaxed p-3 rounded-xl border transition-colors ${
                           isUnmatched
                             ? 'bg-rose-50/40 border-rose-200 group-hover:border-rose-300'
                             : 'bg-slate-50/80 border-slate-200 group-hover:border-oil-300'
                         }`}
                       >
-                        "{item.report_snippet}"
-                      </p>
+                        <CopyableText
+                          text={item.report_snippet}
+                          tooltipTitle="Click to copy report snippet"
+                          className="w-full"
+                        >
+                          "{item.report_snippet}"
+                        </CopyableText>
+                      </div>
 
                       {/* Suggested Activity Linkage */}
                       <div className="text-xs text-slate-600 flex items-center gap-2 pt-0.5 flex-wrap">
@@ -492,15 +499,29 @@ export const ReviewQueue: React.FC = () => {
                           {isUnmatched ? 'Nearest Candidate (Low Confidence):' : 'Suggested Activity:'}
                         </span>
                         {item.suggested_activity ? (
-                          <div className="flex items-center gap-1.5">
-                            <strong className="text-oil-900 font-bold font-mono">
-                              {item.suggested_activity.activity_id}
-                            </strong>
-                            <span className="text-slate-700">— {item.suggested_activity.activity_name}</span>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <CopyableText
+                              text={item.suggested_activity.activity_id}
+                              tooltipTitle="Click to copy Activity ID"
+                              className="font-bold text-oil-900 font-mono hover:text-[#9e1218]"
+                            >
+                              <strong>{item.suggested_activity.activity_id}</strong>
+                            </CopyableText>
+                            <CopyableText
+                              text={item.suggested_activity.activity_name}
+                              tooltipTitle="Click to copy Activity Name"
+                              className="text-slate-700 hover:text-slate-900"
+                            >
+                              — {item.suggested_activity.activity_name}
+                            </CopyableText>
                             {item.suggested_activity.wbs_code && (
-                              <span className="text-[10px] font-mono text-slate-400">
+                              <CopyableText
+                                text={item.suggested_activity.wbs_code}
+                                tooltipTitle="Click to copy WBS code"
+                                className="text-[10px] font-mono text-slate-400 hover:text-slate-700"
+                              >
                                 ({item.suggested_activity.wbs_code})
-                              </span>
+                              </CopyableText>
                             )}
                           </div>
                         ) : (
