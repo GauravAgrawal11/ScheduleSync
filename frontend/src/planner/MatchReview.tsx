@@ -31,7 +31,6 @@ import {
   Paperclip,
   ZoomIn,
 } from 'lucide-react';
-import { CopyableText } from '../components/CopyableText';
 
 export const MatchReview: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -207,13 +206,7 @@ export const MatchReview: React.FC = () => {
               Raw Site Input Log (Logged by {matchItem.supervisor} on {matchItem.report_date})
             </span>
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm font-medium text-slate-800 italic leading-relaxed">
-              <CopyableText
-                text={matchItem.report_snippet}
-                tooltipTitle="Click to copy raw site report"
-                className="w-full"
-              >
-                "{matchItem.report_snippet}"
-              </CopyableText>
+              "{matchItem.report_snippet}"
             </div>
           </div>
 
@@ -413,24 +406,13 @@ export const MatchReview: React.FC = () => {
               <span className="text-xs font-bold text-blue-900 uppercase tracking-wide flex items-center gap-1.5">
                 <Layers className="w-4 h-4 text-blue-700" /> Suggested Baseline Activity (WBS Level 6)
               </span>
-              <CopyableText
-                text={matchItem.suggested_activity.wbs_code}
-                tooltipTitle="Click to copy WBS code"
-                className="font-mono text-xs font-bold text-blue-800 bg-blue-100 px-2.5 py-0.5 rounded border border-blue-300 hover:bg-blue-200"
-              >
+              <span className="font-mono text-xs font-bold text-blue-800 bg-blue-100 px-2.5 py-0.5 rounded border border-blue-300">
                 WBS: {matchItem.suggested_activity.wbs_code}
-              </CopyableText>
+              </span>
             </div>
 
             <h3 className="text-base sm:text-lg font-bold text-slate-900">
-              <CopyableText
-                text={matchItem.suggested_activity.activity_id}
-                tooltipTitle="Click to copy Activity ID"
-                className="hover:text-[#9e1218] font-mono"
-              >
-                {matchItem.suggested_activity.activity_id}
-              </CopyableText>
-              : {matchItem.suggested_activity.activity_name}
+              {matchItem.suggested_activity.activity_id}: {matchItem.suggested_activity.activity_name}
             </h3>
 
             <div className="flex flex-wrap gap-4 mt-3 text-xs text-slate-600">
