@@ -1,0 +1,22 @@
+# Pings the Render health endpoint every 10 minutes to prevent the free-tier
+# service from spinning down (15-minute idle timeout).
+#
+# Setup: add a GitHub repository variable named RENDER_HEALTH_URL with the value
+#   https://<your-service>.onrender.com/health
+
+name: Keep Render Alive
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'   # every 10 minutes, safely under the 15-min limit
+  workflow_dispatch:           # manual trigger for testing
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping /health
+        run: curl -fsS --max-time 60 --retry 2 "${{ vars.RENDER_HEALTH_URL }}"

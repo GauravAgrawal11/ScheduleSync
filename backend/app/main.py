@@ -177,6 +177,8 @@ def root():
     }
 
 
-@app.get("/health", tags=["System"])
+@app.api_route("/health", methods=["GET", "HEAD"], tags=["System"])
 def health_check():
-    return {"status": "healthy", "module": "member_a_core"}
+    """Shallow health probe for Render deploy checks and keep-alive pings.
+    No DB, no LLM, no file access — just returns 200 immediately."""
+    return {"status": "ok"}
